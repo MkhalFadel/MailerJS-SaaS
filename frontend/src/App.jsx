@@ -1,6 +1,8 @@
+import Dashboard from "./pages/dashboard/Dashboard";
+
 function App() {
   return (
-    <h1>StackForge Frontend Ready 🚀</h1>
+    <Dashboard />
   );
 }
 
