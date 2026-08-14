@@ -1,0 +1,132 @@
+.container {
+   width: 100%;
+   max-width: 1100px;
+   margin: 0 auto;
+}
+
+.header {
+   display: flex;
+   align-items: flex-end;
+   justify-content: space-between;
+   margin-bottom: 24px;
+}
+
+.backButton {
+   margin-bottom: 16px;
+   padding: 0;
+   background: transparent;
+   color: var(--color-text-muted);
+   border: 0;
+   font-size: 12px;
+}
+
+.backButton:hover {
+   color: var(--color-primary);
+}
+
+.header h1 {
+   color: var(--color-text);
+   font-size: 28px;
+}
+
+.header p {
+   margin-top: 6px;
+   color: var(--color-text-secondary);
+   font-size: 14px;
+}
+
+.editButton {
+   padding: 10px 16px;
+   background: var(--color-primary);
+   color: var(--color-primary-text);
+   border: 1px solid var(--color-primary);
+   border-radius: var(--radius-md);
+   font-size: 12px;
+   font-weight: 600;
+}
+
+.editButton:hover {
+   background: var(--color-primary-hover);
+}
+
+.previewCard {
+   overflow: hidden;
+   background: var(--color-surface);
+   border: 1px solid var(--color-border);
+   border-radius: var(--radius-lg);
+   box-shadow: var(--shadow-sm);
+}
+
+.previewToolbar {
+   display: flex;
+   flex-direction: column;
+   gap: 10px;
+   padding: 18px 22px;
+   background: var(--color-bg-secondary);
+   border-bottom: 1px solid var(--color-border);
+}
+
+.previewToolbar div {
+   display: flex;
+   gap: 12px;
+}
+
+.previewToolbar span {
+   width: 65px;
+   color: var(--color-text-muted);
+   font-size: 11px;
+}
+
+.previewToolbar strong {
+   color: var(--color-text);
+   font-size: 12px;
+   font-weight: 500;
+}
+
+.emailPreview {
+   min-height: 550px;
+   padding: 50px;
+   background: var(--color-bg);
+}
+
+.emailPreview > div {
+   max-width: 650px;
+   min-height: 400px;
+   margin: 0 auto;
+   padding: 40px;
+   background: #ffffff;
+   color: #17181a;
+   border-radius: var(--radius-md);
+   box-shadow: var(--shadow-sm);
+}
+
+.emailPreview h1 {
+   margin-bottom: 20px;
+   font-size: 28px;
+}
+
+.emailPreview p {
+   margin-bottom: 14px;
+   color: #555b64;
+   line-height: 1.6;
+}
+
+@media (max-width: 700px) {
+   .header {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 16px;
+   }
+
+   .editButton {
+      width: 100%;
+   }
+
+   .emailPreview {
+      padding: 20px;
+   }
+
+   .emailPreview > div {
+      padding: 25px;
+   }
+}
