@@ -1,0 +1,137 @@
+.container {
+   overflow: hidden;
+   background: var(--color-surface);
+   border: 1px solid var(--color-border);
+   border-radius: var(--radius-lg);
+   box-shadow: var(--shadow-sm);
+}
+
+.header {
+   padding: 22px 25px;
+   border-bottom: 1px solid var(--color-border);
+}
+
+.header h2 {
+   color: var(--color-danger);
+   font-size: 15px;
+   font-weight: 600;
+}
+
+.header p {
+   margin-top: 5px;
+   color: var(--color-text-secondary);
+   font-size: 10px;
+}
+
+.dangerCard {
+   margin: 20px 25px 25px;
+   border: 1px solid var(--color-danger-border);
+   border-radius: var(--radius-md);
+}
+
+.content {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 20px;
+   padding: 18px;
+}
+
+.content h3 {
+   color: var(--color-danger);
+   font-size: 11px;
+}
+
+.content p {
+   max-width: 550px;
+   margin-top: 5px;
+   color: var(--color-text-secondary);
+   font-size: 9px;
+   line-height: 1.5;
+}
+
+.deleteButton {
+   flex-shrink: 0;
+   padding: 8px 12px;
+   background: transparent;
+   color: var(--color-danger);
+   border: 1px solid var(--color-danger);
+   border-radius: var(--radius-md);
+   font-size: 9px;
+   font-weight: 600;
+}
+
+.deleteButton:hover {
+   background: var(--color-danger);
+   color: var(--color-primary-text);
+}
+
+.confirmation {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 20px;
+   padding: 15px 18px;
+   background: var(--color-danger-light);
+   border-top: 1px solid var(--color-danger-border);
+}
+
+.confirmation h3 {
+   color: var(--color-danger);
+   font-size: 10px;
+}
+
+.confirmation p {
+   margin-top: 4px;
+   color: var(--color-text-secondary);
+   font-size: 8px;
+   line-height: 1.5;
+}
+
+.confirmationActions {
+   display: flex;
+   flex-shrink: 0;
+   gap: 7px;
+}
+
+.cancelButton {
+   padding: 7px 10px;
+   background: var(--color-background);
+   color: var(--color-text-secondary);
+   border: 1px solid var(--color-border);
+   border-radius: var(--radius-md);
+   font-size: 8px;
+}
+
+.confirmButton {
+   padding: 7px 10px;
+   background: var(--color-danger);
+   color: var(--color-primary-text);
+   border: 1px solid var(--color-danger);
+   border-radius: var(--radius-md);
+   font-size: 8px;
+   font-weight: 600;
+}
+
+@media (max-width: 600px) {
+   .content,
+   .confirmation {
+      align-items: flex-start;
+      flex-direction: column;
+   }
+
+   .deleteButton,
+   .cancelButton,
+   .confirmButton {
+      width: 100%;
+   }
+
+   .confirmationActions {
+      width: 100%;
+   }
+
+   .cancelButton,
+   .confirmButton {
+      flex: 1;
+   }
+}

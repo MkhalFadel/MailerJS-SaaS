@@ -82,14 +82,14 @@ function Sidebar() {
          </nav>
 
          <div className={styles.sidebarBottom}>
-         <div className={styles.user}>
+         <NavLink key={"/account"} to={"/account"} className={styles.user}>
             <div className={styles.avatar}>FM</div>
 
             <div className={styles.userInfo}>
                <span className={styles.userName}>Fadel Mkahal</span>
                <span className={styles.userEmail}>fadel@example.com</span>
             </div>
-         </div>
+         </NavLink>
          </div>
       </aside>
    );

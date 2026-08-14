@@ -8,6 +8,7 @@ import Login from "./pages/auth/login/Login";
 import Register from "./pages/auth/register/Register";
 import ForgetPassword from "./pages/auth/forgetPassword/ForgetPassword";
 import ResetPassword from "./pages/auth/resetPassword/ResetPassword";
+import Account from "./pages/account/Account";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgetPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/account" element={<Account />} />
     </Routes>
   );
 }
