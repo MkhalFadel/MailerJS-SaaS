@@ -1,0 +1,137 @@
+.container {
+   width: 100%;
+}
+
+.sectionHeader {
+   margin-bottom: 18px;
+}
+
+.sectionHeader h2 {
+   color: var(--color-text);
+   font-size: 18px;
+   font-weight: 700;
+}
+
+.sectionHeader p {
+   margin-top: 5px;
+   color: var(--color-text-secondary);
+   font-size: 12px;
+}
+
+.card {
+   overflow: hidden;
+   background: var(--color-surface);
+   border: 1px solid var(--color-border);
+   border-radius: var(--radius-lg);
+   box-shadow: var(--shadow-sm);
+}
+
+.form {
+   display: flex;
+   flex-direction: column;
+   gap: 20px;
+   padding: 24px;
+}
+
+.senderPreview {
+   display: flex;
+   align-items: center;
+   gap: 13px;
+   padding: 15px;
+   background: var(--color-primary-light);
+   border: 1px solid var(--color-border);
+   border-radius: var(--radius-md);
+}
+
+.previewIcon {
+   display: grid;
+   place-items: center;
+   width: 42px;
+   height: 42px;
+   background: var(--color-primary);
+   color: var(--color-primary-text);
+   border-radius: 50%;
+   font-size: 14px;
+   font-weight: 700;
+}
+
+.senderPreview div:last-child {
+   display: flex;
+   flex-direction: column;
+   gap: 3px;
+}
+
+.senderPreview span {
+   color: var(--color-primary);
+   font-size: 9px;
+   font-weight: 600;
+   text-transform: uppercase;
+}
+
+.senderPreview strong {
+   color: var(--color-text);
+   font-size: 12px;
+}
+
+.senderPreview small {
+   color: var(--color-text-muted);
+   font-size: 9px;
+}
+
+.field {
+   display: flex;
+   flex-direction: column;
+   gap: 7px;
+}
+
+.field > span {
+   color: var(--color-text-secondary);
+   font-size: 11px;
+   font-weight: 600;
+}
+
+.field input {
+   width: 100%;
+   padding: 11px 12px;
+   background: var(--color-input-bg);
+   color: var(--color-text);
+   border: 1px solid var(--color-input-border);
+   border-radius: var(--radius-md);
+   outline: none;
+   font-size: 12px;
+}
+
+.field input:focus {
+   border-color: var(--color-input-focus);
+}
+
+.field input::placeholder {
+   color: var(--color-placeholder);
+}
+
+.field small {
+   color: var(--color-text-muted);
+   font-size: 9px;
+}
+
+.actions {
+   display: flex;
+   justify-content: flex-end;
+   padding: 18px 24px;
+   background: var(--color-bg-secondary);
+   border-top: 1px solid var(--color-border);
+}
+
+.saveButton {
+   padding: 10px 17px;
+   background: var(--color-primary);
+   color: var(--color-primary-text);
+   border: 1px solid var(--color-primary);
+   border-radius: var(--radius-md);
+   font-size: 10px;
+   font-weight: 600;
+}
+
+.saveButton:hover {
+   background: var(--color-primary-hover);
+}
