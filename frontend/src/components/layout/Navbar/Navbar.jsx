@@ -1,4 +1,5 @@
 import styles from "./navbar.module.css";
+import ThemeToggle from "../../themeToggle/ThemeToggle";
 
 function Navbar() {
    return (
@@ -7,7 +8,9 @@ function Navbar() {
          <button className={styles.mobileMenu}>☰</button>
          </div>
 
+
          <div className={styles.actions}>
+         <ThemeToggle />
          <button className={styles.iconButton} aria-label="Notifications">
             🔔
          </button>
