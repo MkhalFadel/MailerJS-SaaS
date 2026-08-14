@@ -1,0 +1,143 @@
+.container {
+   width: 100%;
+}
+
+.header {
+   margin-bottom: 20px;
+}
+
+.header h2 {
+   color: var(--color-text);
+   font-size: 15px;
+   font-weight: 600;
+}
+
+.header p {
+   margin-top: 5px;
+   color: var(--color-text-secondary);
+   font-size: 10px;
+}
+
+.grid {
+   display: grid;
+   grid-template-columns: repeat(3,1fr);
+   gap: 15px;
+}
+
+.card {
+   position: relative;
+   display: flex;
+   flex-direction: column;
+   padding: 22px;
+   background: var(--color-surface);
+   border: 1px solid var(--color-border);
+   border-radius: var(--radius-lg);
+   box-shadow: var(--shadow-sm);
+}
+
+.card.popular {
+   border-color: var(--color-primary);
+}
+
+.popularBadge {
+   position: absolute;
+   top: 12px;
+   right: 12px;
+   padding: 4px 7px;
+   background: var(--color-primary-light);
+   color: var(--color-primary);
+   border-radius: var(--radius-full);
+   font-size: 7px;
+   font-weight: 600;
+}
+
+.cardHeader h3 {
+   color: var(--color-text);
+   font-size: 15px;
+   font-weight: 600;
+}
+
+.cardHeader p {
+   min-height: 28px;
+   margin-top: 6px;
+   color: var(--color-text-secondary);
+   font-size: 8px;
+   line-height: 1.5;
+}
+
+.price {
+   display: flex;
+   align-items: baseline;
+   gap: 4px;
+   margin-top: 20px;
+}
+
+.price strong {
+   color: var(--color-text);
+   font-size: 26px;
+}
+
+.price span {
+   color: var(--color-text-muted);
+   font-size: 8px;
+}
+
+.divider {
+   height: 1px;
+   margin: 20px 0;
+   background: var(--color-border);
+}
+
+.card ul {
+   display: flex;
+   flex-direction: column;
+   gap: 10px;
+   margin: 0;
+   padding: 0;
+   list-style: none;
+}
+
+.card li {
+   display: flex;
+   align-items: center;
+   gap: 7px;
+   color: var(--color-text-secondary);
+   font-size: 9px;
+}
+
+.card li span {
+   color: var(--color-success);
+   font-weight: 700;
+}
+
+.card button {
+   width: 100%;
+   margin-top: 22px;
+   padding: 9px;
+   background: var(--color-primary);
+   color: var(--color-primary-text);
+   border: 1px solid var(--color-primary);
+   border-radius: var(--radius-md);
+   font-size: 9px;
+   font-weight: 600;
+}
+
+.card button:hover {
+   background: var(--color-primary-hover);
+}
+
+.card button.currentButton {
+   background: var(--color-background-secondary);
+   color: var(--color-text-secondary);
+   border-color: var(--color-border);
+}
+
+.card button.currentButton:hover {
+   background: var(--color-background-secondary);
+}
+
+@media (max-width: 850px) {
+   .grid {
+      grid-template-columns: 1fr;
+   }
+}

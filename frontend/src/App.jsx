@@ -9,6 +9,7 @@ import Register from "./pages/auth/register/Register";
 import ForgetPassword from "./pages/auth/forgetPassword/ForgetPassword";
 import ResetPassword from "./pages/auth/resetPassword/ResetPassword";
 import Account from "./pages/account/Account";
+import Billing from "./pages/billing/Billing";
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
       <Route path="/forgot-password" element={<ForgetPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/account" element={<Account />} />
+      <Route path="/billing" element={<Billing />} />
     </Routes>
   );
 }
