@@ -1,3 +1,4 @@
+import { NavLink } from "react-router-dom";
 import styles from "./currentPlan.module.css";
 
 function CurrentPlan() {
@@ -26,9 +27,9 @@ function CurrentPlan() {
                </p>
             </div>
 
-            <button>
+            <NavLink key={"/billing"} to={"/billing"} className={styles.plansBtn}>
                View Plans
-            </button>
+            </NavLink>
          </div>
       </section>
    );

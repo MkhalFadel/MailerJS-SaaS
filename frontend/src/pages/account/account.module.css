@@ -8,7 +8,7 @@
 .header {
    display: flex;
    align-items: center;
-   justify-content: space-between;
+   justify-content: left;
    margin-bottom: 25px;
 }
 
@@ -22,6 +22,15 @@
    margin-top: 6px;
    color: var(--color-text-secondary);
    font-size: 11px;
+}
+
+.backBtn{
+   color: var(--color-text-secondary);
+   margin-right: 57px;
+}
+
+.backBtn:hover{
+   color: blue;
 }
 
 .layout {

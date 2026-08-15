@@ -1,6 +1,6 @@
 import styles from "./currentPlan.module.css";
 
-function CurrentPlan() {
+function CurrentPlan({ setActiveSection }) {
    return (
       <section className={styles.container}>
          <div className={styles.header}>
@@ -47,7 +47,7 @@ function CurrentPlan() {
                </p>
             </div>
 
-            <button>
+            <button onClick={() => setActiveSection("plans")}>
                View Plans
             </button>
          </div>

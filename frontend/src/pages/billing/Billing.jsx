@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { NavLink } from "react-router-dom";
 import styles from "./billing.module.css";
 import CurrentPlan from "../../components/billing/currentPlan/CurrentPlan";
 import Usage from "../../components/billing/usage/Usage";
@@ -6,14 +7,14 @@ import Plans from "../../components/billing/plans/Plans";
 import BillingHistory from "../../components/billing/billingHistory/BillingHistory";
 
 function Billing() {
-   const [activeSection,setActiveSection] = useState("overview");
+   const [activeSection, setActiveSection] = useState("overview");
 
    function renderContent() {
       switch (activeSection) {
          case "overview":
             return (
                <div className={styles.overviewContent}>
-                  <CurrentPlan />
+                  <CurrentPlan setActiveSection={setActiveSection} />
                   <Usage />
                </div>
             );
@@ -32,6 +33,9 @@ function Billing() {
    return (
       <div className={styles.page}>
          <div className={styles.header}>
+            <div>
+               <NavLink key={"/account"} to={"/account"} className={styles.backBtn}>← Back to Account settings</NavLink>
+            </div>
             <div>
                <h1>Billing</h1>
 

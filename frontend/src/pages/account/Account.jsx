@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { NavLink } from "react-router-dom";
 import styles from "./account.module.css";
 import ProfileOverview from "../../components/account/profileOverview/ProfileOverview";
 import PersonalInformation from "../../components/account/personalInformation/PersonalInformation";
@@ -57,6 +58,9 @@ function Account() {
    return (
       <div className={styles.page}>
          <div className={styles.header}>
+            <div>
+               <NavLink key={"/dashboard"} to={"/dashboard"} className={styles.backBtn}>← Back to HomePage</NavLink>
+            </div>
             <div>
                <h1>Account Settings</h1>
 
