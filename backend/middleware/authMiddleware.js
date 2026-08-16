@@ -1,31 +1,25 @@
-const jwt = require("jsonwebtoken");
+const { verifyToken } = require("../utils/auth")
 
-async function authMiddleware(req, res, next)
+function authMiddleware(req, res, next)
 {
    try {
-      const authHeader = req.headers.authorization;
+      // Fetch the access token stored in device's cookies
+      const accessToken = req.cookies.authToken;
 
-      if (!authHeader) {
+      // Check if the token is authorized
+      if (!accessToken) {
          return res.status(401).json({
-            message: "Unauthorized",
+            message: "Unauthorized token",
          });
       }
-
-      const token = authHeader.split(" ")[1];
-
-      const decoded = jwt.verify(
-         token,
-         process.env.JWT_SECRET
-      );
-
-      req.user = decoded;
-
+      
+      // Verify the token, if valid it will return the payload
+      const payload = verifyToken(accessToken);
+      req.user = payload;
       next();
-
    } catch (err) {
-
       res.status(401).json({
-         message: "Invalid token",
+         message: "Invalid token"
       });
    }
 }

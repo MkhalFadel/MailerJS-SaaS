@@ -81,7 +81,7 @@ async function login(req, res)
       const { password_hash, ...rest } = user;
 
       return res.status(200).json({
-         message: "Login successful", user: rest
+         message: "Login successful", user: rest, accessToken
       })
 
    } catch (error) {
@@ -95,11 +95,18 @@ async function login(req, res)
 async function updateUser(req, res)
 {
    try {
-      const { data } = req.body;
+      const data = req.body;
+      const { id } = req.user
       const fields = updateUsersFields(data)
+
+      if(Object.keys(fields).length === 0)
+         return res.status(400).json({
+            error: "No fields to update"
+         });
+
       const user = await prisma.users.update({
          where: {
-            id: data.id
+            id: id
          },
          data: fields
       })
@@ -120,7 +127,7 @@ async function updateUser(req, res)
 async function deleteUser(req, res)
 {
    try {
-      const { id } = req.body
+      const { id } = req.user
       await prisma.users.delete({
          where:{
             id: id
