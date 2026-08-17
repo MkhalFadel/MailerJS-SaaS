@@ -1,7 +1,7 @@
 const prisma = require("../lib/prisma")
 const { hashPassword, verifyPassword, generateRefreshToken, generateToken, updateUsersFields, verifyFields, verifyRefreshToken } = require("../utils/auth");
 
-async function fetchUser(req, res)
+async function fetchUser(req, res, next)
 {
    try {
       const { id } = req.user;
@@ -22,13 +22,11 @@ async function fetchUser(req, res)
          data: rest 
       })
    } catch (error) {
-      return res.status(500).json({
-         error: "Internal server error"
-      });
+      next(error)
    }
 }
 
-async function registerUsers(req, res)
+async function registerUsers(req, res, next)
 {
    try {
       const data = req.body;
@@ -60,7 +58,7 @@ async function registerUsers(req, res)
    }
 }
 
-async function login(req, res)
+async function login(req, res, next)
 {
    try {
       const { email, password } = req.body;
@@ -105,14 +103,11 @@ async function login(req, res)
       })
 
    } catch (error) {
-      console.log("Login error: ", error);
-      return res.status(500).json({
-         error: "Server Error"
-      })
+      next(error)
    }
 }
 
-async function updateUser(req, res)
+async function updateUser(req, res, next)
 {
    try {
       const data = req.body;
@@ -138,13 +133,11 @@ async function updateUser(req, res)
       })
 
    } catch (error) {
-      return res.status(500).json({
-         error: "Internal server error"
-      })
+      next(error)
    }
 }
 
-async function deleteUser(req, res)
+async function deleteUser(req, res, next)
 {
    try {
       const { id } = req.user
@@ -162,7 +155,7 @@ async function deleteUser(req, res)
    }
 }
 
-function updateAccessToken(req, res)
+function updateAccessToken(req, res, next)
 {
    const refreshToken = req.cookies.refreshToken;
 
@@ -197,13 +190,11 @@ function updateAccessToken(req, res)
       });
 
    } catch(error) {
-      return res.status(401).json({
-         message: "Invalid or expired refresh token"
-      });
+      next(error)
    }
 }
 
-function logout(req, res)
+function logout(req, res, next)
 {
    res.clearCookie("authToken");
    res.clearCookie("refreshToken");
