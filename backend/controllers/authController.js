@@ -32,21 +32,14 @@ async function registerUsers(req, res)
 {
    try {
       const data = req.body;
-      const fields = verifyFields(data);
-      
-      if(fields)
-         return res.status(400).json({
-            message: "Required fields missing",
-            fields: fields
-         })
 
       const hashedPassword = await hashPassword(data.password)
       const user = await prisma.users.create({
          data:{
-            email: data.email,
+            email: data.email.trim(),
             password_hash: hashedPassword,
-            first_name: data.firstName,
-            last_name: data.lastName,
+            first_name: data.firstName.trim(),
+            last_name: data.lastName.trim(),
          }
       })
 

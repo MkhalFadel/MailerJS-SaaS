@@ -2,15 +2,17 @@ const express = require("express");
 const router = express.Router();
 const { login, registerUsers, updateUser, deleteUser, fetchUser, updateAccessToken, logout } = require("../controllers/authController")
 const authMiddleware = require("../middleware/authMiddleware")
+const validate = require("../middleware/validationMiddleware");
+const { registerValidator, loginValidator } = require("../validators/authValidator");
 
 // fetch user
 router.get("/", authMiddleware, fetchUser)
 
 // Create new user
-router.post('/register', registerUsers)
+router.post('/register', registerValidator, validate, registerUsers)
 
 // Login
-router.post('/login', login)
+router.post('/login', loginValidator, validate, login)
 
 // Update user info
 router.put("/update", authMiddleware, updateUser)
