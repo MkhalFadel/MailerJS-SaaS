@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const cookieParser = require('cookie-parser');
 const usersRoute = require("../routes/authRoutes");
+const contactsRouter = require("../routes/contactsRoute");
 const errorHandler = require("../middleware/errorMiddleware");
 
 const app = express();
@@ -14,6 +15,9 @@ app.use(cookieParser());
 
 // Users route
 app.use("/api/users", usersRoute);
+
+// Contacts route
+app.use('/api/contacts', contactsRouter);
 
 // Handle errors
 app.use(errorHandler)
