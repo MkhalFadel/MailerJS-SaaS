@@ -59,19 +59,25 @@ async function updateContact(req, res, next)
             error: "No fields to update"
          });
 
-      const contact = await prisma.contacts.update({
+      const contact = await prisma.contacts.findFirst({
          where: {
-            id: id,
-            user_id: userId
-         },
-         
-         data: fields
-      })
-
+            id: data.id,
+            user_id: req.user.id
+         }
+      });
+      
       if(!contact)
          return res.status(404).json({
             error: "Contact not found"
          });
+
+      const updatedContact = await prisma.contacts.update({
+         where: {
+            id: contact.id
+         },
+
+         data: fields
+      })
 
       return res.status(200).json({
          message: "Contact updated successfully",

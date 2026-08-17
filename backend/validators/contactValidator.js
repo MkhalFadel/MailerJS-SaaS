@@ -9,4 +9,24 @@ const contactValidator = [
       .withMessage("Invalid email address"),
 ];
 
-module.exports = { contactValidator }
+const contactUpdateValidator = [
+      body("email")
+      .optional()
+      .trim()
+      .notEmpty()
+      .withMessage("Email cannot be empty"),
+      
+      body("firstName")
+      .optional()
+      .trim()
+      .notEmpty()
+      .withMessage("First name cannot be empty"),
+      
+      body("lastName")
+      .optional()
+      .trim()
+      .notEmpty()
+      .withMessage("Last name cannot be empty"),
+]
+
+module.exports = { contactValidator, contactUpdateValidator }
