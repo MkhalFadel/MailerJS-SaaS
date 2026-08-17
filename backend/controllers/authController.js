@@ -1,5 +1,32 @@
 const prisma = require("../lib/prisma")
-const { hashPassword, verifyPassword, generateRefreshToken, generateToken, updateUsersFields, verifyFields } = require("../utils/auth");
+const { hashPassword, verifyPassword, generateRefreshToken, generateToken, updateUsersFields, verifyFields, verifyRefreshToken } = require("../utils/auth");
+
+async function fetchUser(req, res)
+{
+   try {
+      const { id } = req.user;
+
+      const user = await prisma.users.findUnique({
+         where: {
+            id: id
+         }
+      })
+
+      if(!user)
+         return res.status(404).json({
+            error: "User not found"
+         });
+
+      const { password_hash, ...rest } = user;
+      return res.status(200).json({
+         data: rest 
+      })
+   } catch (error) {
+      return res.status(500).json({
+         error: "Internal server error"
+      });
+   }
+}
 
 async function registerUsers(req, res)
 {
@@ -70,7 +97,7 @@ async function login(req, res)
 
       res.cookie("authToken", accessToken, {
          ...cookieOptions,
-         maxAge: 60 * 60 * 1000
+         maxAge: 2 * 60 * 60 * 1000
       })
 
       res.cookie("refreshToken", refreshToken, {
@@ -81,7 +108,7 @@ async function login(req, res)
       const { password_hash, ...rest } = user;
 
       return res.status(200).json({
-         message: "Login successful", user: rest, accessToken
+         message: "Login successful", user: rest
       })
 
    } catch (error) {
@@ -142,4 +169,55 @@ async function deleteUser(req, res)
    }
 }
 
-module.exports = { login, registerUsers, updateUser, deleteUser }
+function updateAccessToken(req, res)
+{
+   const refreshToken = req.cookies.refreshToken;
+
+   if(!refreshToken)
+   {
+      return res.status(401).json({
+         message: "Refresh token required"
+      });
+   }
+
+   try {
+      const { id,email } = verifyRefreshToken(refreshToken);
+
+      const accessToken = generateToken({
+         id,
+         email
+      });
+
+      const cookieOptions = {
+         httpOnly: true,
+         secure: false,
+         sameSite: "lax"
+      };
+
+      res.cookie("authToken", accessToken, {
+         ...cookieOptions,
+         maxAge: 2 * 60 * 60 * 1000
+      });
+
+      return res.status(200).json({
+         message: "Access token refreshed"
+      });
+
+   } catch(error) {
+      return res.status(401).json({
+         message: "Invalid or expired refresh token"
+      });
+   }
+}
+
+function logout(req, res)
+{
+   res.clearCookie("authToken");
+   res.clearCookie("refreshToken");
+
+   return res.status(200).json({
+      message: "Logout successful"
+   })
+}
+
+module.exports = { login, registerUsers, updateUser, deleteUser, fetchUser, updateAccessToken, logout }
