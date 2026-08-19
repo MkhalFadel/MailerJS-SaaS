@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 const usersRoute = require("../routes/authRoutes");
 const contactsRouter = require("../routes/contactsRoute");
 const templatesRouter = require("../routes/templatesRoute");
+const smtpRouter = require("../routes/smtpRouter");
 const errorHandler = require("../middleware/errorMiddleware");
 
 const app = express();
@@ -22,6 +23,9 @@ app.use('/api/contacts', contactsRouter);
 
 // Template route
 app.use("/api/templates", templatesRouter);
+
+// SMTP route
+app.use("/api/smtp", smtpRouter);
 
 // Handle errors
 app.use(errorHandler)
