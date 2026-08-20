@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { fetchSmtpAccounts, createSmtpAccount, updateSmtpAccount, deleteSmtpAccount } = require("../controllers/smtpController");
+const { fetchSmtpAccounts, createSmtpAccount, updateSmtpAccount, deleteSmtpAccount, verifyConnection } = require("../controllers/smtpController");
 const { smtpValidator, smtpUpdateValidator } = require("../validators/smtpValidator");
 const validate = require("../middleware/validationMiddleware");
 const authMiddleware = require("../middleware/authMiddleware");
@@ -16,5 +16,8 @@ router.put("/:id", authMiddleware, smtpUpdateValidator, validate, updateSmtpAcco
 
 // Delete SMTP account
 router.delete("/:id", authMiddleware, deleteSmtpAccount);
+
+// Test SMTP connection
+router.post("/:id/test", authMiddleware, verifyConnection)
 
 module.exports = router;

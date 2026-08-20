@@ -1,5 +1,6 @@
 const prisma = require("../lib/prisma");
 const { updateSmtpFields, sanitizeSmtpAccount, setDefaultSmtpAccount } = require("../utils/smtp");
+const { testConnection } = require("../services/smtpService");
 
 async function fetchSmtpAccounts(req, res, next)
 {
@@ -158,4 +159,41 @@ async function deleteSmtpAccount(req, res, next)
    }
 }
 
-module.exports = { fetchSmtpAccounts, createSmtpAccount, updateSmtpAccount, deleteSmtpAccount };
+async function verifyConnection(req, res, next)
+{
+   try {
+      const { id } = req.params;
+      const userId = req.user.id;
+      
+      const account = await prisma.smtp_accounts.findFirst({
+         where: {
+            id: id,
+            user_id: userId
+         }
+      })
+
+      if(!account)
+         return res.status(404).json({
+            error: "SMTP account not found"
+         });
+
+      try {
+         await testConnection(account);
+
+         return res.status(200).json({
+            message: "SMTP connection successful"
+         });
+      } catch(error) {
+         console.error("SMTP connection failed:",error);
+
+         return res.status(502).json({
+            error: "Unable to connect to SMTP server"
+         });
+      }
+
+   } catch (error) {
+      next(error)
+   }
+}
+
+module.exports = { fetchSmtpAccounts, createSmtpAccount, updateSmtpAccount, deleteSmtpAccount, verifyConnection };
