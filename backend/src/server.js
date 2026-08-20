@@ -7,6 +7,7 @@ const usersRoute = require("../routes/authRoutes");
 const contactsRouter = require("../routes/contactsRoute");
 const templatesRouter = require("../routes/templatesRoute");
 const smtpRouter = require("../routes/smtpRouter");
+const campaignRouter = require("../routes/campaignsRoutes");
 const errorHandler = require("../middleware/errorMiddleware");
 
 const app = express();
@@ -26,6 +27,9 @@ app.use("/api/templates", templatesRouter);
 
 // SMTP route
 app.use("/api/smtp", smtpRouter);
+
+// Campaigns route
+app.use("/api/campaigns", campaignRouter)
 
 // Handle errors
 app.use(errorHandler)

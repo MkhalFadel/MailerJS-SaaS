@@ -19,6 +19,7 @@ model users {
   contacts      contacts[]
   templates     templates[]
   smtp_accounts  smtp_accounts[]
+  campaigns      campaigns[]
 }
 
 model contacts {
@@ -45,6 +46,8 @@ model templates {
 
   user users @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
+  campaigns      campaigns[]
+
   @@index([user_id])
 }
 
@@ -65,5 +68,27 @@ model smtp_accounts {
 
   user users @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
+  campaigns      campaigns[]
+
   @@index([user_id])
+}
+
+model campaigns {
+    id              String        @id @default(uuid())
+    user_id         String
+    name            String
+    subject         String
+    template_id     String
+    smtp_account_id String
+    status          String        @default("draft")
+    created_at      DateTime      @default(now()) @db.Timestamptz(6)
+    updated_at      DateTime      @updatedAt @db.Timestamptz(6)
+
+    user         users        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+    template     templates    @relation(fields: [template_id], references: [id], onDelete: Restrict)
+    smtp_account smtp_accounts @relation(fields: [smtp_account_id], references: [id], onDelete: Restrict)
+
+    @@index([user_id])
+    @@index([template_id])
+    @@index([smtp_account_id])
 }
