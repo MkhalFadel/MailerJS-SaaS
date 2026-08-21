@@ -30,6 +30,7 @@ model contacts {
   last_name  String?
 
   user users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  campaign_recipients campaign_recipients[]
 
   @@unique([user_id, email])
   @@index([user_id])
@@ -80,15 +81,30 @@ model campaigns {
     subject         String
     template_id     String
     smtp_account_id String
-    status          String        @default("draft")
     created_at      DateTime      @default(now()) @db.Timestamptz(6)
     updated_at      DateTime      @updatedAt @db.Timestamptz(6)
 
     user         users        @relation(fields: [user_id], references: [id], onDelete: Cascade)
     template     templates    @relation(fields: [template_id], references: [id], onDelete: Restrict)
     smtp_account smtp_accounts @relation(fields: [smtp_account_id], references: [id], onDelete: Restrict)
+    recipients       campaign_recipients[]
 
     @@index([user_id])
     @@index([template_id])
     @@index([smtp_account_id])
+}
+
+model campaign_recipients {
+  id          String   @id @default(uuid())
+  campaign_id String
+  contact_id  String
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @updatedAt @db.Timestamptz(6)
+
+  campaign campaigns @relation(fields: [campaign_id], references: [id], onDelete: Cascade)
+  contact  contacts  @relation(fields: [contact_id], references: [id], onDelete: Restrict)
+
+  @@unique([campaign_id, contact_id])
+  @@index([campaign_id])
+  @@index([contact_id])
 }
