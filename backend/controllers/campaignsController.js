@@ -283,7 +283,7 @@ async function sendCampaign(req, res, next)
                senderName: campaign.smtp_account.sender_name,
                senderEmail: campaign.smtp_account.sender_email,
                recipient: recipient.contact.email,
-               subject: campaign.subject,
+               subject: renderTemplate(campaign.subject, recipient.contact),
                html: renderTemplate(campaign.template.content, recipient.contact)
             });
 
