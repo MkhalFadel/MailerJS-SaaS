@@ -1,5 +1,6 @@
 const prisma = require("../lib/prisma");
 const { updateCampaignFields } = require("../utils/campaigns");
+const { renderTemplate } = require("../utils/templateRenderer");
 const { createTransporter, sendEmail } = require("../services/smtpService");
 
 async function fetchCampaigns(req, res, next)
@@ -283,7 +284,7 @@ async function sendCampaign(req, res, next)
                senderEmail: campaign.smtp_account.sender_email,
                recipient: recipient.contact.email,
                subject: campaign.subject,
-               html: campaign.template.content
+               html: renderTemplate(campaign.template.content, recipient.contact)
             });
 
             results.successful++;
