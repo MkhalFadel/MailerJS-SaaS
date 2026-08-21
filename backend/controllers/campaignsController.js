@@ -1,5 +1,6 @@
 const prisma = require("../lib/prisma");
 const { updateCampaignFields } = require("../utils/campaigns");
+const { createTransporter, sendEmail } = require("../services/smtpService");
 
 async function fetchCampaigns(req, res, next)
 {
@@ -233,4 +234,77 @@ async function deleteCampaign(req, res, next)
    }
 }
 
-module.exports = { fetchCampaigns, fetchCampaign, createCampaign, updateCampaign, deleteCampaign };
+async function sendCampaign(req, res, next)
+{
+   try {
+      const { id } = req.params;
+      const userId = req.user.id;
+
+      const campaign = await prisma.campaigns.findFirst({
+         where: {
+            id,
+            user_id: userId
+         },
+         include: {
+            template: true,
+            smtp_account: true,
+            recipients: {
+               include: {
+                  contact: true
+               }
+            }
+         }
+      });
+
+      if(!campaign)
+         return res.status(404).json({
+            error: "Campaign not found"
+         });
+
+      if(campaign.recipients.length === 0)
+         return res.status(400).json({
+            error: "Campaign has no recipients"
+         });
+
+      const transporter = createTransporter(campaign.smtp_account);
+
+      const results = {
+         total: campaign.recipients.length,
+         successful: 0,
+         failed: 0,
+         failures: []
+      };
+
+      for(const recipient of campaign.recipients)
+      {
+         try {
+            await sendEmail(transporter,{
+               senderName: campaign.smtp_account.sender_name,
+               senderEmail: campaign.smtp_account.sender_email,
+               recipient: recipient.contact.email,
+               subject: campaign.subject,
+               html: campaign.template.content
+            });
+
+            results.successful++;
+         } catch(error) {
+            results.failed++;
+
+            results.failures.push({
+               contactId: recipient.contact_id,
+               email: recipient.contact.email,
+               error: error.message
+            });
+         }
+      }
+
+      return res.status(200).json({
+         message: "Campaign sending completed",
+         data: results
+      });
+   } catch(error) {
+      next(error);
+   }
+}
+
+module.exports = { fetchCampaigns, fetchCampaign, createCampaign, updateCampaign, deleteCampaign, sendCampaign };

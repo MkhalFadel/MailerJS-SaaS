@@ -3,9 +3,9 @@ const { decryptText } = require("../utils/encryption");
 
 function createTransporter(data)
 {
-   const decryptedPassword = decryptText(data.password_encrypted)
+   const decryptedPassword = decryptText(data.password_encrypted);
 
-   const transporter = nodemailer.createTransport({
+   return nodemailer.createTransport({
       host: data.host,
       port: data.port,
       secure: data.secure,
@@ -14,8 +14,6 @@ function createTransporter(data)
          pass: decryptedPassword
       }
    });
-
-   return transporter;
 }
 
 async function testConnection(data)
@@ -25,5 +23,17 @@ async function testConnection(data)
    return await transporter.verify();
 }
 
-module.exports = { testConnection, createTransporter };
+async function sendEmail(transporter, data)
+{
+   return await transporter.sendMail({
+      from: {
+         name: data.senderName || data.senderEmail,
+         address: data.senderEmail
+      },
+      to: data.recipient,
+      subject: data.subject,
+      html: data.html
+   });
+}
 
+module.exports = { createTransporter, testConnection, sendEmail };
