@@ -78,7 +78,7 @@ async function updateTemplate(req, res, next)
 
       return res.status(200).json({
          message: "Template updated successfully",
-         data: template
+         data: updatedTemplate
       });
       
    } catch (error) {
