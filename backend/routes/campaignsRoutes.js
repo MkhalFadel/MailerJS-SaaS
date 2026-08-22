@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { fetchCampaigns, createCampaign, updateCampaign, deleteCampaign, fetchCampaign, sendCampaign } = require("../controllers/campaignsController");
+const { fetchCampaigns, createCampaign, updateCampaign, deleteCampaign, fetchCampaign, sendCampaign, fetchCampaignDeliveries } = require("../controllers/campaignsController");
 const authMiddleware = require("../middleware/authMiddleware");
 const { campaignValidator, campaignUpdateValidator } = require("../validators/campaignsValidator");
 const validate = require("../middleware/validationMiddleware")
@@ -22,5 +22,8 @@ router.delete("/:id", authMiddleware, deleteCampaign);
 
 // Send campaign
 router.post("/:id/send", authMiddleware, sendCampaign);
+
+// Fetch delivery history
+router.get("/:id/deliveries", authMiddleware, fetchCampaignDeliveries);
 
 module.exports = router;

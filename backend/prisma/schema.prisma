@@ -103,8 +103,22 @@ model campaign_recipients {
 
   campaign campaigns @relation(fields: [campaign_id], references: [id], onDelete: Cascade)
   contact  contacts  @relation(fields: [contact_id], references: [id], onDelete: Restrict)
+  deliveries campaign_deliveries[]
 
   @@unique([campaign_id, contact_id])
   @@index([campaign_id])
   @@index([contact_id])
+}
+
+model campaign_deliveries {
+  id                    String   @id @default(uuid())
+  campaign_recipient_id String
+  status                String
+  error_message         String?
+  sent_at               DateTime?
+  created_at            DateTime @default(now()) @db.Timestamptz(6)
+
+  campaign_recipient campaign_recipients @relation(fields: [campaign_recipient_id], references: [id], onDelete: Cascade)
+
+  @@index([campaign_recipient_id])
 }

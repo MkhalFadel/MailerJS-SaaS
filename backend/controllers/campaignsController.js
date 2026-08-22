@@ -283,12 +283,34 @@ async function sendCampaign(req, res, next)
                senderName: campaign.smtp_account.sender_name,
                senderEmail: campaign.smtp_account.sender_email,
                recipient: recipient.contact.email,
-               subject: renderTemplate(campaign.subject, recipient.contact),
-               html: renderTemplate(campaign.template.content, recipient.contact)
+               subject: renderTemplate(
+                  campaign.subject,
+                  recipient.contact
+               ),
+               html: renderTemplate(
+                  campaign.template.content,
+                  recipient.contact
+               )
+            });
+
+            await prisma.campaign_deliveries.create({
+               data: {
+                  campaign_recipient_id: recipient.id,
+                  status: "accpeted",
+                  sent_at: new Date()
+               }
             });
 
             results.successful++;
          } catch(error) {
+            await prisma.campaign_deliveries.create({
+               data: {
+                  campaign_recipient_id: recipient.id,
+                  status: "failed",
+                  error_message: error.message
+               }
+            });
+
             results.failed++;
 
             results.failures.push({
@@ -308,4 +330,58 @@ async function sendCampaign(req, res, next)
    }
 }
 
-module.exports = { fetchCampaigns, fetchCampaign, createCampaign, updateCampaign, deleteCampaign, sendCampaign };
+async function fetchCampaignDeliveries(req, res, next)
+{
+   try {
+      const { id } = req.params;
+      const userId = req.user.id;
+
+      const campaign = await prisma.campaigns.findFirst({
+         where: {
+            id: id,
+            user_id: userId
+         }
+      });
+
+      if(!campaign)
+         return res.status(404).json({
+            error: "Campaign not found",
+         });
+
+      const deliveries = await prisma.campaign_deliveries.findMany({
+         where: {
+            campaign_recipient: {
+               campaign_id: id
+            }
+         },
+         include: {
+            campaign_recipient: {
+               include: {
+                  contact: true
+               }
+            }
+         },
+         orderBy: {
+            created_at: "desc"
+         }
+      });
+
+      const data = deliveries.map((delivery) => ({
+         id: delivery.id,
+         status: delivery.status,
+         error_message: delivery.error_message,
+         sent_at: delivery.sent_at,
+         created_at: delivery.created_at,
+         contact: delivery.campaign_recipient.contact
+      }));
+
+      return res.status(200).json({
+         message: "Campaign deliveries fetched!",
+         data: data
+      });
+   } catch(error) {
+      next(error);
+   }
+}
+
+module.exports = { fetchCampaigns, fetchCampaign, createCampaign, updateCampaign, deleteCampaign, sendCampaign, fetchCampaignDeliveries };
