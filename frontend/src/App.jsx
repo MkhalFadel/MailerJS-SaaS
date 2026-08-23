@@ -10,21 +10,28 @@ import ForgetPassword from "./pages/auth/forgetPassword/ForgetPassword";
 import ResetPassword from "./pages/auth/resetPassword/ResetPassword";
 import Account from "./pages/account/Account";
 import Billing from "./pages/billing/Billing";
+import ProtectedRoute from "./components/auth/protectedRoutes/ProtectedRoute";
+import PublicRoute from "./components/auth/publicRoute/PublicRoute";
 
 function App() {
   return (
     <Routes>
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/campaigns" element={<Campaign />} />
-      <Route path="/templates" element={<Templates />} />
-      <Route path="/contacts" element={<Contacts />} />
-      <Route path="/settings" element={<Settings />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/forgot-password" element={<ForgetPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/account" element={<Account />} />
-      <Route path="/billing" element={<Billing />} />
+      <Route element={<PublicRoute />}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+      </Route>
+
+      <Route element={<ProtectedRoute />}>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/campaigns" element={<Campaign />} />
+        <Route path="/templates" element={<Templates />} />
+        <Route path="/contacts" element={<Contacts />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/forgot-password" element={<ForgetPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/account" element={<Account />} />
+        <Route path="/billing" element={<Billing />} />
+      </Route>
     </Routes>
   );
 }

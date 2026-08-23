@@ -1,16 +1,34 @@
 import { useState } from "react";
 import styles from "./dangerZone.module.css";
 import { useNavigate } from "react-router-dom";
+import { deleteUser } from "../../../api/auth";
+import { useAuth } from "../../../context/AuthContext";
 
 function DangerZone() {
    const [showConfirmation,setShowConfirmation] = useState(false);
    const [action, setAction] = useState("");
 
    const navigate = useNavigate();
+   const { logout } = useAuth();
 
-   function signout()
+   async function signout()
    {
-      navigate("/login")
+      try {
+         await logout()
+         navigate("/login")
+      } catch (error) {
+         console.log(error);
+      }
+   }
+
+   async function deleteAccount()
+   {
+      try {
+         await deleteUser();
+         navigate('/login');
+      } catch (error) {
+         console.log(error);
+      }
    }
 
    return (
@@ -114,7 +132,7 @@ function DangerZone() {
                         Cancel
                      </button>
 
-                     <button className={styles.confirmButton}>
+                     <button className={styles.confirmButton} onClick={deleteAccount}>
                         Yes, Delete My Account
                      </button>
                   </div>

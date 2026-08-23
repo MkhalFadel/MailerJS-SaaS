@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import AuthLayout from "../../../components/auth/authLayout/AuthLayout";
 import styles from "./register.module.css";
+import { registerUser } from "../../../api/auth";
+import { useNavigate } from "react-router-dom";
 
 function Register() {
    const [firstName,setFirstName] = useState("");
@@ -11,17 +13,23 @@ function Register() {
    const [confirmPassword,setConfirmPassword] = useState("");
    const [terms,setTerms] = useState(false);
 
-   function handleSubmit(event) {
+   const navigate = useNavigate();
+
+   async function handleSubmit(event) {
       event.preventDefault();
 
-      console.log({
-         firstName,
-         lastName,
-         email,
-         password,
-         confirmPassword,
-         terms
-      });
+      try {
+         await registerUser({
+            email,
+            firstName,
+            lastName,
+            password
+         })
+         
+         navigate("/login")
+      } catch (error) {
+         console.log(error);
+      }
    }
 
    return (
@@ -116,6 +124,7 @@ function Register() {
 
                <button
                   className={styles.submit}
+                  onClick={e => handleSubmit(e)}
                   type="submit"
                >
                   Create Account

@@ -2,21 +2,33 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import AuthLayout from "../../../components/auth/authLayout/AuthLayout";
 import styles from "./login.module.css";
+import { useAuth } from "../../../context/AuthContext"
+import { useNavigate } from "react-router-dom";
 
 function Login() {
-   const [email,setEmail] = useState("");
-   const [password,setPassword] = useState("");
-   const [remember,setRemember] = useState(false);
-   const [showPassword,setShowPassword] = useState(false);
+   const [email, setEmail] = useState("");
+   const [password, setPassword] = useState("");
+   const [remember, setRemember] = useState(false);
+   const [showPassword, setShowPassword] = useState(false);
 
-   function handleSubmit(event) {
+   const navigate = useNavigate("");
+
+   const { login } = useAuth();
+
+   async function handleSubmit(event) {
       event.preventDefault();
 
-      console.log({
-         email,
-         password,
-         remember
-      });
+      try {
+         await login({
+            email,
+            password
+         })
+
+         navigate("/dashboard")
+      } catch (error) {
+         console.log(error);
+      }
+
    }
 
    return (
@@ -87,6 +99,7 @@ function Login() {
 
                <button
                   className={styles.submit}
+                  onClick={e => handleSubmit(e)}
                   type="submit"
                >
                   Sign In
