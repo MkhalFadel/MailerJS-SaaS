@@ -1,6 +1,6 @@
 import styles from "./contactDetails.module.css";
 
-function ContactDetails({ contact,onBack,onEdit }) {
+function ContactDetails({ contact, onBack, onEdit }) {
    const initials = `${contact.firstName.charAt(0)}${contact.lastName.charAt(0)}`;
 
    return (
@@ -60,49 +60,8 @@ function ContactDetails({ contact,onBack,onEdit }) {
                      <span>Email</span>
                      <strong>{contact.email}</strong>
                   </div>
-
-                  <div>
-                     <span>Company</span>
-                     <strong>{contact.company}</strong>
-                  </div>
-
-                  <div>
-                     <span>Phone</span>
-                     <strong>{contact.phone}</strong>
-                  </div>
-
-                  <div>
-                     <span>Status</span>
-
-                     <strong
-                        className={
-                           contact.status === "active"
-                              ? styles.active
-                              : styles.inactive
-                        }
-                     >
-                        ● {contact.status}
-                     </strong>
-                  </div>
+                  
                </div>
-            </section>
-
-            <section className={styles.card}>
-               <div className={styles.cardHeader}>
-                  <h2>Tags</h2>
-               </div>
-
-               <div className={styles.tags}>
-                  {contact.tags.map((tag) => (
-                     <span key={tag}>
-                        {tag}
-                     </span>
-                  ))}
-               </div>
-
-               <button className={styles.addTag}>
-                  + Add Tag
-               </button>
             </section>
 
             <section className={styles.card}>
@@ -111,11 +70,6 @@ function ContactDetails({ contact,onBack,onEdit }) {
                </div>
 
                <div className={styles.activity}>
-                  <div>
-                     <span>Contact created</span>
-                     <small>{contact.createdAt}</small>
-                  </div>
-
                   <div>
                      <span>Last campaign</span>
                      <small>Not available</small>

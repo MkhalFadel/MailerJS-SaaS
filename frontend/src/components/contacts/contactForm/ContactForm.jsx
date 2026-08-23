@@ -1,15 +1,58 @@
 import { useState } from "react";
 import styles from "./contactForm.module.css";
+import { createContact, updateContact } from "../../../api/contacts";
 
-function ContactForm({ contact,onCancel }) {
-   const [firstName,setFirstName] = useState(contact?.firstName || "");
-   const [lastName,setLastName] = useState(contact?.lastName || "");
-   const [email,setEmail] = useState(contact?.email || "");
-   const [company,setCompany] = useState(contact?.company || "");
-   const [phone,setPhone] = useState(contact?.phone || "");
-   const [status,setStatus] = useState(contact?.status || "active");
+function ContactForm({ contact, setContacts, onCancel }) {
+   const [firstName, setFirstName] = useState(contact?.firstName || "");
+   const [lastName, setLastName] = useState(contact?.lastName || "");
+   const [email, setEmail] = useState(contact?.email || "");
 
    const isEditing = Boolean(contact);
+
+   async function createNewContact()
+   {
+      try {
+         const res = await createContact({
+            email,
+            firstName, 
+            lastName
+         })
+
+         const newContact = res.data;
+
+         setContacts(current => ([
+            ...current,
+            newContact
+         ]))
+
+         onCancel();
+      } catch (error) {
+         console.log(error);
+      }
+   }
+
+   async function editContact()
+   {
+      try {
+         const res = await updateContact(contact.id, {
+            email,
+            firstName, 
+            lastName
+         });
+
+         const editedContact = res.data;
+
+         setContacts(current =>
+            current.map(item =>
+               item.id === editedContact.id ? editedContact : item
+            )
+         );
+
+         onCancel();
+      } catch (error) {
+         console.log(error);
+      }
+   }
 
    return (
       <div className={styles.container}>
@@ -66,58 +109,6 @@ function ContactForm({ contact,onCancel }) {
                      placeholder="fadel@example.com"
                   />
                </label>
-
-               <label className={styles.field}>
-                  <span>Company</span>
-
-                  <input
-                     type="text"
-                     value={company}
-                     onChange={(event) => setCompany(event.target.value)}
-                     placeholder="Example Inc."
-                  />
-               </label>
-
-               <label className={styles.field}>
-                  <span>Phone</span>
-
-                  <input
-                     type="tel"
-                     value={phone}
-                     onChange={(event) => setPhone(event.target.value)}
-                     placeholder="+961 70 123 456"
-                  />
-               </label>
-
-               <label className={styles.field}>
-                  <span>Status</span>
-
-                  <select
-                     value={status}
-                     onChange={(event) => setStatus(event.target.value)}
-                  >
-                     <option value="active">
-                        Active
-                     </option>
-
-                     <option value="inactive">
-                        Inactive
-                     </option>
-                  </select>
-               </label>
-            </div>
-
-            <div className={styles.tagsSection}>
-               <span>Tags</span>
-
-               <div className={styles.tags}>
-                  <span>Customer ×</span>
-                  <span>Developer ×</span>
-
-                  <button>
-                     + Add Tag
-                  </button>
-               </div>
             </div>
 
             <div className={styles.actions}>
@@ -128,7 +119,10 @@ function ContactForm({ contact,onCancel }) {
                   Cancel
                </button>
 
-               <button className={styles.saveButton}>
+               <button
+                  className={styles.saveButton}
+                  onClick={isEditing ? editContact : createNewContact}
+               >
                   {isEditing ? "Save Changes" : "Add Contact"}
                </button>
             </div>

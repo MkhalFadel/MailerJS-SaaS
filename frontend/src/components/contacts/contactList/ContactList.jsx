@@ -1,15 +1,10 @@
 import { useMemo,useState } from "react";
 import styles from "./contactList.module.css";
+import { deleteContact } from "../../../api/contacts";
 
-function ContactList({
-   contacts,
-   onCreate,
-   onEdit,
-   onDetails,
-   onImport
-}) {
-   const [search,setSearch] = useState("");
-   const [status,setStatus] = useState("all");
+function ContactList({ contacts, setContacts, onCreate, onEdit, onDetails, onImport }) 
+{
+   const [search, setSearch] = useState("");
 
    const filteredContacts = useMemo(() => {
       return contacts.filter((contact) => {
@@ -17,15 +12,24 @@ function ContactList({
 
          const matchesSearch =
             fullName.toLowerCase().includes(search.toLowerCase()) ||
-            contact.email.toLowerCase().includes(search.toLowerCase()) ||
-            contact.company.toLowerCase().includes(search.toLowerCase());
+            contact.email.toLowerCase().includes(search.toLowerCase());
 
-         const matchesStatus =
-            status === "all" || contact.status === status;
-
-         return matchesSearch && matchesStatus;
+         return matchesSearch;
       });
-   },[contacts,search,status]);
+   },[contacts, search]);
+
+   async function deleteContacts(id)
+   {
+      try {
+         await deleteContact(id);
+
+         setContacts(current =>
+            current.filter(item => item.id !== id)
+         );
+      } catch (error) {
+         console.log(error)
+      }
+   }
 
    return (
       <div className={styles.container}>
@@ -68,24 +72,6 @@ function ContactList({
                   onChange={(event) => setSearch(event.target.value)}
                />
             </div>
-
-            <select
-               className={styles.filter}
-               value={status}
-               onChange={(event) => setStatus(event.target.value)}
-            >
-               <option value="all">
-                  All Contacts
-               </option>
-
-               <option value="active">
-                  Active
-               </option>
-
-               <option value="inactive">
-                  Inactive
-               </option>
-            </select>
          </div>
 
          <div className={styles.tableWrapper}>
@@ -101,9 +87,6 @@ function ContactList({
 
                      <th>Name</th>
                      <th>Email</th>
-                     <th>Company</th>
-                     <th>Status</th>
-                     <th>Tags</th>
                      <th>Actions</th>
                   </tr>
                </thead>
@@ -141,52 +124,17 @@ function ContactList({
                         </td>
 
                         <td>
-                           <span className={styles.company}>
-                              {contact.company}
-                           </span>
-                        </td>
-
-                        <td>
-                           <span
-                              className={`${styles.status} ${
-                                 contact.status === "active"
-                                    ? styles.active
-                                    : styles.inactive
-                              }`}
-                           >
-                              {contact.status}
-                           </span>
-                        </td>
-
-                        <td>
-                           <div className={styles.tags}>
-                              {contact.tags.map((tag) => (
-                                 <span
-                                    className={styles.tag}
-                                    key={tag}
-                                 >
-                                    {tag}
-                                 </span>
-                              ))}
-                           </div>
-                        </td>
-
-                        <td>
                            <div className={styles.actions}>
-                              <button
-                                 onClick={() => onDetails(contact)}
-                              >
+                              <button onClick={() => onDetails(contact)}>
                                  View
                               </button>
 
-                              <button
-                                 onClick={() => onEdit(contact)}
-                              >
+                              <button onClick={() => onEdit(contact)}>
                                  Edit
                               </button>
 
-                              <button>
-                                 ⋮
+                              <button onClick={() => deleteContacts(contact.id)}>
+                                 delete
                               </button>
                            </div>
                         </td>

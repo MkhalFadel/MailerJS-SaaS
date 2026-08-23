@@ -61,8 +61,8 @@ async function updateContact(req, res, next)
 
       const contact = await prisma.contacts.findFirst({
          where: {
-            id: data.id,
-            user_id: req.user.id
+            id,
+            user_id: userId
          }
       });
       
@@ -77,12 +77,12 @@ async function updateContact(req, res, next)
          },
 
          data: fields
-      })
+      });
 
       return res.status(200).json({
          message: "Contact updated successfully",
-         data: contact
-      })
+         data: updatedContact
+      });
 
    } catch (error) {
       next(error)
