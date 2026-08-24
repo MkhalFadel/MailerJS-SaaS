@@ -1,64 +1,35 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DashboardLayout from "../../layouts/dashboard/DashboardLayout";
 import TemplateList from "../../components/templates/templateList/TemplateList";
 import TemplateEditor from "../../components/templates/templateEditor/TemplateEditor";
 import TemplatePreview from "../../components/templates/templatePreview/TemplatePreview";
+import { getTemplates } from "../../api/templates";
 import styles from "./templates.module.css";
-
-const templatesData = [
-   {
-      id: 1,
-      name: "Welcome Email",
-      subject: "Welcome to {{company}}",
-      updatedAt: "Aug 10, 2026",
-      status: "active",
-      content: `
-         <h1>Hello {{name}}</h1>
-         <p>Welcome to {{company}}.</p>
-         <p>We're happy to have you with us.</p>
-      `
-   },
-   {
-      id: 2,
-      name: "Monthly Newsletter",
-      subject: "{{company}} Monthly Newsletter",
-      updatedAt: "Aug 8, 2026",
-      status: "active",
-      content: `
-         <h1>{{company}} Newsletter</h1>
-         <p>Hello {{name}},</p>
-         <p>Here are this month's latest updates.</p>
-      `
-   },
-   {
-      id: 3,
-      name: "Product Update",
-      subject: "What's new at {{company}}",
-      updatedAt: "Aug 5, 2026",
-      status: "active",
-      content: `
-         <h1>What's New</h1>
-         <p>Hi {{name}},</p>
-         <p>We've released some exciting new features.</p>
-      `
-   },
-   {
-      id: 4,
-      name: "Password Reset",
-      subject: "Reset your password",
-      updatedAt: "Aug 2, 2026",
-      status: "active",
-      content: `
-         <h1>Password Reset</h1>
-         <p>Hello {{name}},</p>
-         <p>Click the button below to reset your password.</p>
-      `
-   }
-];
 
 function Templates() {
    const [view, setView] = useState("list");
+   const [templates, setTemplates] = useState([]);
    const [selectedTemplate, setSelectedTemplate] = useState(null);
+   const [loading, setLoading] = useState(true);
+   const [error, setError] = useState(null);
+
+   useEffect(() => {
+      async function loadTemplates()
+      {
+         try {
+            const response = await getTemplates();
+
+            setTemplates(response.data);
+         } catch(error) {
+            console.error("Failed to fetch templates:",error);
+            setError(error);
+         } finally {
+            setLoading(false);
+         }
+      }
+
+      loadTemplates();
+   },[]);
 
    function handleCreate() {
       setSelectedTemplate(null);
@@ -83,23 +54,30 @@ function Templates() {
    return (
       <DashboardLayout>
          <div className={styles.page}>
-            {view === "list" && (
+
+            {loading && <div>Loading...</div>}
+
+            {error && <div>Error finding templates</div> }
+
+            {!loading && !error && view === "list" && (
                <TemplateList
-                  templates={templatesData}
+                  templates={templates}
+                  setTemplates={setTemplates}
                   onCreate={handleCreate}
                   onEdit={handleEdit}
                   onPreview={handlePreview}
                />
             )}
 
-            {view === "editor" && (
+            {!loading && !error && view === "editor" && (
                <TemplateEditor
                   template={selectedTemplate}
+                  setTemplates={setTemplates}
                   onCancel={handleBack}
                />
             )}
 
-            {view === "preview" && selectedTemplate && (
+            {!loading && !error && view === "preview" && selectedTemplate && (
                <TemplatePreview
                   template={selectedTemplate}
                   onBack={handleBack}

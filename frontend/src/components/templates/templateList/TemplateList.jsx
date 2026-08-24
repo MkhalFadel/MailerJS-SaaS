@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
 import styles from "./templateList.module.css";
+import { deleteTemplate } from "../../../api/templates";
+import { formatTemplateDate } from "../../../utils/utils";
 
-function TemplateList({ templates, onCreate, onEdit, onPreview }) {
+function TemplateList({ templates, setTemplates, onCreate, onEdit, onPreview }) {
    const [search, setSearch] = useState("");
-   const [status, setStatus] = useState("all");
 
    const filteredTemplates = useMemo(() => {
       return templates.filter((template) => {
@@ -11,12 +12,22 @@ function TemplateList({ templates, onCreate, onEdit, onPreview }) {
             template.name.toLowerCase().includes(search.toLowerCase()) ||
             template.subject.toLowerCase().includes(search.toLowerCase());
 
-         const matchesStatus =
-            status === "all" || template.status === status;
-
-         return matchesSearch && matchesStatus;
+         return matchesSearch;
       });
-   }, [templates, search, status]);
+   }, [templates, search]);
+
+   async function deleteTemplateById(id)
+   {
+      try {
+         await deleteTemplate(id);
+
+         setTemplates(current =>
+            current.filter(item => item.id !== id)
+         );
+      } catch(error) {
+         console.error(error);
+      }
+   }
 
    return (
       <div className={styles.container}>
@@ -47,15 +58,6 @@ function TemplateList({ templates, onCreate, onEdit, onPreview }) {
                   onChange={(event) => setSearch(event.target.value)}
                />
             </div>
-
-            <select
-               className={styles.filter}
-               value={status}
-               onChange={(event) => setStatus(event.target.value)}
-            >
-               <option value="all">All Templates</option>
-               <option value="active">Active</option>
-            </select>
          </div>
 
          {filteredTemplates.length === 0 ? (
@@ -115,32 +117,24 @@ function TemplateList({ templates, onCreate, onEdit, onPreview }) {
                               <h2>{template.name}</h2>
                               <p>{template.subject}</p>
                            </div>
-
-                           <span className={styles.status}>
-                              {template.status}
-                           </span>
                         </div>
 
                         <div className={styles.cardFooter}>
                            <span>
-                              Updated {template.updatedAt}
+                              Updated {formatTemplateDate(template.updatedAt)}
                            </span>
 
                            <div className={styles.actions}>
-                              <button
-                                 onClick={() => onPreview(template)}
-                              >
+                              <button  onClick={() => onPreview(template)}>
                                  Preview
                               </button>
 
-                              <button
-                                 onClick={() => onEdit(template)}
-                              >
+                              <button onClick={() => onEdit(template)}>
                                  Edit
                               </button>
 
-                              <button>
-                                 ⋮
+                              <button onClick={() => deleteTemplateById(template.id)}>
+                                 delete
                               </button>
                            </div>
                         </div>

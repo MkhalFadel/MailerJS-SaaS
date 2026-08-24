@@ -1,14 +1,56 @@
 import { useState } from "react";
+import { createTemplate, updateTemplate } from "../../../api/templates";
 import styles from "./templateEditor.module.css";
 
-function TemplateEditor({ template, onCancel }) {
+function TemplateEditor({ template, setTemplates, onCancel }) {
    const [name, setName] = useState(template?.name || "");
    const [subject, setSubject] = useState(template?.subject || "");
-   const [content, setContent] = useState(
-      template?.content?.trim() || ""
-   );
+   const [content, setContent] = useState(template?.content?.trim() || "");
 
    const isEditing = Boolean(template);
+
+   async function createNewTemplate()
+   {
+      try {
+         const response = await createTemplate({
+            name,
+            subject,
+            content
+         });
+
+         setTemplates(current => [
+            ...current,
+            response.data
+         ]);
+
+         onCancel();
+      } catch(error) {
+         console.error(error);
+      }
+   }
+
+   async function editExistingTemplate()
+   {
+      try {
+         const response = await updateTemplate(template.id,{
+            name,
+            subject,
+            content
+         });
+
+         setTemplates(current =>
+            current.map(item =>
+               item.id === response.data.id
+                  ? response.data
+                  : item
+            )
+         );
+
+         onCancel();
+      } catch(error) {
+         console.error(error);
+      }
+   }
 
    return (
       <div className={styles.container}>
@@ -81,8 +123,8 @@ function TemplateEditor({ template, onCancel }) {
             <div className={styles.placeholders}>
                <span>Available placeholders</span>
 
-               <code>{"{{name}}"}</code>
-               <code>{"{{company}}"}</code>
+               <code>{"{{first_name}}"}</code>
+               <code>{"{{last_name}}"}</code>
                <code>{"{{email}}"}</code>
             </div>
 
@@ -94,7 +136,7 @@ function TemplateEditor({ template, onCancel }) {
                   Cancel
                </button>
 
-               <button className={styles.saveButton}>
+               <button className={styles.saveButton} onClick={isEditing ? editExistingTemplate : createNewTemplate}>
                   Save Template
                </button>
             </div>
