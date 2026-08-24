@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./emailConfiguration.module.css";
+import { createSmtpAccount, updateSmtpAccount, testSmtpConnection } from "../../../api/smtp";
 
 const providers = [
    {
@@ -40,39 +41,194 @@ const providers = [
    }
 ];
 
-function EmailConfiguration() {
-   const [provider,setProvider] = useState("Gmail");
-   const [host,setHost] = useState("smtp.gmail.com");
-   const [port,setPort] = useState("587");
-   const [secure,setSecure] = useState(false);
-   const [username,setUsername] = useState("fadel@example.com");
-   const [password,setPassword] = useState("password123");
-   const [showPassword,setShowPassword] = useState(false);
+const defaultFormData = {
+   provider: "Gmail",
+   host: "smtp.gmail.com",
+   port: "587",
+   secure: false,
+   username: "",
+   password: "",
+   senderName: "",
+   senderEmail: ""
+};
 
-   function handleProviderChange(event) {
+function EmailConfiguration({ account, setSmtpAccounts, onCancel })
+{
+   const [formData,setFormData] = useState(defaultFormData);
+
+   const [showPassword, setShowPassword] = useState(false);
+   const [loading, setLoading] = useState(false);
+   const [testing, setTesting] = useState(false);
+   const [error, setError] = useState(null);
+   const [message, setMessage] = useState(null);
+   const [connectionStatus, setConnectionStatus] = useState(null);
+
+   const isEditing = Boolean(account);
+
+   useEffect(() => {
+      setFormData({
+         provider: account?.provider || "Gmail",
+         host: account?.host || "smtp.gmail.com",
+         port: account?.port
+            ? String(account.port)
+            : "587",
+         secure: account?.secure || false,
+         username: account?.username || "",
+         password: "",
+         senderName: account?.senderName || "",
+         senderEmail: account?.senderEmail || ""
+      });
+
+      setError(null);
+      setMessage(null);
+   },[account]);
+
+   function handleChange(event)
+   {
+      const { name,value } = event.target;
+
+      setFormData(current => ({
+         ...current,
+         [name]: value
+      }));
+   }
+
+   function handleProviderChange(event)
+   {
       const selectedProvider = event.target.value;
 
-      setProvider(selectedProvider);
-
       const providerData = providers.find(
-         (item) => item.name === selectedProvider
+         item => item.name === selectedProvider
       );
 
-      if (!providerData) {
+      if(!providerData)
+         return;
+
+      setFormData(current => ({
+         ...current,
+         provider: selectedProvider,
+         host: providerData.host,
+         port: String(providerData.port),
+         secure: providerData.secure
+      }));
+   }
+
+   function handleSecureToggle()
+   {
+      setFormData(current => ({
+         ...current,
+         secure: !current.secure
+      }));
+   }
+
+   async function handleSave(event)
+   {
+      event.preventDefault();
+
+      setLoading(true);
+      setError(null);
+      setMessage(null);
+
+      try {
+         const data = {
+            provider: formData.provider,
+            host: formData.host,
+            port: Number(formData.port),
+            secure: formData.secure,
+            username: formData.username,
+            senderName: formData.senderName,
+            senderEmail: formData.senderEmail
+         };
+
+         if(formData.password.trim())
+            data.password = formData.password;
+
+         let response;
+
+         if(isEditing)
+         {
+            response = await updateSmtpAccount(
+               account.id,
+               data
+            );
+
+            setSmtpAccounts(current =>
+               current.map(item =>
+                  item.id === response.data.id
+                     ? response.data
+                     : item
+               )
+            );
+         }
+         else
+         {
+            if(!formData.password.trim())
+            {
+               setError("SMTP password is required.");
+               return;
+            }
+
+            data.password = formData.password;
+
+            response = await createSmtpAccount(data);
+
+            setSmtpAccounts(current => [
+               ...current,
+               response.data
+            ]);
+         }
+
+         setMessage(isEditing ? "SMTP account updated successfully." : "SMTP account created successfully.");
+
+         setFormData(current => ({
+            ...current,
+            password: ""
+         }));
+
+         if(onCancel)
+            onCancel();
+
+      } catch(error) {
+         console.error(error);
+
+         setError(error.message || "Unable to save SMTP account.");
+      } finally {
+         setLoading(false);
+      }
+   }
+
+   async function handleTestConnection()
+   {
+      if(!account)
+      {
+         setConnectionStatus({
+            success: false,
+            message: "Save the SMTP account before testing the connection."
+         });
+
          return;
       }
 
-      setHost(providerData.host);
-      setPort(String(providerData.port));
-      setSecure(providerData.secure);
-   }
+      setTesting(true);
+      setConnectionStatus(null);
 
-   function handleSave(event) {
-      event.preventDefault();
-   }
+      try {
+         await testSmtpConnection(account.id);
 
-   function handleTestConnection() {
-      console.log("Testing SMTP connection...");
+         setConnectionStatus({
+            success: true,
+            message: "SMTP connection successful."
+         });
+      } catch(error) {
+         console.error(error);
+
+         setConnectionStatus({
+            success: false,
+            message: error.message || "Unable to connect to the SMTP server."
+         });
+      } finally {
+         setTesting(false);
+      }
    }
 
    return (
@@ -88,9 +244,21 @@ function EmailConfiguration() {
 
             <span className={styles.status}>
                <span></span>
-               Configured
+               {isEditing ? "Configured" : "Not configured"}
             </span>
          </div>
+
+         {error && (
+            <div className={styles.error}>
+               {error}
+            </div>
+         )}
+
+         {message && (
+            <div className={styles.success}>
+               {message}
+            </div>
+         )}
 
          <form
             className={styles.card}
@@ -101,10 +269,11 @@ function EmailConfiguration() {
                   <span>Email Provider</span>
 
                   <select
-                     value={provider}
+                     name="provider"
+                     value={formData.provider}
                      onChange={handleProviderChange}
                   >
-                     {providers.map((item) => (
+                     {providers.map(item => (
                         <option
                            value={item.name}
                            key={item.name}
@@ -125,8 +294,9 @@ function EmailConfiguration() {
 
                      <input
                         type="text"
-                        value={host}
-                        onChange={(event) => setHost(event.target.value)}
+                        name="host"
+                        value={formData.host}
+                        onChange={handleChange}
                         placeholder="smtp.example.com"
                      />
                   </label>
@@ -136,8 +306,9 @@ function EmailConfiguration() {
 
                      <input
                         type="number"
-                        value={port}
-                        onChange={(event) => setPort(event.target.value)}
+                        name="port"
+                        value={formData.port}
+                        onChange={handleChange}
                         placeholder="587"
                      />
                   </label>
@@ -155,9 +326,9 @@ function EmailConfiguration() {
                   <button
                      type="button"
                      className={`${styles.toggle} ${
-                        secure ? styles.enabled : ""
+                        formData.secure ? styles.enabled : ""
                      }`}
-                     onClick={() => setSecure(!secure)}
+                     onClick={handleSecureToggle}
                      aria-label="Toggle secure connection"
                   >
                      <span></span>
@@ -180,9 +351,10 @@ function EmailConfiguration() {
                   <span>Username</span>
 
                   <input
-                     type="email"
-                     value={username}
-                     onChange={(event) => setUsername(event.target.value)}
+                     type="text"
+                     name="username"
+                     value={formData.username}
+                     onChange={handleChange}
                      placeholder="you@example.com"
                   />
                </label>
@@ -193,38 +365,103 @@ function EmailConfiguration() {
                   <div className={styles.passwordWrapper}>
                      <input
                         type={showPassword ? "text" : "password"}
-                        value={password}
-                        onChange={(event) => setPassword(event.target.value)}
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        placeholder={
+                           isEditing
+                              ? "Password is securely stored"
+                              : "Enter SMTP password"
+                        }
+                        disabled={isEditing}
                      />
 
-                     <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                     >
-                        {showPassword ? "Hide" : "Show"}
-                     </button>
+                     {!isEditing && (
+                        <button
+                           type="button"
+                           onClick={() =>
+                              setShowPassword(current => !current)
+                           }
+                        >
+                           {showPassword ? "Hide" : "Show"}
+                        </button>
+                     )}
                   </div>
 
                   <small>
-                     Your password will be securely stored.
+                     {isEditing
+                        ? "Your SMTP password cannot be viewed or changed."
+                        : "Your password will be encrypted and securely stored."}
                   </small>
+               </label>
+
+               <label className={styles.field}>
+                  <span>Sender Name</span>
+
+                  <input
+                     type="text"
+                     name="senderName"
+                     value={formData.senderName}
+                     onChange={handleChange}
+                     placeholder="MailerJS"
+                  />
+               </label>
+
+               <label className={styles.field}>
+                  <span>Sender Email</span>
+
+                  <input
+                     type="email"
+                     name="senderEmail"
+                     value={formData.senderEmail}
+                     onChange={handleChange}
+                     placeholder="you@example.com"
+                  />
                </label>
             </div>
 
-            <div className={styles.actions}>
-               <button
-                  type="button"
-                  className={styles.testButton}
-                  onClick={handleTestConnection}
+            {connectionStatus && (
+               <div
+                  className={
+                     connectionStatus.success
+                        ? styles.connectionSuccess
+                        : styles.connectionError
+                  }
                >
-                  Test Connection
-               </button>
+                  <span>
+                     {connectionStatus.success ? "✓" : "⚠"}
+                  </span>
+
+                  <span>
+                     {connectionStatus.message}
+                  </span>
+               </div>
+            )}
+
+            <div className={styles.actions}>
+               {isEditing && (
+                  <button
+                     type="button"
+                     className={styles.testButton}
+                     onClick={handleTestConnection}
+                     disabled={testing || loading}
+                  >
+                     {testing
+                        ? "Testing..."
+                        : "Test Connection"}
+                  </button>
+               )}
 
                <button
                   type="submit"
                   className={styles.saveButton}
+                  disabled={loading || testing}
                >
-                  Save Changes
+                  {loading
+                     ? "Saving..."
+                     : isEditing
+                        ? "Save Changes"
+                        : "Add SMTP Account"}
                </button>
             </div>
          </form>

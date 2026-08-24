@@ -188,6 +188,34 @@
    transform: translateY(-50%);
 }
 
+.connectionSuccess {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+   margin-top: 16px;
+   padding: 10px 12px;
+   background: var(--color-success-light);
+   color: var(--color-success);
+   border: 1px solid var(--color-success);
+   border-radius: var(--radius-md);
+   font-size: 12px;
+   font-weight: 500;
+}
+
+.connectionError {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+   margin-top: 16px;
+   padding: 10px 12px;
+   background: var(--color-danger-light);
+   color: var(--color-danger);
+   border: 1px solid var(--color-danger);
+   border-radius: var(--radius-md);
+   font-size: 12px;
+   font-weight: 500;
+}
+
 .actions {
    display: flex;
    justify-content: flex-end;

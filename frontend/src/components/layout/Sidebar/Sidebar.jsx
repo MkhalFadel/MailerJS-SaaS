@@ -25,11 +25,11 @@ const navigation = [
 ];
 
 const secondaryNavigation = [
-   {
-      label: "SMTP",
-      path: "/smtp",
-      icon: "⚙",
-   },
+   // {
+   //    label: "SMTP",
+   //    path: "/smtp",
+   //    icon: "⚙",
+   // },
    {
       label: "Settings",
       path: "/settings",
