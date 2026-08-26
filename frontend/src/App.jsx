@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "./pages/dashboard/Dashboard";
 import Campaign from "./pages/campaigns/Campaigns"
 import Templates from "./pages/templates/Templates";
@@ -22,6 +22,7 @@ function App() {
       </Route>
 
       <Route element={<ProtectedRoute />}>
+        <Route path="/" element={<Navigate to="/dashboard" replace/>} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/campaigns" element={<Campaign />} />
         <Route path="/templates" element={<Templates />} />
