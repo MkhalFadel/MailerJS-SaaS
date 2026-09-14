@@ -65,6 +65,22 @@ function mapCampaign(campaign)
    };
 }
 
+function mapCampaignSend(campaignSend)
+{
+   return {
+      id: campaignSend.id,
+      campaignId: campaignSend.campaign_id,
+      status: campaignSend.status,
+      totalRecipients: campaignSend.total_recipients,
+      acceptedCount: campaignSend.accepted_count,
+      failedCount: campaignSend.failed_count,
+      errorMessage: campaignSend.error_message,
+      createdAt: campaignSend.created_at,
+      startedAt: campaignSend.started_at,
+      completedAt: campaignSend.completed_at
+   };
+}
+
 export async function getCampaigns()
 {
    const response = await apiRequest("/campaigns");
@@ -154,11 +170,38 @@ export function deleteCampaignRecipient(campaignId, contactId)
    );
 }
 
-export function sendCampaign(id)
+export async function sendCampaign(id)
 {
-   return apiRequest(`/campaigns/${id}/send`, {
+   const response = await apiRequest(`/campaigns/${id}/send`, {
       method: "POST"
    });
+
+   return {
+      ...response,
+      data: mapCampaignSend(response.data)
+   };
+}
+
+export async function getCampaignSends(campaignId)
+{
+   const response = await apiRequest(`/campaigns/${campaignId}/sends`);
+
+   return {
+      ...response,
+      data: response.data.map(mapCampaignSend)
+   };
+}
+
+export async function getCampaignSend(campaignId, campaignSendId)
+{
+   const response = await apiRequest(
+      `/campaigns/${campaignId}/sends/${campaignSendId}`
+   );
+
+   return {
+      ...response,
+      data: mapCampaignSend(response.data)
+   };
 }
 
 export async function getCampaignDeliveries(campaignId)
@@ -169,6 +212,8 @@ export async function getCampaignDeliveries(campaignId)
       ...response,
       data: response.data.map((delivery) => ({
          id: delivery.id,
+         campaignSendId: delivery.campaign_send_id,
+         campaignSendCreatedAt: delivery.campaign_send_created_at,
          status: delivery.status,
          errorMessage: delivery.error_message,
          sentAt: delivery.sent_at,

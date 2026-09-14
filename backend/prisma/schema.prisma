@@ -7,6 +7,14 @@ datasource db {
   provider = "postgresql"
 }
 
+enum campaign_send_status {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  COMPLETED_WITH_ERRORS
+  FAILED
+}
+
 model users {
   id            String   @id @default(uuid())
   email         String   @unique @db.VarChar(100)
@@ -18,18 +26,18 @@ model users {
 
   contacts      contacts[]
   templates     templates[]
-  smtp_accounts  smtp_accounts[]
-  campaigns      campaigns[]
+  smtp_accounts smtp_accounts[]
+  campaigns     campaigns[]
 }
 
 model contacts {
-  id         String   @id @default(uuid())
+  id         String  @id @default(uuid())
   user_id    String
-  email      String   @db.VarChar(255)
+  email      String  @db.VarChar(255)
   first_name String?
   last_name  String?
 
-  user users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user                users                 @relation(fields: [user_id], references: [id], onDelete: Cascade)
   campaign_recipients campaign_recipients[]
 
   @@unique([user_id, email])
@@ -47,51 +55,72 @@ model templates {
 
   user users @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-  campaigns      campaigns[]
+  campaigns campaigns[]
 
   @@index([user_id])
 }
 
 model smtp_accounts {
-  id                   String   @id @default(uuid())
-  user_id              String
-  provider             String
-  host                 String
-  port                 Int
-  secure               Boolean  @default(false)
-  username             String
-  password_encrypted   String
-  sender_name          String?
-  sender_email         String
-  is_default            Boolean  @default(false)
-  created_at            DateTime @default(now()) @db.Timestamptz(6)
-  updated_at            DateTime @updatedAt @db.Timestamptz(6)
+  id                 String   @id @default(uuid())
+  user_id            String
+  provider           String
+  host               String
+  port               Int
+  secure             Boolean  @default(false)
+  username           String
+  password_encrypted String
+  sender_name        String?
+  sender_email       String
+  is_default         Boolean  @default(false)
+  created_at         DateTime @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime @updatedAt @db.Timestamptz(6)
 
   user users @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-  campaigns      campaigns[]
+  campaigns campaigns[]
 
   @@index([user_id])
 }
 
 model campaigns {
-    id              String        @id @default(uuid())
-    user_id         String
-    name            String
-    subject         String
-    template_id     String
-    smtp_account_id String
-    created_at      DateTime      @default(now()) @db.Timestamptz(6)
-    updated_at      DateTime      @updatedAt @db.Timestamptz(6)
+  id              String   @id @default(uuid())
+  user_id         String
+  name            String
+  subject         String
+  template_id     String
+  smtp_account_id String
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @updatedAt @db.Timestamptz(6)
 
-    user         users        @relation(fields: [user_id], references: [id], onDelete: Cascade)
-    template     templates    @relation(fields: [template_id], references: [id], onDelete: Restrict)
-    smtp_account smtp_accounts @relation(fields: [smtp_account_id], references: [id], onDelete: Restrict)
-    recipients       campaign_recipients[]
+  user         users                 @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  template     templates             @relation(fields: [template_id], references: [id], onDelete: Restrict)
+  smtp_account smtp_accounts         @relation(fields: [smtp_account_id], references: [id], onDelete: Restrict)
+  recipients   campaign_recipients[]
+  sends        campaign_sends[]
 
-    @@index([user_id])
-    @@index([template_id])
-    @@index([smtp_account_id])
+  @@index([user_id])
+  @@index([template_id])
+  @@index([smtp_account_id])
+}
+
+model campaign_sends {
+  id               String               @id @default(uuid())
+  campaign_id      String
+  active_key       String?              @unique
+  status           campaign_send_status @default(QUEUED)
+  total_recipients Int
+  accepted_count   Int                  @default(0)
+  failed_count     Int                  @default(0)
+  error_message    String?
+  created_at       DateTime             @default(now()) @db.Timestamptz(6)
+  started_at       DateTime?            @db.Timestamptz(6)
+  completed_at     DateTime?            @db.Timestamptz(6)
+
+  campaign   campaigns             @relation(fields: [campaign_id], references: [id], onDelete: Cascade)
+  deliveries campaign_deliveries[]
+
+  @@index([campaign_id])
+  @@index([campaign_id, status])
 }
 
 model campaign_recipients {
@@ -101,8 +130,8 @@ model campaign_recipients {
   created_at  DateTime @default(now()) @db.Timestamptz(6)
   updated_at  DateTime @updatedAt @db.Timestamptz(6)
 
-  campaign campaigns @relation(fields: [campaign_id], references: [id], onDelete: Cascade)
-  contact  contacts  @relation(fields: [contact_id], references: [id], onDelete: Restrict)
+  campaign   campaigns             @relation(fields: [campaign_id], references: [id], onDelete: Cascade)
+  contact    contacts              @relation(fields: [contact_id], references: [id], onDelete: Restrict)
   deliveries campaign_deliveries[]
 
   @@unique([campaign_id, contact_id])
@@ -111,14 +140,21 @@ model campaign_recipients {
 }
 
 model campaign_deliveries {
-  id                    String   @id @default(uuid())
-  campaign_recipient_id String
+  id                    String    @id @default(uuid())
+  campaign_recipient_id String?
+  campaign_send_id      String?
+  recipient_email       String?
+  recipient_first_name  String?
+  recipient_last_name   String?
   status                String
   error_message         String?
   sent_at               DateTime?
-  created_at            DateTime @default(now()) @db.Timestamptz(6)
+  created_at            DateTime  @default(now()) @db.Timestamptz(6)
 
-  campaign_recipient campaign_recipients @relation(fields: [campaign_recipient_id], references: [id], onDelete: Cascade)
+  campaign_recipient campaign_recipients? @relation(fields: [campaign_recipient_id], references: [id], onDelete: SetNull)
+  campaign_send      campaign_sends?      @relation(fields: [campaign_send_id], references: [id], onDelete: Cascade)
 
+  @@unique([campaign_send_id, campaign_recipient_id])
   @@index([campaign_recipient_id])
+  @@index([campaign_send_id])
 }

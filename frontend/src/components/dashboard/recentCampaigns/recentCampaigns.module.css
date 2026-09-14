@@ -1,0 +1,137 @@
+.card {
+   min-width: 0;
+   background: var(--color-surface);
+   border: 1px solid var(--color-border);
+   border-radius: var(--radius-lg);
+   box-shadow: var(--shadow-sm);
+}
+
+.header {
+   padding: 20px;
+   border-bottom: 1px solid var(--color-border);
+}
+
+.header h2 {
+   color: var(--color-text);
+   font-size: 15px;
+   font-weight: 650;
+}
+
+.header p {
+   margin-top: 4px;
+   color: var(--color-text-muted);
+   font-size: 12px;
+}
+
+.tableWrapper {
+   overflow-x: auto;
+}
+
+table {
+   width: 100%;
+   border-collapse: collapse;
+}
+
+th,
+td {
+   padding: 14px 20px;
+   text-align: left;
+   white-space: nowrap;
+}
+
+th {
+   color: var(--color-text-muted);
+   font-size: 11px;
+   font-weight: 600;
+   text-transform: uppercase;
+}
+
+td {
+   color: var(--color-text-secondary);
+   border-top: 1px solid var(--color-border);
+   font-size: 13px;
+}
+
+.campaignDetails {
+   display: flex;
+   flex-direction: column;
+   gap: 3px;
+   max-width: 220px;
+}
+
+.campaignDetails strong {
+   overflow: hidden;
+   color: var(--color-text);
+   font-weight: 600;
+   white-space: nowrap;
+   text-overflow: ellipsis;
+}
+
+.campaignDetails span {
+   overflow: hidden;
+   color: var(--color-text-muted);
+   font-size: 11px;
+   white-space: nowrap;
+   text-overflow: ellipsis;
+}
+
+.status {
+   display: inline-block;
+   padding: 4px 8px;
+   border-radius: 999px;
+   font-size: 11px;
+   font-weight: 600;
+}
+
+.notSent {
+   background: var(--color-bg-secondary);
+   color: var(--color-text-muted);
+}
+
+.queued {
+   background: var(--color-info-light);
+   color: var(--color-info);
+}
+
+.processing {
+   background: var(--color-primary-light);
+   color: var(--color-primary);
+}
+
+.completed {
+   background: var(--color-success-light);
+   color: var(--color-success);
+}
+
+.completedWithErrors {
+   background: var(--color-warning-light);
+   color: var(--color-warning);
+}
+
+.failed {
+   background: var(--color-danger-light);
+   color: var(--color-danger);
+}
+
+.emptyState {
+   padding: 48px 20px;
+   text-align: center;
+}
+
+.emptyState h3 {
+   color: var(--color-text);
+   font-size: 14px;
+}
+
+.emptyState p {
+   margin-top: 6px;
+   color: var(--color-text-muted);
+   font-size: 12px;
+}
+
+@media (max-width: 600px) {
+   th,
+   td {
+      padding: 12px;
+   }
+}

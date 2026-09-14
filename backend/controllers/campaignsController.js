@@ -1,7 +1,12 @@
 const prisma = require("../lib/prisma");
 const { updateCampaignFields } = require("../utils/campaigns");
-const { renderTemplate } = require("../utils/templateRenderer");
-const { createTransporter, sendEmail } = require("../services/smtpService");
+const {
+   CampaignSendError,
+   createCampaignSend,
+   getCampaignSend,
+   getCampaignSends,
+   serializeCampaignSend
+} = require("../services/campaignSendService");
 
 async function fetchCampaigns(req, res, next)
 {
@@ -262,91 +267,68 @@ async function sendCampaign(req, res, next)
       const { id } = req.params;
       const userId = req.user.id;
 
-      const campaign = await prisma.campaigns.findFirst({
-         where: {
-            id,
-            user_id: userId
-         },
-         include: {
-            template: true,
-            smtp_account: true,
-            recipients: {
-               include: {
-                  contact: true
-               }
-            }
-         }
-      });
+      const campaignSend = await createCampaignSend(id, userId);
 
-      if(!campaign)
-         return res.status(404).json({
-            error: "Campaign not found"
-         });
-
-      if(campaign.recipients.length === 0)
-         return res.status(400).json({
-            error: "Campaign has no recipients"
-         });
-
-      const transporter = createTransporter(campaign.smtp_account);
-
-      const results = {
-         total: campaign.recipients.length,
-         successful: 0,
-         failed: 0,
-         failures: []
-      };
-
-      for(const recipient of campaign.recipients)
-      {
-         try {
-            await sendEmail(transporter,{
-               senderName: campaign.smtp_account.sender_name,
-               senderEmail: campaign.smtp_account.sender_email,
-               recipient: recipient.contact.email,
-               subject: renderTemplate(
-                  campaign.subject,
-                  recipient.contact
-               ),
-               html: renderTemplate(
-                  campaign.template.content,
-                  recipient.contact
-               )
-            });
-
-            await prisma.campaign_deliveries.create({
-               data: {
-                  campaign_recipient_id: recipient.id,
-                  status: "accepted",
-                  sent_at: new Date()
-               }
-            });
-
-            results.successful++;
-         } catch(error) {
-            await prisma.campaign_deliveries.create({
-               data: {
-                  campaign_recipient_id: recipient.id,
-                  status: "failed",
-                  error_message: error.message
-               }
-            });
-
-            results.failed++;
-
-            results.failures.push({
-               contactId: recipient.contact_id,
-               email: recipient.contact.email,
-               error: error.message
-            });
-         }
-      }
-
-      return res.status(200).json({
-         message: "Campaign sending completed",
-         data: results
+      return res.status(202).json({
+         message: "Campaign send queued",
+         data: serializeCampaignSend(campaignSend)
       });
    } catch(error) {
+      if(error instanceof CampaignSendError)
+      {
+         return res.status(error.status).json({
+            error: error.message
+         });
+      }
+
+      next(error);
+   }
+}
+
+async function fetchCampaignSends(req, res, next)
+{
+   try {
+      const { id } = req.params;
+      const campaignSends = await getCampaignSends(id, req.user.id);
+
+      return res.status(200).json({
+         message: "Campaign sends fetched!",
+         data: campaignSends.map(serializeCampaignSend)
+      });
+   } catch(error) {
+      if(error instanceof CampaignSendError)
+      {
+         return res.status(error.status).json({
+            error: error.message
+         });
+      }
+
+      next(error);
+   }
+}
+
+async function fetchCampaignSend(req, res, next)
+{
+   try {
+      const { id, sendId } = req.params;
+      const campaignSend = await getCampaignSend(
+         id,
+         sendId,
+         req.user.id
+      );
+
+      return res.status(200).json({
+         message: "Campaign send fetched!",
+         data: serializeCampaignSend(campaignSend)
+      });
+   } catch(error) {
+      if(error instanceof CampaignSendError)
+      {
+         return res.status(error.status).json({
+            error: error.message
+         });
+      }
+
       next(error);
    }
 }
@@ -371,14 +353,28 @@ async function fetchCampaignDeliveries(req, res, next)
 
       const deliveries = await prisma.campaign_deliveries.findMany({
          where: {
-            campaign_recipient: {
-               campaign_id: id
-            }
+            OR: [
+               {
+                  campaign_recipient: {
+                     campaign_id: id
+                  }
+               },
+               {
+                  campaign_send: {
+                     campaign_id: id
+                  }
+               }
+            ]
          },
          include: {
             campaign_recipient: {
                include: {
                   contact: true
+               }
+            },
+            campaign_send: {
+               select: {
+                  created_at: true
                }
             }
          },
@@ -387,14 +383,26 @@ async function fetchCampaignDeliveries(req, res, next)
          }
       });
 
-      const data = deliveries.map((delivery) => ({
-         id: delivery.id,
-         status: delivery.status,
-         error_message: delivery.error_message,
-         sent_at: delivery.sent_at,
-         created_at: delivery.created_at,
-         contact: delivery.campaign_recipient.contact
-      }));
+      const data = deliveries.map((delivery) => {
+         const contact = delivery.recipient_email
+            ? {
+               email: delivery.recipient_email,
+               first_name: delivery.recipient_first_name,
+               last_name: delivery.recipient_last_name
+            }
+            : delivery.campaign_recipient?.contact;
+
+         return {
+            id: delivery.id,
+            campaign_send_id: delivery.campaign_send_id,
+            campaign_send_created_at: delivery.campaign_send?.created_at,
+            status: delivery.status,
+            error_message: delivery.error_message,
+            sent_at: delivery.sent_at,
+            created_at: delivery.created_at,
+            contact
+         };
+      });
 
       return res.status(200).json({
          message: "Campaign deliveries fetched!",
@@ -405,4 +413,14 @@ async function fetchCampaignDeliveries(req, res, next)
    }
 }
 
-module.exports = { fetchCampaigns, fetchCampaign, createCampaign, updateCampaign, deleteCampaign, sendCampaign, fetchCampaignDeliveries };
+module.exports = {
+   fetchCampaigns,
+   fetchCampaign,
+   createCampaign,
+   updateCampaign,
+   deleteCampaign,
+   sendCampaign,
+   fetchCampaignSends,
+   fetchCampaignSend,
+   fetchCampaignDeliveries
+};

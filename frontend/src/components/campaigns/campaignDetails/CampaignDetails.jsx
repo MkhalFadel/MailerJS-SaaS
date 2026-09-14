@@ -3,12 +3,45 @@ import styles from "./campaignDetails.module.css";
 import {
    addCampaignRecipients,
    deleteCampaignRecipient,
+   getCampaignSend,
+   getCampaignSends,
    getCampaignDeliveries,
    getCampaignRecipients,
    sendCampaign
 } from "../../../api/campaigns";
 import { getContacts } from "../../../api/contacts";
 import ContactSelector from "../contactSelector/ContactSelector";
+
+function isActiveCampaignSend(campaignSend)
+{
+   return ["QUEUED", "PROCESSING"].includes(campaignSend?.status);
+}
+
+function isTerminalCampaignSend(campaignSend)
+{
+   return [
+      "COMPLETED",
+      "COMPLETED_WITH_ERRORS",
+      "FAILED"
+   ].includes(campaignSend?.status);
+}
+
+function getCampaignSendTitle(campaignSend)
+{
+   if(campaignSend.status === "QUEUED")
+      return "Campaign Queued";
+
+   if(campaignSend.status === "PROCESSING")
+      return "Sending Campaign";
+
+   if(campaignSend.status === "COMPLETED")
+      return "Campaign Completed";
+
+   if(campaignSend.status === "COMPLETED_WITH_ERRORS")
+      return "Campaign Completed With Errors";
+
+   return "Campaign Send Failed";
+}
 
 function CampaignDetails({ campaign, onBack })
 {
@@ -23,10 +56,11 @@ function CampaignDetails({ campaign, onBack })
    const [addingRecipients, setAddingRecipients] = useState(false);
    const [removingRecipientId, setRemovingRecipientId] = useState(null);
    const [sending, setSending] = useState(false);
+   const [loadingSend, setLoadingSend] = useState(true);
    const [recipientsError, setRecipientsError] = useState(null);
    const [deliveriesError, setDeliveriesError] = useState(null);
    const [sendError, setSendError] = useState(null);
-   const [sendSummary, setSendSummary] = useState(null);
+   const [campaignSend, setCampaignSend] = useState(null);
 
    const loadRecipients = useCallback(async function loadRecipients()
    {
@@ -70,17 +104,99 @@ function CampaignDetails({ campaign, onBack })
       }
    },[campaign.id]);
 
+   const campaignSendId = campaignSend?.id;
+   const campaignSendStatus = campaignSend?.status;
+
+   const loadCampaignSends = useCallback(async function loadCampaignSends()
+   {
+      setLoadingSend(true);
+
+      try {
+         const response = await getCampaignSends(campaign.id);
+         const activeSend = response.data.find(isActiveCampaignSend);
+
+         setCampaignSend(activeSend || response.data[0] || null);
+      } catch(error) {
+         console.error("Failed to fetch campaign sends:", error);
+
+         setSendError(
+            error.message ||
+            "Unable to load campaign send status."
+         );
+      } finally {
+         setLoadingSend(false);
+      }
+   },[campaign.id]);
+
    useEffect(() => {
       async function loadCampaignDetails()
       {
          await Promise.all([
             loadRecipients(),
-            loadDeliveries()
+            loadDeliveries(),
+            loadCampaignSends()
          ]);
       }
 
       loadCampaignDetails();
-   },[loadDeliveries,loadRecipients]);
+   },[loadCampaignSends,loadDeliveries,loadRecipients]);
+
+   useEffect(() => {
+      if(!["QUEUED", "PROCESSING"].includes(campaignSendStatus))
+         return;
+
+      let cancelled = false;
+      let polling = false;
+
+      async function pollCampaignSend()
+      {
+         if(polling)
+            return;
+
+         polling = true;
+
+         try {
+            const response = await getCampaignSend(
+               campaign.id,
+               campaignSendId
+            );
+
+            if(cancelled)
+               return;
+
+            setCampaignSend(response.data);
+
+            if(isTerminalCampaignSend(response.data))
+               await loadDeliveries();
+         } catch(error) {
+            if(!cancelled)
+            {
+               console.error("Failed to poll campaign send:", error);
+
+               setSendError(
+                  error.message ||
+                  "Unable to refresh campaign send status."
+               );
+            }
+         } finally {
+            polling = false;
+         }
+      }
+
+      pollCampaignSend();
+
+      const interval = setInterval(pollCampaignSend, 2500);
+
+      return () => {
+         cancelled = true;
+         clearInterval(interval);
+      };
+   },[
+      campaign.id,
+      campaignSendId,
+      campaignSendStatus,
+      loadDeliveries
+   ]);
 
    const statistics = useMemo(() => {
       const accepted = deliveries.filter(
@@ -214,17 +330,24 @@ function CampaignDetails({ campaign, onBack })
 
    async function handleSendCampaign()
    {
+      if(isActiveCampaignSend(campaignSend))
+         return;
+
       setSending(true);
       setSendError(null);
-      setSendSummary(null);
 
       try {
          const response = await sendCampaign(campaign.id);
 
-         setSendSummary(response.data);
-         await loadDeliveries();
+         setCampaignSend(response.data);
       } catch(error) {
          console.error("Failed to send campaign:", error);
+
+         if(error.status === 409)
+         {
+            await loadCampaignSends();
+            return;
+         }
 
          setSendError(
             error.message ||
@@ -234,6 +357,12 @@ function CampaignDetails({ campaign, onBack })
          setSending(false);
       }
    }
+
+   const processedRecipients = campaignSend
+      ? campaignSend.acceptedCount + campaignSend.failedCount
+      : 0;
+
+   const sendingIsActive = isActiveCampaignSend(campaignSend);
 
    return (
       <div className={styles.container}>
@@ -263,10 +392,19 @@ function CampaignDetails({ campaign, onBack })
                   type="button"
                   className={styles.primaryButton}
                   onClick={handleSendCampaign}
-                  disabled={sending || recipients.length === 0}
+                  disabled={
+                     sending ||
+                     loadingSend ||
+                     sendingIsActive ||
+                     recipients.length === 0
+                  }
                >
                   {sending
-                     ? "Sending..."
+                     ? "Queueing..."
+                     : campaignSend?.status === "QUEUED"
+                        ? "Queued"
+                        : campaignSend?.status === "PROCESSING"
+                           ? "Sending..."
                      : "Send Campaign"}
                </button>
             </div>
@@ -278,30 +416,39 @@ function CampaignDetails({ campaign, onBack })
             </div>
          )}
 
-         {sendSummary && (
-            <div className={styles.sendSummary}>
+         {campaignSend && (
+            <div
+               className={
+                  styles.sendSummary + " " +
+                  (campaignSend.status === "FAILED"
+                     ? styles.sendFailed
+                     : campaignSend.status === "COMPLETED_WITH_ERRORS"
+                        ? styles.sendWithErrors
+                        : sendingIsActive
+                           ? styles.sendActive
+                           : "")
+               }
+            >
                <div>
-                  <h2>Campaign Sending Complete</h2>
+                  <h2>{getCampaignSendTitle(campaignSend)}</h2>
 
                   <p>
-                     SMTP acceptance confirms server submission, not final mailbox delivery.
+                     {sendingIsActive
+                        ? `${processedRecipients} of ${campaignSend.totalRecipients} recipients processed.`
+                        : "SMTP acceptance confirms server submission, not final mailbox delivery."}
                   </p>
                </div>
 
                <div className={styles.summaryStatistics}>
-                  <span>Total: {sendSummary.total}</span>
-                  <span>Successful: {sendSummary.successful}</span>
-                  <span>Failed: {sendSummary.failed}</span>
+                  <span>Total: {campaignSend.totalRecipients}</span>
+                  <span>Accepted: {campaignSend.acceptedCount}</span>
+                  <span>Failed: {campaignSend.failedCount}</span>
                </div>
 
-               {sendSummary.failures?.length > 0 && (
-                  <ul className={styles.failureList}>
-                     {sendSummary.failures.map((failure) => (
-                        <li key={failure.contactId}>
-                           {failure.email}: {failure.error}
-                        </li>
-                     ))}
-                  </ul>
+               {campaignSend.errorMessage && (
+                  <p className={styles.sendErrorMessage}>
+                     {campaignSend.errorMessage}
+                  </p>
                )}
             </div>
          )}
@@ -464,6 +611,7 @@ function CampaignDetails({ campaign, onBack })
                            <thead>
                               <tr>
                                  <th>Email</th>
+                                 <th>Send Run</th>
                                  <th>Status</th>
                                  <th>Sent At</th>
                                  <th>Error</th>
@@ -478,12 +626,22 @@ function CampaignDetails({ campaign, onBack })
                                     </td>
 
                                     <td>
+                                       {delivery.campaignSendCreatedAt
+                                          ? new Date(
+                                             delivery.campaignSendCreatedAt
+                                          ).toLocaleString()
+                                          : "Legacy"}
+                                    </td>
+
+                                    <td>
                                        <span
                                           className={
                                              styles.recipientStatus + " " +
                                              (delivery.status === "accepted"
                                                 ? styles.accepted
-                                                : styles.failed)
+                                                : delivery.status === "failed"
+                                                   ? styles.failed
+                                                   : styles.pending)
                                           }
                                        >
                                           {delivery.status}

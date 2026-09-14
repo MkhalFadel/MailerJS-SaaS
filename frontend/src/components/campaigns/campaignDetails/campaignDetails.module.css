@@ -103,6 +103,33 @@
    font-size: 12px;
 }
 
+.sendActive {
+   background: var(--color-info-light);
+   border-color: var(--color-info);
+}
+
+.sendActive h2 {
+   color: var(--color-info);
+}
+
+.sendWithErrors {
+   background: var(--color-warning-light);
+   border-color: var(--color-warning);
+}
+
+.sendWithErrors h2 {
+   color: var(--color-warning);
+}
+
+.sendFailed {
+   background: var(--color-danger-light);
+   border-color: var(--color-danger);
+}
+
+.sendFailed h2 {
+   color: var(--color-danger);
+}
+
 .summaryStatistics {
    display: flex;
    flex-wrap: wrap;
@@ -120,9 +147,8 @@
    font-weight: 600;
 }
 
-.failureList {
-   margin: 14px 0 0;
-   padding-left: 18px;
+.sendErrorMessage {
+   margin-top: 14px;
    color: var(--color-danger);
    font-size: 12px;
    line-height: 1.5;
@@ -229,6 +255,11 @@ td {
 .failed {
    background: var(--color-danger-light);
    color: var(--color-danger);
+}
+
+.pending {
+   background: var(--color-warning-light);
+   color: var(--color-warning);
 }
 
 .removeButton {
