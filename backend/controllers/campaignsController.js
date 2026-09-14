@@ -14,7 +14,16 @@ async function fetchCampaigns(req, res, next)
          },
          include: {
             template: true,
-            smtp_account: true
+            smtp_account: true,
+            recipients: {
+               include: {
+                  deliveries: {
+                     select: {
+                        status: true
+                     }
+                  }
+               }
+            }
          },
          orderBy: {
             created_at: "desc"
@@ -24,7 +33,19 @@ async function fetchCampaigns(req, res, next)
       const safeCampaigns = campaigns.map((campaign) => {
          const { password_encrypted, ...smtpAccount } = campaign.smtp_account;
 
-         return {...campaign, smtp_account: smtpAccount};
+         const sent = campaign.recipients.reduce(
+            (total,recipient) => {
+               return total + recipient.deliveries.filter(
+                  delivery => delivery.status === "accepted"
+               ).length;
+            }, 0);
+
+         return {
+            ...campaign,
+            smtp_account: smtpAccount,
+            recipients: campaign.recipients.length,
+            sent
+         };
       });
 
       return res.status(200).json({
@@ -296,7 +317,7 @@ async function sendCampaign(req, res, next)
             await prisma.campaign_deliveries.create({
                data: {
                   campaign_recipient_id: recipient.id,
-                  status: "accpeted",
+                  status: "accepted",
                   sent_at: new Date()
                }
             });

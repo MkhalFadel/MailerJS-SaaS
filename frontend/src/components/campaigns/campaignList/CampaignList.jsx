@@ -1,22 +1,19 @@
 import { useMemo, useState } from "react";
 import styles from "./campaignList.module.css";
+import { formatTemplateDate } from "../../../utils/utils";
 
 function CampaignList({ campaigns, onCreate, onView }) {
    const [search, setSearch] = useState("");
-   const [status, setStatus] = useState("all");
 
    const filteredCampaigns = useMemo(() => {
       return campaigns.filter((campaign) => {
          const matchesSearch =
-            campaign.name.toLowerCase().includes(search.toLowerCase()) ||
-            campaign.subject.toLowerCase().includes(search.toLowerCase());
+         campaign.name.toLowerCase().includes(search.toLowerCase()) ||
+         campaign.subject.toLowerCase().includes(search.toLowerCase());
 
-         const matchesStatus =
-            status === "all" || campaign.status === status;
-
-         return matchesSearch && matchesStatus;
+         return matchesSearch;
       });
-   }, [campaigns, search, status]);
+   }, [campaigns, search]);
 
    return (
       <div className={styles.container}>
@@ -45,17 +42,6 @@ function CampaignList({ campaigns, onCreate, onView }) {
                   onChange={(event) => setSearch(event.target.value)}
                />
             </div>
-
-            <select
-               value={status}
-               onChange={(event) => setStatus(event.target.value)}
-               className={styles.filter}
-            >
-               <option value="all">All Statuses</option>
-               <option value="completed">Completed</option>
-               <option value="scheduled">Scheduled</option>
-               <option value="draft">Draft</option>
-            </select>
          </div>
 
          <div className={styles.card}>
@@ -81,10 +67,9 @@ function CampaignList({ campaigns, onCreate, onView }) {
                         <tr>
                            <th>Campaign</th>
                            <th>Recipients</th>
-                           <th>Status</th>
-                           <th>Sent</th>
+                           <th>Accepted</th>
                            <th>Created</th>
-                           <th></th>
+                           <th>Actions</th>
                         </tr>
                      </thead>
 
@@ -101,21 +86,11 @@ function CampaignList({ campaigns, onCreate, onView }) {
                                  </button>
                               </td>
 
-                              <td>{campaign.recipients.toLocaleString()}</td>
+                              <td>{campaign.recipients}</td>
 
-                              <td>
-                                 <span
-                                    className={`${styles.status} ${
-                                       styles[campaign.status]
-                                    }`}
-                                 >
-                                    {campaign.status}
-                                 </span>
-                              </td>
+                              <td>{campaign.accepted}</td>
 
-                              <td>{campaign.sent.toLocaleString()}</td>
-
-                              <td>{campaign.createdAt}</td>
+                              <td>{formatTemplateDate(campaign.createdAt)}</td>
 
                               <td>
                                  <button

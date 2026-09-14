@@ -1,64 +1,35 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DashboardLayout from "../../layouts/dashboard/DashboardLayout";
 import CampaignList from "../../components/campaigns/campaignList/CampaignList";
 import CampaignForm from "../../components/campaigns/campaignForm/CampaignForm";
 import CampaignDetails from "../../components/campaigns/campaignDetails/CampaignDetails";
+import { getCampaigns } from "../../api/campaigns";
 import styles from "./campaigns.module.css";
-
-const campaignsData = [
-   {
-      id: 1,
-      name: "Summer Newsletter",
-      subject: "Summer deals are here!",
-      status: "completed",
-      recipients: 1240,
-      sent: 1238,
-      failed: 2,
-      openRate: "74.2%",
-      clickRate: "21.4%",
-      createdAt: "Aug 10, 2026"
-   },
-   {
-      id: 2,
-      name: "Product Update",
-      subject: "What's new in MailerJS",
-      status: "completed",
-      recipients: 320,
-      sent: 319,
-      failed: 1,
-      openRate: "68.5%",
-      clickRate: "18.2%",
-      createdAt: "Aug 8, 2026"
-   },
-   {
-      id: 3,
-      name: "Job Applications",
-      subject: "Software Developer Application",
-      status: "draft",
-      recipients: 42,
-      sent: 0,
-      failed: 0,
-      openRate: "—",
-      clickRate: "—",
-      createdAt: "Aug 7, 2026"
-   },
-   {
-      id: 4,
-      name: "Welcome Email",
-      subject: "Welcome to MailerJS",
-      status: "scheduled",
-      recipients: 850,
-      sent: 0,
-      failed: 0,
-      openRate: "—",
-      clickRate: "—",
-      createdAt: "Aug 5, 2026"
-   }
-];
 
 function Campaigns() {
    const [view, setView] = useState("list");
    const [selectedCampaign, setSelectedCampaign] = useState(null);
+   const [campaigns, setCampaigns] = useState([]);
+   const [loading, setLoading] = useState(true);
+   const [error, setError] = useState(null);
+
+   useEffect(() => {
+         async function loadCampaigns()
+         {
+            try {
+               const response = await getCampaigns();
+
+               setCampaigns(response.data);
+            } catch(error) {
+               console.error("Failed to fetch campaigns:",error);
+               setError(error.message || "Unable to load campaigns.");
+            } finally {
+               setLoading(false);
+            }
+         }
+
+         loadCampaigns();
+      },[]);
 
    function handleCreateCampaign() {
       setSelectedCampaign(null);
@@ -74,13 +45,29 @@ function Campaigns() {
       setSelectedCampaign(null);
       setView("list");
    }
+   function handleCampaignCreated(campaign) {
+      setCampaigns(current => [campaign, ...current]);
+   }
+
 
    return (
       <DashboardLayout>
          <div className={styles.page}>
-            {view === "list" && (
+            {view === "list" && loading && (
+               <div className={styles.loading}>
+                  Loading campaigns...
+               </div>
+            )}
+
+            {view === "list" && !loading && error && (
+               <div className={styles.error}>
+                  {error}
+               </div>
+            )}
+
+            {view === "list" && !loading && !error && (
                <CampaignList
-                  campaigns={campaignsData}
+                  campaigns={campaigns}
                   onCreate={handleCreateCampaign}
                   onView={handleViewCampaign}
                />
@@ -88,6 +75,7 @@ function Campaigns() {
 
             {view === "create" && (
                <CampaignForm
+                  onCreated={handleCampaignCreated}
                   onCancel={handleBack}
                />
             )}
