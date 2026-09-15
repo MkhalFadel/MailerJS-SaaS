@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import {
    getCurrentUser,
    loginUser,
+   loginWithGoogle,
    logoutUser,
-   updateCurrentUser
+   updateCurrentUser,
+   updatePassword
 } from "../api/auth";
 import { AuthContext } from "./authContext";
 
@@ -29,6 +31,20 @@ export function AuthProvider({ children })
       loadUser();
    },[]);
 
+   useEffect(() => {
+      function handleSessionExpired()
+      {
+         setUser(null);
+         setLoading(false);
+      }
+
+      window.addEventListener("auth:session-expired", handleSessionExpired);
+
+      return () => {
+         window.removeEventListener("auth:session-expired", handleSessionExpired);
+      };
+   },[]);
+
    async function login(credentials)
    {
       const response = await loginUser(credentials);
@@ -45,9 +61,27 @@ export function AuthProvider({ children })
       setUser(null);
    }
 
+   async function googleLogin(credential)
+   {
+      const response = await loginWithGoogle(credential);
+
+      setUser(response.user);
+
+      return response;
+   }
+
    async function updateProfile(profile)
    {
       const response = await updateCurrentUser(profile);
+
+      setUser(response.data);
+
+      return response;
+   }
+
+   async function changePassword(password)
+   {
+      const response = await updatePassword(password);
 
       setUser(response.data);
 
@@ -61,8 +95,10 @@ export function AuthProvider({ children })
             loading,
             isAuthenticated: Boolean(user),
             login,
+            googleLogin,
             logout,
-            updateProfile
+            updateProfile,
+            changePassword
          }}
       >
          {children}

@@ -129,6 +129,23 @@
    background: var(--color-primary-hover);
 }
 
+.divider {
+   display: flex;
+   align-items: center;
+   gap: 10px;
+   color: var(--color-text-muted);
+   font-size: 12px;
+   text-align: center;
+}
+
+.divider::before,
+.divider::after {
+   content: "";
+   flex: 1;
+   height: 1px;
+   background: var(--color-border);
+}
+
 .signup {
    display: flex;
    justify-content: center;

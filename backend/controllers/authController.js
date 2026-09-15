@@ -1,5 +1,45 @@
 const prisma = require("../lib/prisma")
-const { hashPassword, verifyPassword, generateRefreshToken, generateToken, updateUsersFields, verifyFields, verifyRefreshToken } = require("../utils/auth");
+const {
+   hashPassword,
+   verifyPassword,
+   updateUsersFields,
+   verifyRefreshToken,
+   setAuthCookies,
+   setAccessTokenCookie,
+   clearAuthCookies
+} = require("../utils/auth");
+const { verifyGoogleCredential } = require("../services/googleAuthService");
+
+function serializeUser(user)
+{
+   const { password_hash, ...rest } = user;
+
+   return {
+      ...rest,
+      hasPassword: Boolean(password_hash)
+   };
+}
+
+function getPasswordValidationError(password)
+{
+   if(typeof password !== "string" || password.length < 8)
+      return "Password must contain at least 8 characters";
+
+   if(!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/\d/.test(password))
+      return "Password must contain uppercase, lowercase, and a number";
+
+   return null;
+}
+
+function getGoogleProfileNames(profile)
+{
+   const nameParts = profile.name?.trim().split(/\s+/) || [];
+
+   return {
+      firstName: profile.given_name?.trim() || nameParts[0] || "Google",
+      lastName: profile.family_name?.trim() || nameParts.slice(1).join(" ") || "User"
+   };
+}
 
 async function fetchUser(req, res, next)
 {
@@ -17,9 +57,8 @@ async function fetchUser(req, res, next)
             error: "User not found"
          });
 
-      const { password_hash, ...rest } = user;
       return res.status(200).json({
-         data: rest 
+         data: serializeUser(user)
       })
    } catch (error) {
       next(error)
@@ -41,10 +80,9 @@ async function registerUsers(req, res, next)
          }
       })
 
-      const { password_hash, ...rest } = user;
       return res.status(201).json({
          message: "User created successfully",
-         data: rest
+         data: serializeUser(user)
       })
    } catch (error) {
       if(error.code === "P2002")
@@ -69,37 +107,17 @@ async function login(req, res, next)
          }
       })
 
-      if(!user) return res.status(401).json({error: "Invalid Credentials"});
+      if(!user || !user.password_hash)
+         return res.status(401).json({error: "Invalid Credentials"});
 
       const checkPassword = await verifyPassword(password, user.password_hash);
 
       if(!checkPassword) return res.status(401).json({error: "Invalid Credentials"});
 
-      const payload = { id: user.id, email: user.email }
-
-      const accessToken = generateToken(payload);
-      const refreshToken = generateRefreshToken(payload);
-
-      const cookieOptions = {
-         httpOnly: true,
-         secure: false,
-         sameSite: "lax"
-      };
-
-      res.cookie("authToken", accessToken, {
-         ...cookieOptions,
-         maxAge: 2 * 60 * 60 * 1000
-      })
-
-      res.cookie("refreshToken", refreshToken, {
-         ...cookieOptions,
-         maxAge: 7 * 24 * 60 * 60 * 1000
-      })
-
-      const { password_hash, ...rest } = user;
+      setAuthCookies(res, user);
 
       return res.status(200).json({
-         message: "Login successful", user: rest
+         message: "Login successful", user: serializeUser(user)
       })
 
    } catch (error) {
@@ -115,45 +133,9 @@ async function updateUser(req, res, next)
 
       if(data.password)
       {
-         if(
-            data.password.length < 8 ||
-            !/[a-z]/.test(data.password) ||
-            !/[A-Z]/.test(data.password) ||
-            !/\d/.test(data.password)
-         )
-         {
-            return res.status(400).json({
-               error: "Password must contain at least 8 characters, uppercase, lowercase, and a number"
-            });
-         }
-
-         if(!data.currentPassword)
-         {
-            return res.status(400).json({
-               error: "Current password is required"
-            });
-         }
-
-         const currentUser = await prisma.users.findUnique({
-            where: {
-               id
-            },
-            select: {
-               password_hash: true
-            }
+         return res.status(400).json({
+            error: "Use the password endpoint to update your password"
          });
-
-         const isCurrentPasswordValid = currentUser && await verifyPassword(
-            data.currentPassword,
-            currentUser.password_hash
-         );
-
-         if(!isCurrentPasswordValid)
-         {
-            return res.status(400).json({
-               error: "Current password is incorrect"
-            });
-         }
       }
 
       const fields = await updateUsersFields(data)
@@ -170,14 +152,199 @@ async function updateUser(req, res, next)
          data: fields
       })
 
-      const { password_hash, ...rest} = user;
       return res.status(200).json({
          message: "Info updated successfully",
-         data: rest
+         data: serializeUser(user)
       })
 
    } catch (error) {
       next(error)
+   }
+}
+
+async function updatePassword(req, res, next)
+{
+   try {
+      const {
+         currentPassword,
+         newPassword,
+         confirmPassword,
+         googleCredential
+      } = req.body;
+      const user = await prisma.users.findUnique({
+         where: {
+            id: req.user.id
+         },
+         select: {
+            id: true,
+            email: true,
+            password_hash: true,
+            google_id: true,
+            first_name: true,
+            last_name: true,
+            created_at: true,
+            updated_at: true
+         }
+      });
+
+      if(!user)
+      {
+         return res.status(404).json({
+            error: "User not found"
+         });
+      }
+
+      const passwordError = getPasswordValidationError(newPassword);
+
+      if(passwordError)
+         return res.status(400).json({ error: passwordError });
+
+      if(newPassword !== confirmPassword)
+      {
+         return res.status(400).json({
+            error: "New password and confirmation do not match"
+         });
+      }
+
+      if(user.password_hash)
+      {
+         if(!currentPassword)
+         {
+            return res.status(400).json({
+               error: "Current password is required"
+            });
+         }
+
+         const isCurrentPasswordValid = await verifyPassword(
+            currentPassword,
+            user.password_hash
+         );
+
+         if(!isCurrentPasswordValid)
+         {
+            return res.status(400).json({
+               error: "Current password is incorrect"
+            });
+         }
+      } else {
+         if(!user.google_id)
+         {
+            return res.status(400).json({
+               error: "Password setup is unavailable for this account"
+            });
+         }
+
+         try {
+            const profile = await verifyGoogleCredential(googleCredential);
+
+            if(profile.sub !== user.google_id)
+            {
+               return res.status(403).json({
+                  error: "Google reauthentication does not match this account"
+               });
+            }
+         } catch(error) {
+            if(error.code === "GOOGLE_AUTH_NOT_CONFIGURED")
+            {
+               return res.status(503).json({
+                  error: "Google reauthentication is not configured"
+               });
+            }
+
+            if(error.code === "GOOGLE_AUTH_INVALID")
+            {
+               return res.status(401).json({
+                  error: "Google reauthentication could not be verified"
+               });
+            }
+
+            throw error;
+         }
+      }
+
+      const password_hash = await hashPassword(newPassword);
+      const updatedUser = await prisma.users.update({
+         where: {
+            id: user.id
+         },
+         data: {
+            password_hash
+         }
+      });
+
+      return res.status(200).json({
+         message: user.password_hash
+            ? "Password changed successfully"
+            : "Password set successfully",
+         data: serializeUser(updatedUser)
+      });
+   } catch(error) {
+      next(error);
+   }
+}
+
+async function verifyGoogleReauthentication(req, res, next)
+{
+   try {
+      const credential = req.body?.credential;
+
+      if(!credential)
+      {
+         return res.status(400).json({
+            error: "Google credential is required"
+         });
+      }
+
+      const profile = await verifyGoogleCredential(credential);
+      const user = await prisma.users.findUnique({
+         where: {
+            id: req.user.id
+         },
+         select: {
+            google_id: true
+         }
+      });
+
+      if(!user)
+      {
+         return res.status(404).json({
+            error: "User not found"
+         });
+      }
+
+      if(!user.google_id)
+      {
+         return res.status(400).json({
+            error: "Google reauthentication is unavailable for this account"
+         });
+      }
+
+      if(profile.sub !== user.google_id)
+      {
+         return res.status(403).json({
+            error: "Please verify using the Google account connected to this MailerJS account."
+         });
+      }
+
+      return res.status(200).json({
+         verified: true
+      });
+   } catch(error) {
+      if(error.code === "GOOGLE_AUTH_NOT_CONFIGURED")
+      {
+         return res.status(503).json({
+            error: "Google reauthentication is not configured"
+         });
+      }
+
+      if(error.code === "GOOGLE_AUTH_INVALID")
+      {
+         return res.status(401).json({
+            error: "Google reauthentication could not be verified"
+         });
+      }
+
+      next(error);
    }
 }
 
@@ -190,6 +357,8 @@ async function deleteUser(req, res, next)
             id: id
          }
       })
+
+      clearAuthCookies(res);
       
       return res.status(204).send()
    } catch (error) {
@@ -199,53 +368,149 @@ async function deleteUser(req, res, next)
    }
 }
 
-function updateAccessToken(req, res, next)
+async function updateAccessToken(req, res, next)
 {
    const refreshToken = req.cookies.refreshToken;
 
    if(!refreshToken)
    {
+      clearAuthCookies(res);
+
       return res.status(401).json({
-         message: "Refresh token required"
+         error: "Refresh token required",
+         code: "REFRESH_TOKEN_MISSING"
       });
    }
 
    try {
-      const { id,email } = verifyRefreshToken(refreshToken);
-
-      const accessToken = generateToken({
-         id,
-         email
+      const { id } = verifyRefreshToken(refreshToken);
+      const user = await prisma.users.findUnique({
+         where: {
+            id
+         },
+         select: {
+            id: true,
+            email: true
+         }
       });
 
-      const cookieOptions = {
-         httpOnly: true,
-         secure: false,
-         sameSite: "lax"
-      };
+      if(!user)
+      {
+         clearAuthCookies(res);
 
-      res.cookie("authToken", accessToken, {
-         ...cookieOptions,
-         maxAge: 2 * 60 * 60 * 1000
-      });
+         return res.status(401).json({
+            error: "Refresh token is no longer valid",
+            code: "REFRESH_TOKEN_INVALID"
+         });
+      }
+
+      setAccessTokenCookie(res, user);
 
       return res.status(200).json({
          message: "Access token refreshed"
       });
 
    } catch(error) {
-      next(error)
+      clearAuthCookies(res);
+
+      return res.status(401).json({
+         error: "Invalid refresh token",
+         code: "REFRESH_TOKEN_INVALID"
+      });
+   }
+}
+
+async function googleLogin(req, res, next)
+{
+   try {
+      const profile = await verifyGoogleCredential(req.body?.credential);
+      const googleId = profile.sub;
+      const email = profile.email.trim().toLowerCase();
+      let user = await prisma.users.findUnique({
+         where: {
+            google_id: googleId
+         }
+      });
+
+      if(!user)
+      {
+         const existingEmailUser = await prisma.users.findFirst({
+            where: {
+               email: {
+                  equals: email,
+                  mode: "insensitive"
+               }
+            }
+         });
+
+         if(existingEmailUser)
+         {
+            return res.status(409).json({
+               error: "An account with this email already exists. Sign in with your existing method to link Google later."
+            });
+         }
+
+         const { firstName, lastName } = getGoogleProfileNames(profile);
+         user = await prisma.users.create({
+            data: {
+               email,
+               google_id: googleId,
+               first_name: firstName,
+               last_name: lastName
+            }
+         });
+      }
+
+      setAuthCookies(res, user);
+
+      return res.status(200).json({
+         message: "Google sign-in successful",
+         user: serializeUser(user)
+      });
+   } catch(error) {
+      if(error.code === "GOOGLE_AUTH_NOT_CONFIGURED")
+      {
+         return res.status(503).json({
+            error: "Google sign-in is not configured"
+         });
+      }
+
+      if(error.code === "GOOGLE_AUTH_INVALID")
+      {
+         return res.status(401).json({
+            error: "Google sign-in could not be verified"
+         });
+      }
+
+      if(error.code === "P2002")
+      {
+         return res.status(409).json({
+            error: "Unable to create a Google account with this identity"
+         });
+      }
+
+      next(error);
    }
 }
 
 function logout(req, res, next)
 {
-   res.clearCookie("authToken");
-   res.clearCookie("refreshToken");
+   clearAuthCookies(res);
 
    return res.status(200).json({
       message: "Logout successful"
    })
 }
 
-module.exports = { login, registerUsers, updateUser, deleteUser, fetchUser, updateAccessToken, logout }
+module.exports = {
+   login,
+   registerUsers,
+   updateUser,
+   updatePassword,
+   verifyGoogleReauthentication,
+   deleteUser,
+   fetchUser,
+   updateAccessToken,
+   googleLogin,
+   logout
+}

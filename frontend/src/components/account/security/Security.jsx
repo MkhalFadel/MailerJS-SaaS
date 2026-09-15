@@ -1,19 +1,55 @@
 import { useState } from "react";
 import styles from "./security.module.css";
+import GoogleSignIn from "../../auth/googleSignIn/GoogleSignIn";
+import { verifyGoogleReauthentication } from "../../../api/auth";
 
-function Security({ onPasswordChange }) {
+function Security({ hasPassword = true, onPasswordChange }) {
    const [currentPassword, setCurrentPassword] = useState("");
    const [newPassword, setNewPassword] = useState("");
    const [confirmPassword, setConfirmPassword] = useState("");
+   const [googleCredential, setGoogleCredential] = useState(null);
+   const [googleVerified, setGoogleVerified] = useState(false);
+   const [verifyingGoogle, setVerifyingGoogle] = useState(false);
+   const [verificationError, setVerificationError] = useState(null);
    const [saving, setSaving] = useState(false);
    const [error, setError] = useState(null);
-   const [success, setSuccess] = useState(false);
+   const [successMessage, setSuccessMessage] = useState(null);
+   const isGoogleOnly = !hasPassword;
+
+   function clearGoogleVerification()
+   {
+      setGoogleCredential(null);
+      setGoogleVerified(false);
+   }
+
+   async function handleGoogleVerification(credential)
+   {
+      setVerifyingGoogle(true);
+      setVerificationError(null);
+      setError(null);
+      setSuccessMessage(null);
+      clearGoogleVerification();
+
+      try {
+         await verifyGoogleReauthentication(credential);
+
+         setGoogleCredential(credential);
+         setGoogleVerified(true);
+      } catch(error) {
+         clearGoogleVerification();
+         setVerificationError(
+            error.message || "Unable to verify the Google account connected to this MailerJS account."
+         );
+      } finally {
+         setVerifyingGoogle(false);
+      }
+   }
 
    async function handleSubmit(event)
    {
       event.preventDefault();
       setError(null);
-      setSuccess(false);
+      setSuccessMessage(null);
 
       if(newPassword.length < 8)
       {
@@ -33,6 +69,12 @@ function Security({ onPasswordChange }) {
          return;
       }
 
+      if(isGoogleOnly && (!googleVerified || !googleCredential))
+      {
+         setError("Verify your Google identity before setting a password.");
+         return;
+      }
+
       if(!onPasswordChange)
       {
          setError("Password updates are unavailable right now.");
@@ -43,17 +85,30 @@ function Security({ onPasswordChange }) {
 
       try {
          await onPasswordChange({
-            currentPassword,
-            password: newPassword
+            currentPassword: isGoogleOnly ? undefined : currentPassword,
+            newPassword,
+            confirmPassword,
+            googleCredential: isGoogleOnly ? googleCredential : undefined
          });
 
          setCurrentPassword("");
          setNewPassword("");
          setConfirmPassword("");
-         setSuccess(true);
+         clearGoogleVerification();
+         setSuccessMessage(
+            isGoogleOnly
+               ? "Password set successfully. You can now sign in with Google or your email and password."
+               : "Password changed successfully."
+         );
       } catch(error) {
          console.error("Failed to update password:", error);
          setError(error.message || "Unable to change your password.");
+
+         if(isGoogleOnly)
+         {
+            clearGoogleVerification();
+            setVerificationError("Verify your Google identity again before setting a password.");
+         }
       } finally {
          setSaving(false);
       }
@@ -71,31 +126,75 @@ function Security({ onPasswordChange }) {
 
          <div className={styles.passwordStatus}>
             <div>
-               <h3>Password</h3>
+               <h3>{isGoogleOnly ? "Set Password" : "Change Password"}</h3>
 
                <p>
-                  Change your password regularly to keep your account secure.
+                  {isGoogleOnly
+                     ? "You currently sign in with Google and can create a MailerJS password."
+                     : "Change your password regularly to keep your account secure."}
                </p>
             </div>
 
             <span>
-               Current password required
+               {isGoogleOnly ? "Google verification required" : "Current password required"}
             </span>
          </div>
 
          <form className={styles.form} onSubmit={handleSubmit}>
-            <label className={styles.field}>
-               <span>Current Password</span>
+            {hasPassword && (
+               <label className={styles.field}>
+                  <span>Current Password</span>
 
-               <input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(event) => setCurrentPassword(event.target.value)}
-                  autoComplete="current-password"
-                  placeholder="Enter current password"
-                  required
-               />
-            </label>
+                  <input
+                     type="password"
+                     value={currentPassword}
+                     onChange={(event) => setCurrentPassword(event.target.value)}
+                     autoComplete="current-password"
+                     placeholder="Enter current password"
+                     required
+                  />
+               </label>
+            )}
+
+            {isGoogleOnly && (
+               <div className={styles.reauthentication}>
+                  <div>
+                     <h4>Verify with Google</h4>
+
+                     <p>
+                        Confirm the Google identity connected to this account before setting a password.
+                     </p>
+                  </div>
+
+                  {verifyingGoogle ? (
+                     <p className={styles.verifying} role="status">
+                        Verifying Google account...
+                     </p>
+                  ) : googleVerified ? (
+                     <p className={styles.verified} role="status">
+                        Google account verified. You can now set your password.
+                     </p>
+                  ) : (
+                     <>
+                        {verificationError && (
+                           <p className={styles.verificationError} role="alert">
+                              {verificationError}
+                           </p>
+                        )}
+
+                        <GoogleSignIn
+                           onSuccess={handleGoogleVerification}
+                           onError={(googleError) => {
+                              clearGoogleVerification();
+                              setVerificationError(
+                                 googleError.message || "Unable to verify your Google account."
+                              );
+                           }}
+                        />
+                     </>
+                  )}
+               </div>
+            )}
 
             <label className={styles.field}>
                <span>New Password</span>
@@ -139,15 +238,20 @@ function Security({ onPasswordChange }) {
                      </span>
                   )}
 
-                  {success && (
+                  {successMessage && (
                      <span className={styles.success} role="status">
-                        Password changed successfully.
+                        {successMessage}
                      </span>
                   )}
                </div>
 
-               <button disabled={saving} type="submit">
-                  {saving ? "Changing..." : "Change Password"}
+               <button
+                  disabled={saving || (isGoogleOnly && (!googleVerified || !googleCredential || verifyingGoogle))}
+                  type="submit"
+               >
+                  {saving
+                     ? (isGoogleOnly ? "Setting Password..." : "Changing...")
+                     : (isGoogleOnly ? "Set Password" : "Change Password")}
                </button>
             </div>
          </form>

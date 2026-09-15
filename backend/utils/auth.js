@@ -1,6 +1,9 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken")
 
+const ACCESS_TOKEN_MAX_AGE = 2 * 60 * 60 * 1000;
+const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+
 async function hashPassword(password)
 {
    const salt = 12;
@@ -10,6 +13,9 @@ async function hashPassword(password)
 
 async function verifyPassword(password, storedHash)
 {
+   if(!password || !storedHash)
+      return false;
+
    const match = await bcrypt.compare(password, storedHash)
    return match;
 }
@@ -34,6 +40,55 @@ function verifyToken(token)
 function verifyRefreshToken(token)
 {
    return jwt.verify(token, process.env.REFRESH_SECRET)
+}
+
+function getAuthCookieOptions()
+{
+   const sameSite = process.env.AUTH_COOKIE_SAME_SITE || "lax";
+
+   return {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite,
+      path: "/"
+   };
+}
+
+function setAuthCookies(res, user)
+{
+   const payload = {
+      id: user.id,
+      email: user.email
+   };
+   const cookieOptions = getAuthCookieOptions();
+
+   res.cookie("authToken", generateToken(payload), {
+      ...cookieOptions,
+      maxAge: ACCESS_TOKEN_MAX_AGE
+   });
+   res.cookie("refreshToken", generateRefreshToken(payload), {
+      ...cookieOptions,
+      maxAge: REFRESH_TOKEN_MAX_AGE
+   });
+}
+
+function setAccessTokenCookie(res, user)
+{
+   res.cookie("authToken", generateToken({
+      id: user.id,
+      email: user.email
+   }), {
+      ...getAuthCookieOptions(),
+      maxAge: ACCESS_TOKEN_MAX_AGE
+   });
+}
+
+function clearAuthCookies(res)
+{
+   const cookieOptions = getAuthCookieOptions();
+
+   res.clearCookie("authToken", cookieOptions);
+   res.clearCookie("refreshToken", cookieOptions);
 }
 
 async function updateUsersFields(data)
@@ -66,4 +121,17 @@ function verifyFields(data)
    return Object.keys(fields).length === 0 ? false : fields
 }
 
-module.exports = { hashPassword, verifyPassword, generateToken, generateRefreshToken, verifyToken, verifyRefreshToken, updateUsersFields, verifyFields }
+module.exports = {
+   hashPassword,
+   verifyPassword,
+   generateToken,
+   generateRefreshToken,
+   verifyToken,
+   verifyRefreshToken,
+   getAuthCookieOptions,
+   setAuthCookies,
+   setAccessTokenCookie,
+   clearAuthCookies,
+   updateUsersFields,
+   verifyFields
+}

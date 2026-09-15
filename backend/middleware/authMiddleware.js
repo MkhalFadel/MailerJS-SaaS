@@ -9,7 +9,8 @@ function authMiddleware(req, res, next)
       // Check if the token is authorized
       if (!accessToken) {
          return res.status(401).json({
-            message: "Unauthorized token",
+            error: "Access token is required",
+            code: "ACCESS_TOKEN_MISSING"
          });
       }
       
@@ -19,7 +20,12 @@ function authMiddleware(req, res, next)
       next();
    } catch (err) {
       res.status(401).json({
-         message: "Invalid token"
+         error: err.name === "TokenExpiredError"
+            ? "Access token has expired"
+            : "Access token is invalid",
+         code: err.name === "TokenExpiredError"
+            ? "ACCESS_TOKEN_EXPIRED"
+            : "ACCESS_TOKEN_INVALID"
       });
    }
 }

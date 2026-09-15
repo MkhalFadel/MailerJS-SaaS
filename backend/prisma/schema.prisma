@@ -18,7 +18,8 @@ enum campaign_send_status {
 model users {
   id            String   @id @default(uuid())
   email         String   @unique @db.VarChar(100)
-  password_hash String   @db.VarChar(255)
+  password_hash String?  @db.VarChar(255)
+  google_id     String?  @unique @db.VarChar(255)
   first_name    String
   last_name     String
   created_at    DateTime @default(now()) @db.Timestamptz(6)

@@ -238,7 +238,8 @@ test("dashboard route uses the existing authentication middleware", () => {
 
    assert.equal(statusCode, 401);
    assert.deepEqual(responseBody, {
-      message: "Unauthorized token"
+      error: "Access token is required",
+      code: "ACCESS_TOKEN_MISSING"
    });
    assert.equal(nextCalled, false);
 });

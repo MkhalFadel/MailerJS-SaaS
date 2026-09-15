@@ -13,7 +13,7 @@ import { useAuth } from "../../context/authContext";
 import { getDashboard } from "../../api/dashboard";
 
 function Account() {
-   const { user, updateProfile } = useAuth();
+   const { user, updateProfile, changePassword } = useAuth();
    const [activeSection,setActiveSection] = useState("profile");
 
    const [firstName,setFirstName] = useState(user?.first_name || "");
@@ -98,7 +98,12 @@ function Account() {
             );
 
          case "security":
-            return <Security onPasswordChange={updateProfile} />;
+            return (
+               <Security
+                  hasPassword={user?.hasPassword}
+                  onPasswordChange={changePassword}
+               />
+            );
 
          case "actions":
             return <AccountActions />;

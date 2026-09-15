@@ -5,6 +5,7 @@ import styles from "./login.module.css";
 import { useAuth } from "../../../context/authContext"
 import { useNavigate } from "react-router-dom";
 import Icon from "../../../components/icons/Icon";
+import GoogleSignIn from "../../../components/auth/googleSignIn/GoogleSignIn";
 
 function Login() {
    const [email, setEmail] = useState("");
@@ -15,7 +16,7 @@ function Login() {
 
    const navigate = useNavigate("");
 
-   const { login } = useAuth();
+   const { login, googleLogin } = useAuth();
 
    async function handleSubmit(event) {
       event.preventDefault();
@@ -33,6 +34,20 @@ function Login() {
          setError(error.message || "Unable to sign in.");
       }
 
+   }
+
+   async function handleGoogleSignIn(credential)
+   {
+      setError(null);
+
+      try {
+         await googleLogin(credential);
+         navigate("/dashboard");
+      } catch(error) {
+         console.error("Google sign-in failed:", error);
+         setError(error.message || "Unable to sign in with Google.");
+         throw error;
+      }
    }
 
    return (
@@ -115,6 +130,17 @@ function Login() {
                >
                   Sign In
                </button>
+
+               <div className={styles.divider}>
+                  <span>or continue with</span>
+               </div>
+
+               <GoogleSignIn
+                  onSuccess={handleGoogleSignIn}
+                  onError={(googleError) => {
+                     setError(googleError.message || "Unable to sign in with Google.");
+                  }}
+               />
             </form>
 
             <div className={styles.signup}>
