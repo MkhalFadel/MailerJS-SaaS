@@ -10,14 +10,14 @@
 
 .header h1 {
    color: var(--color-text);
-   font-size: 28px;
+   font-size: 30px;
    font-weight: 700;
 }
 
 .header p {
    margin-top: 6px;
    color: var(--color-text-secondary);
-   font-size: 14px;
+   font-size: 15px;
 }
 
 .layout {
@@ -48,16 +48,16 @@
    color: var(--color-text-secondary);
    border: 0;
    border-radius: var(--radius-md);
-   font-size: 11px;
+   min-height: 42px;
+   font-size: 13px;
    font-weight: 500;
    text-align: left;
    transition: background var(--transition-fast),color var(--transition-fast);
 }
 
-.navItem span {
-   width: 18px;
+.navItem svg {
+   flex-shrink: 0;
    color: var(--color-text-muted);
-   text-align: center;
 }
 
 .navItem:hover {
@@ -71,7 +71,7 @@
    font-weight: 600;
 }
 
-.navItem.active span {
+.navItem.active svg {
    color: var(--color-primary);
 }
 
@@ -94,23 +94,28 @@
 
 .smtpHeader h2 {
    color: var(--color-text);
-   font-size: 20px;
+   font-size: 22px;
    font-weight: 700;
 }
 
 .smtpHeader p {
    margin-top: 5px;
    color: var(--color-text-secondary);
-   font-size: 13px;
+   font-size: 14px;
 }
 
 .addButton {
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   gap: 7px;
+   min-height: 42px;
    padding: 10px 15px;
    background: var(--color-primary);
-   color: var(--color-text-on-primary);
+   color: var(--color-primary-text);
    border: 0;
    border-radius: var(--radius-md);
-   font-size: 12px;
+   font-size: 13px;
    font-weight: 600;
    cursor: pointer;
    transition: background var(--transition-fast),transform var(--transition-fast);
@@ -157,13 +162,13 @@
 
 .smtpProvider {
    color: var(--color-text);
-   font-size: 14px;
+   font-size: 16px;
    font-weight: 600;
 }
 
 .smtpEmail {
    color: var(--color-text-secondary);
-   font-size: 12px;
+   font-size: 13px;
    overflow: hidden;
    text-overflow: ellipsis;
    white-space: nowrap;
@@ -175,7 +180,7 @@
    gap: 8px;
    margin-top: 3px;
    color: var(--color-text-muted);
-   font-size: 11px;
+   font-size: 12px;
 }
 
 .smtpActions {
@@ -186,12 +191,16 @@
 }
 
 .editButton {
+   display: inline-flex;
+   align-items: center;
+   gap: 5px;
+   min-height: 38px;
    padding: 8px 12px;
    background: var(--color-surface-hover);
    color: var(--color-text);
    border: 1px solid var(--color-border);
    border-radius: var(--radius-md);
-   font-size: 11px;
+   font-size: 12px;
    font-weight: 500;
    cursor: pointer;
    transition: background var(--transition-fast),border-color var(--transition-fast);
@@ -203,12 +212,16 @@
 }
 
 .deleteButton {
+   display: inline-flex;
+   align-items: center;
+   gap: 5px;
+   min-height: 38px;
    padding: 8px 12px;
    background: transparent;
    color: var(--color-danger);
    border: 1px solid var(--color-border);
    border-radius: var(--radius-md);
-   font-size: 11px;
+   font-size: 12px;
    font-weight: 500;
    cursor: pointer;
    transition: background var(--transition-fast),border-color var(--transition-fast);
@@ -234,7 +247,7 @@
 .emptySmtp h3 {
    margin-top: 12px;
    color: var(--color-text);
-   font-size: 16px;
+   font-size: 17px;
    font-weight: 600;
 }
 
@@ -242,7 +255,7 @@
    max-width: 420px;
    margin-top: 6px;
    color: var(--color-text-secondary);
-   font-size: 13px;
+   font-size: 14px;
    line-height: 1.5;
 }
 
@@ -253,7 +266,7 @@
    background: var(--color-primary-light);
    color: var(--color-primary);
    border-radius: 999px;
-   font-size: 10px;
+   font-size: 12px;
    font-weight: 600;
 }
 

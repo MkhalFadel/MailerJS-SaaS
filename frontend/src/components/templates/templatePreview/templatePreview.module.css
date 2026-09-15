@@ -12,12 +12,15 @@
 }
 
 .backButton {
+   display: inline-flex;
+   align-items: center;
+   gap: 6px;
    margin-bottom: 16px;
    padding: 0;
    background: transparent;
    color: var(--color-text-muted);
    border: 0;
-   font-size: 12px;
+   font-size: 13px;
 }
 
 .backButton:hover {
@@ -26,22 +29,27 @@
 
 .header h1 {
    color: var(--color-text);
-   font-size: 28px;
+   font-size: 30px;
 }
 
 .header p {
    margin-top: 6px;
    color: var(--color-text-secondary);
-   font-size: 14px;
+   font-size: 15px;
 }
 
 .editButton {
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   gap: 7px;
+   min-height: 42px;
    padding: 10px 16px;
    background: var(--color-primary);
    color: var(--color-primary-text);
    border: 1px solid var(--color-primary);
    border-radius: var(--radius-md);
-   font-size: 12px;
+   font-size: 13px;
    font-weight: 600;
 }
 
@@ -94,8 +102,8 @@
    min-height: 400px;
    margin: 0 auto;
    padding: 40px;
-   background: #ffffff;
-   color: #17181a;
+   background: var(--color-email-preview-surface);
+   color: var(--color-email-preview-text);
    border-radius: var(--radius-md);
    box-shadow: var(--shadow-sm);
 }
@@ -107,7 +115,7 @@
 
 .emailPreview p {
    margin-bottom: 14px;
-   color: #555b64;
+   color: var(--color-email-preview-muted);
    line-height: 1.6;
 }
 

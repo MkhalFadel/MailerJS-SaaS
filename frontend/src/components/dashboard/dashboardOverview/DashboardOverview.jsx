@@ -3,6 +3,7 @@ import {
    formatPercentage
 } from "../../../utils/utils";
 import styles from "./dashboardOverview.module.css";
+import Icon from "../../icons/Icon";
 
 function DashboardOverview({ stats })
 {
@@ -25,7 +26,13 @@ function DashboardOverview({ stats })
       <div className={styles.overview}>
          <section className={styles.card}>
             <div className={styles.header}>
-               <h2>Delivery Overview</h2>
+               <div className={styles.titleRow}>
+                  <span className={styles.headerIcon}>
+                     <Icon name="send" size={17} />
+                  </span>
+
+                  <h2>Delivery Overview</h2>
+               </div>
 
                <p>
                   SMTP acceptance across all campaign delivery attempts.
@@ -52,7 +59,13 @@ function DashboardOverview({ stats })
 
          <section className={styles.card}>
             <div className={styles.header}>
-               <h2>Resource Overview</h2>
+               <div className={styles.titleRow}>
+                  <span className={styles.headerIcon}>
+                     <Icon name="settings" size={17} />
+                  </span>
+
+                  <h2>Resource Overview</h2>
+               </div>
 
                <p>
                   Your configured MailerJS resources.

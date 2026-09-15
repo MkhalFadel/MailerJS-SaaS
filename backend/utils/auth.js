@@ -36,13 +36,13 @@ function verifyRefreshToken(token)
    return jwt.verify(token, process.env.REFRESH_SECRET)
 }
 
-function updateUsersFields(data)
+async function updateUsersFields(data)
 {
    const fields = {};
    if(data.email) fields.email = data.email;
    if(data.firstName) fields.first_name = data.firstName;
    if(data.lastName) fields.last_name = data.lastName;
-   if(data.password) fields.password_hash = hashPassword(data.password)
+   if(data.password) fields.password_hash = await hashPassword(data.password)
 
    return fields;
 }

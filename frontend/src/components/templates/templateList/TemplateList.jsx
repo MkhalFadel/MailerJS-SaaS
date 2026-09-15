@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import styles from "./templateList.module.css";
 import { deleteTemplate } from "../../../api/templates";
 import { formatTemplateDate } from "../../../utils/utils";
+import EmptyState from "../../feedback/EmptyState";
+import Icon from "../../icons/Icon";
 
 function TemplateList({ templates, setTemplates, onCreate, onEdit, onPreview }) {
    const [search, setSearch] = useState("");
@@ -42,14 +44,16 @@ function TemplateList({ templates, setTemplates, onCreate, onEdit, onPreview }) 
             <button
                className={styles.primaryButton}
                onClick={onCreate}
-            >
-               + Create Template
+               type="button"
+               >
+               <Icon name="plus" size={16} />
+               Create Template
             </button>
          </div>
 
          <div className={styles.toolbar}>
             <div className={styles.searchWrapper}>
-               <span className={styles.searchIcon}>⌕</span>
+               <Icon className={styles.searchIcon} name="search" size={18} />
 
                <input
                   type="text"
@@ -61,21 +65,14 @@ function TemplateList({ templates, setTemplates, onCreate, onEdit, onPreview }) 
          </div>
 
          {filteredTemplates.length === 0 ? (
-            <div className={styles.emptyState}>
-               <div className={styles.emptyIcon}>✉</div>
-
-               <h2>No templates found</h2>
-
-               <p>
-                  Try changing your search or create a new template.
-               </p>
-
-               <button
-                  className={styles.primaryButton}
-                  onClick={onCreate}
-               >
-                  Create Template
-               </button>
+            <div className={styles.emptyCard}>
+               <EmptyState
+                  actionLabel="Create Template"
+                  description="Try changing your search or create a new template."
+                  icon="template"
+                  onAction={onCreate}
+                  title="No templates found"
+               />
             </div>
          ) : (
             <div className={styles.grid}>
@@ -125,16 +122,23 @@ function TemplateList({ templates, setTemplates, onCreate, onEdit, onPreview }) 
                            </span>
 
                            <div className={styles.actions}>
-                              <button  onClick={() => onPreview(template)}>
+                              <button onClick={() => onPreview(template)} type="button">
+                                 <Icon name="eye" size={15} />
                                  Preview
                               </button>
 
-                              <button onClick={() => onEdit(template)}>
+                              <button onClick={() => onEdit(template)} type="button">
+                                 <Icon name="edit" size={15} />
                                  Edit
                               </button>
 
-                              <button onClick={() => deleteTemplateById(template.id)}>
-                                 delete
+                              <button
+                                 className={styles.deleteButton}
+                                 onClick={() => deleteTemplateById(template.id)}
+                                 type="button"
+                              >
+                                 <Icon name="trash" size={15} />
+                                 Delete
                               </button>
                            </div>
                         </div>

@@ -13,14 +13,14 @@
 
 .header h2 {
    color: var(--color-text);
-   font-size: 15px;
+   font-size: 18px;
    font-weight: 600;
 }
 
 .header p {
    margin-top: 5px;
    color: var(--color-text-secondary);
-   font-size: 10px;
+   font-size: 13px;
 }
 
 .passwordStatus {
@@ -30,27 +30,27 @@
    gap: 20px;
    margin: 20px 25px 0;
    padding: 15px;
-   background: var(--color-background-secondary);
+   background: var(--color-bg-secondary);
    border: 1px solid var(--color-border);
    border-radius: var(--radius-md);
 }
 
 .passwordStatus h3 {
    color: var(--color-text);
-   font-size: 11px;
+   font-size: 14px;
 }
 
 .passwordStatus p {
    max-width: 500px;
    margin-top: 5px;
    color: var(--color-text-secondary);
-   font-size: 9px;
+   font-size: 12px;
 }
 
 .passwordStatus span {
    flex-shrink: 0;
    color: var(--color-text-muted);
-   font-size: 8px;
+   font-size: 12px;
 }
 
 .form {
@@ -68,19 +68,19 @@
 
 .field span {
    color: var(--color-text-secondary);
-   font-size: 10px;
+   font-size: 13px;
    font-weight: 600;
 }
 
 .field input {
    width: 100%;
-   padding: 10px 11px;
+   padding: 10px 12px;
    background: var(--color-input-bg);
    color: var(--color-text);
    border: 1px solid var(--color-input-border);
    border-radius: var(--radius-md);
    outline: none;
-   font-size: 11px;
+   font-size: 14px;
 }
 
 .field input:focus {
@@ -89,37 +89,76 @@
 
 .requirements {
    padding: 12px;
-   background: var(--color-background-secondary);
+   background: var(--color-bg-secondary);
    border-radius: var(--radius-md);
 }
 
 .requirements span {
    color: var(--color-text-secondary);
-   font-size: 9px;
+   font-size: 12px;
    font-weight: 600;
 }
 
 .requirements p {
    margin-top: 4px;
    color: var(--color-text-muted);
-   font-size: 8px;
+   font-size: 12px;
 }
 
 .actions {
    display: flex;
+   align-items: center;
    justify-content: flex-end;
+   gap: 15px;
+}
+
+.feedback {
+   margin-right: auto;
+}
+
+.success,
+.error {
+   color: var(--color-success);
+   font-size: 12px;
+}
+
+.error {
+   color: var(--color-danger);
 }
 
 .actions button {
+   min-height: 42px;
    padding: 9px 15px;
    background: var(--color-primary);
    color: var(--color-primary-text);
    border: 1px solid var(--color-primary);
    border-radius: var(--radius-md);
-   font-size: 10px;
+   font-size: 13px;
    font-weight: 600;
 }
 
 .actions button:hover {
    background: var(--color-primary-hover);
+}
+
+.actions button:disabled {
+   cursor: not-allowed;
+   opacity: 0.65;
+}
+
+@media (max-width: 600px) {
+   .passwordStatus,
+   .actions {
+      align-items: flex-start;
+      flex-direction: column;
+   }
+
+   .actions,
+   .actions button {
+      width: 100%;
+   }
+
+   .feedback {
+      margin-right: 0;
+   }
 }

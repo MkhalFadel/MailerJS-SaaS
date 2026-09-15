@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import styles from "./contactSelector.module.css";
+import Icon from "../../icons/Icon";
 
 function ContactSelector({
    contacts,
@@ -125,20 +126,25 @@ function ContactSelector({
                   type="button"
                   className={styles.closeButton}
                   onClick={onClose}
+                  aria-label="Close contact selector"
                >
-                  ×
+                  <Icon name="close" size={20} />
                </button>
             </div>
 
             <div className={styles.toolbar}>
-               <input
-                  type="text"
-                  placeholder="Search contacts..."
-                  value={search}
-                  onChange={(event) =>
-                     setSearch(event.target.value)
-                  }
-               />
+               <div className={styles.searchField}>
+                  <Icon name="search" size={17} />
+
+                  <input
+                     type="text"
+                     placeholder="Search contacts..."
+                     value={search}
+                     onChange={(event) =>
+                        setSearch(event.target.value)
+                     }
+                  />
+               </div>
 
                <button
                   type="button"

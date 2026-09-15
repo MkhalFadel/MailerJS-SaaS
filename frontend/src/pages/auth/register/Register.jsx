@@ -4,6 +4,7 @@ import AuthLayout from "../../../components/auth/authLayout/AuthLayout";
 import styles from "./register.module.css";
 import { registerUser } from "../../../api/auth";
 import { useNavigate } from "react-router-dom";
+import Icon from "../../../components/icons/Icon";
 
 function Register() {
    const [firstName,setFirstName] = useState("");
@@ -12,11 +13,13 @@ function Register() {
    const [password,setPassword] = useState("");
    const [confirmPassword,setConfirmPassword] = useState("");
    const [terms,setTerms] = useState(false);
+   const [error, setError] = useState(null);
 
    const navigate = useNavigate();
 
    async function handleSubmit(event) {
       event.preventDefault();
+      setError(null);
 
       try {
          await registerUser({
@@ -28,7 +31,8 @@ function Register() {
          
          navigate("/login")
       } catch (error) {
-         console.log(error);
+         console.error(error);
+         setError(error.message || "Unable to create your account.");
       }
    }
 
@@ -47,6 +51,13 @@ function Register() {
                className={styles.form}
                onSubmit={handleSubmit}
             >
+               {error && (
+                  <div className={styles.error} role="alert">
+                     <Icon name="alert" size={17} />
+                     {error}
+                  </div>
+               )}
+
                <div className={styles.nameRow}>
                   <label className={styles.field}>
                      <span>First Name</span>
@@ -124,7 +135,6 @@ function Register() {
 
                <button
                   className={styles.submit}
-                  onClick={e => handleSubmit(e)}
                   type="submit"
                >
                   Create Account

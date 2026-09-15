@@ -11,14 +11,14 @@
 
 .sectionHeader h2 {
    color: var(--color-text);
-   font-size: 18px;
+   font-size: 20px;
    font-weight: 700;
 }
 
 .sectionHeader p {
    margin-top: 5px;
    color: var(--color-text-secondary);
-   font-size: 12px;
+   font-size: 13px;
 }
 
 .status {
@@ -26,18 +26,33 @@
    align-items: center;
    gap: 6px;
    padding: 6px 9px;
-   background: var(--color-success-light);
-   color: var(--color-success);
    border-radius: 999px;
-   font-size: 9px;
+   font-size: 12px;
    font-weight: 600;
 }
 
 .status span {
    width: 6px;
    height: 6px;
-   background: var(--color-success);
    border-radius: 50%;
+}
+
+.configured {
+   background: var(--color-success-light);
+   color: var(--color-success);
+}
+
+.configured span {
+   background: var(--color-success);
+}
+
+.unconfigured {
+   background: var(--color-bg-secondary);
+   color: var(--color-text-muted);
+}
+
+.unconfigured span {
+   background: var(--color-text-muted);
 }
 
 .card {
@@ -46,6 +61,30 @@
    border: 1px solid var(--color-border);
    border-radius: var(--radius-lg);
    box-shadow: var(--shadow-sm);
+}
+
+.error,
+.success {
+   display: flex;
+   align-items: center;
+   margin-bottom: 16px;
+   padding: 12px 14px;
+   border: 1px solid;
+   border-radius: var(--radius-md);
+   font-size: 13px;
+   font-weight: 500;
+}
+
+.error {
+   background: var(--color-danger-light);
+   color: var(--color-danger);
+   border-color: var(--color-danger);
+}
+
+.success {
+   background: var(--color-success-light);
+   color: var(--color-success);
+   border-color: var(--color-success);
 }
 
 .form {
@@ -63,25 +102,25 @@
 
 .field > span {
    color: var(--color-text-secondary);
-   font-size: 11px;
+   font-size: 13px;
    font-weight: 600;
 }
 
 .field small {
    color: var(--color-text-muted);
-   font-size: 9px;
+   font-size: 12px;
 }
 
 .field input,
 .field select {
    width: 100%;
-   padding: 11px 12px;
+   padding: 10px 12px;
    background: var(--color-input-bg);
    color: var(--color-text);
    border: 1px solid var(--color-input-border);
    border-radius: var(--radius-md);
    outline: none;
-   font-size: 12px;
+   font-size: 14px;
 }
 
 .field input:focus,
@@ -111,13 +150,13 @@
 
 .secureRow strong {
    color: var(--color-text);
-   font-size: 11px;
+   font-size: 13px;
 }
 
 .secureRow p {
    margin-top: 4px;
    color: var(--color-text-muted);
-   font-size: 9px;
+   font-size: 12px;
 }
 
 .toggle {
@@ -158,13 +197,13 @@
 
 .credentialsHeader h3 {
    color: var(--color-text);
-   font-size: 13px;
+   font-size: 15px;
 }
 
 .credentialsHeader p {
    margin-top: 4px;
    color: var(--color-text-muted);
-   font-size: 9px;
+   font-size: 12px;
 }
 
 .passwordWrapper {
@@ -176,15 +215,18 @@
 }
 
 .passwordWrapper button {
+   display: grid;
+   place-items: center;
+   width: 34px;
+   height: 34px;
    position: absolute;
    top: 50%;
    right: 10px;
-   padding: 3px;
+   padding: 0;
    background: transparent;
    color: var(--color-primary);
    border: 0;
-   font-size: 9px;
-   font-weight: 600;
+   border-radius: var(--radius-sm);
    transform: translateY(-50%);
 }
 
@@ -198,7 +240,7 @@
    color: var(--color-success);
    border: 1px solid var(--color-success);
    border-radius: var(--radius-md);
-   font-size: 12px;
+   font-size: 13px;
    font-weight: 500;
 }
 
@@ -212,7 +254,7 @@
    color: var(--color-danger);
    border: 1px solid var(--color-danger);
    border-radius: var(--radius-md);
-   font-size: 12px;
+   font-size: 13px;
    font-weight: 500;
 }
 
@@ -226,12 +268,17 @@
 }
 
 .testButton {
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   gap: 7px;
+   min-height: 42px;
    padding: 10px 15px;
    background: var(--color-surface);
    color: var(--color-text-secondary);
    border: 1px solid var(--color-border);
    border-radius: var(--radius-md);
-   font-size: 10px;
+   font-size: 13px;
    font-weight: 600;
 }
 
@@ -241,12 +288,17 @@
 }
 
 .saveButton {
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   gap: 7px;
+   min-height: 42px;
    padding: 10px 17px;
    background: var(--color-primary);
    color: var(--color-primary-text);
    border: 1px solid var(--color-primary);
    border-radius: var(--radius-md);
-   font-size: 10px;
+   font-size: 13px;
    font-weight: 600;
 }
 

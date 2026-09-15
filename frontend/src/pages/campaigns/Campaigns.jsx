@@ -3,6 +3,7 @@ import DashboardLayout from "../../layouts/dashboard/DashboardLayout";
 import CampaignList from "../../components/campaigns/campaignList/CampaignList";
 import CampaignForm from "../../components/campaigns/campaignForm/CampaignForm";
 import CampaignDetails from "../../components/campaigns/campaignDetails/CampaignDetails";
+import FeedbackState from "../../components/feedback/FeedbackState";
 import { getCampaigns } from "../../api/campaigns";
 import styles from "./campaigns.module.css";
 
@@ -54,15 +55,15 @@ function Campaigns() {
       <DashboardLayout>
          <div className={styles.page}>
             {view === "list" && loading && (
-               <div className={styles.loading}>
+               <FeedbackState>
                   Loading campaigns...
-               </div>
+               </FeedbackState>
             )}
 
             {view === "list" && !loading && error && (
-               <div className={styles.error}>
+               <FeedbackState type="error">
                   {error}
-               </div>
+               </FeedbackState>
             )}
 
             {view === "list" && !loading && !error && (

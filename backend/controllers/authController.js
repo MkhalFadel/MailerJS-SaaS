@@ -111,8 +111,52 @@ async function updateUser(req, res, next)
 {
    try {
       const data = req.body;
-      const { id } = req.user
-      const fields = updateUsersFields(data)
+      const { id } = req.user;
+
+      if(data.password)
+      {
+         if(
+            data.password.length < 8 ||
+            !/[a-z]/.test(data.password) ||
+            !/[A-Z]/.test(data.password) ||
+            !/\d/.test(data.password)
+         )
+         {
+            return res.status(400).json({
+               error: "Password must contain at least 8 characters, uppercase, lowercase, and a number"
+            });
+         }
+
+         if(!data.currentPassword)
+         {
+            return res.status(400).json({
+               error: "Current password is required"
+            });
+         }
+
+         const currentUser = await prisma.users.findUnique({
+            where: {
+               id
+            },
+            select: {
+               password_hash: true
+            }
+         });
+
+         const isCurrentPasswordValid = currentUser && await verifyPassword(
+            data.currentPassword,
+            currentUser.password_hash
+         );
+
+         if(!isCurrentPasswordValid)
+         {
+            return res.status(400).json({
+               error: "Current password is incorrect"
+            });
+         }
+      }
+
+      const fields = await updateUsersFields(data)
 
       if(Object.keys(fields).length === 0)
          return res.status(400).json({

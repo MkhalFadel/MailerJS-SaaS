@@ -28,6 +28,14 @@ export function refreshAccessToken()
    });
 }
 
+export function updateCurrentUser(user)
+{
+   return apiRequest("/users/update",{
+      method: "PUT",
+      body: JSON.stringify(user)
+   });
+}
+
 export function logoutUser()
 {
    return apiRequest("/users/logout",{

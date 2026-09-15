@@ -1,4 +1,5 @@
 import styles from "./profileOverview.module.css";
+import Icon from "../../icons/Icon";
 
 function ProfileOverview({ firstName, lastName, email }) 
 {
@@ -21,7 +22,7 @@ function ProfileOverview({ firstName, lastName, email })
 
             <div className={styles.verification}>
                <span>
-                  ✓
+                  <Icon name="check" size={12} />
                </span>
 
                Email verified

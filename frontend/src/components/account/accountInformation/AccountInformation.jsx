@@ -1,6 +1,27 @@
 import styles from "./accountInformation.module.css";
 
-function AccountInformation() {
+function formatDate(value, options)
+{
+   if(!value)
+      return "Unavailable";
+
+   const date = new Date(value);
+
+   if(Number.isNaN(date.getTime()))
+      return "Unavailable";
+
+   return new Intl.DateTimeFormat(undefined, options).format(date);
+}
+
+function AccountInformation({ user }) {
+   const memberSince = formatDate(user?.created_at, {
+      month: "long",
+      year: "numeric"
+   });
+   const lastUpdated = formatDate(user?.updated_at, {
+      dateStyle: "medium"
+   });
+
    return (
       <section className={styles.container}>
          <div className={styles.header}>
@@ -16,7 +37,7 @@ function AccountInformation() {
                <span>Account ID</span>
 
                <strong>
-                  #USR-8F29A1
+                  {user?.id || "Unavailable"}
                </strong>
             </div>
 
@@ -24,15 +45,15 @@ function AccountInformation() {
                <span>Member Since</span>
 
                <strong>
-                  August 2026
+                  {memberSince}
                </strong>
             </div>
 
             <div className={styles.item}>
-               <span>Last Login</span>
+               <span>Last Updated</span>
 
                <strong>
-                  Today
+                  {lastUpdated}
                </strong>
             </div>
 
@@ -41,7 +62,7 @@ function AccountInformation() {
 
                <strong className={styles.active}>
                   <i></i>
-                  Active
+                  {user ? "Active" : "Unavailable"}
                </strong>
             </div>
          </div>

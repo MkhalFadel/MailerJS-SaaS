@@ -11,14 +11,14 @@
 
 .header h1 {
    color: var(--color-text);
-   font-size: 28px;
+   font-size: 30px;
    font-weight: 700;
 }
 
 .header p {
    margin-top: 6px;
    color: var(--color-text-secondary);
-   font-size: 14px;
+   font-size: 15px;
 }
 
 .headerActions {
@@ -27,12 +27,17 @@
 }
 
 .primaryButton {
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   gap: 7px;
+   min-height: 42px;
    padding: 10px 16px;
    background: var(--color-primary);
    color: var(--color-primary-text);
    border: 1px solid var(--color-primary);
    border-radius: var(--radius-md);
-   font-size: 12px;
+   font-size: 13px;
    font-weight: 600;
    transition: background var(--transition-fast);
 }
@@ -42,12 +47,17 @@
 }
 
 .secondaryButton {
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   gap: 7px;
+   min-height: 42px;
    padding: 10px 16px;
    background: var(--color-surface);
    color: var(--color-text-secondary);
    border: 1px solid var(--color-border);
    border-radius: var(--radius-md);
-   font-size: 12px;
+   font-size: 13px;
    font-weight: 600;
 }
 
@@ -75,6 +85,7 @@
    border: 1px solid var(--color-input-border);
    border-radius: var(--radius-md);
    outline: none;
+   font-size: 14px;
 }
 
 .searchWrapper input:focus {
@@ -113,7 +124,7 @@
 
 .table {
    width: 100%;
-   min-width: 900px;
+   min-width: 760px;
    border-collapse: collapse;
 }
 
@@ -122,7 +133,7 @@
    background: var(--color-bg-secondary);
    color: var(--color-text-muted);
    border-bottom: 1px solid var(--color-border);
-   font-size: 10px;
+   font-size: 11px;
    font-weight: 600;
    text-align: left;
    text-transform: uppercase;
@@ -133,7 +144,7 @@
    padding: 14px 16px;
    color: var(--color-text-secondary);
    border-bottom: 1px solid var(--color-border);
-   font-size: 12px;
+   font-size: 14px;
 }
 
 .table tbody tr:last-child td {
@@ -158,7 +169,7 @@
    background: transparent;
    color: var(--color-text);
    border: 0;
-   font-size: 12px;
+   font-size: 14px;
    font-weight: 600;
 }
 
@@ -174,7 +185,7 @@
    background: var(--color-primary-light);
    color: var(--color-primary);
    border-radius: 50%;
-   font-size: 10px;
+   font-size: 11px;
    font-weight: 700;
 }
 
@@ -221,21 +232,31 @@
 
 .actions {
    display: flex;
-   gap: 3px;
+   gap: 4px;
 }
 
 .actions button {
-   padding: 5px 7px;
+   display: inline-flex;
+   align-items: center;
+   gap: 4px;
+   min-height: 32px;
+   padding: 5px 8px;
    background: transparent;
    color: var(--color-text-muted);
    border: 0;
    border-radius: var(--radius-md);
-   font-size: 10px;
+   font-size: 12px;
+   font-weight: 600;
 }
 
 .actions button:hover {
    background: var(--color-surface-hover);
    color: var(--color-primary);
+}
+
+.actions .deleteButton:hover {
+   background: var(--color-danger-light);
+   color: var(--color-danger);
 }
 
 .emptyState {
@@ -271,7 +292,7 @@
 .footer {
    margin-top: 12px;
    color: var(--color-text-muted);
-   font-size: 11px;
+   font-size: 12px;
 }
 
 @media (max-width: 700px) {

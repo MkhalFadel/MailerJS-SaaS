@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "../../layouts/dashboard/DashboardLayout";
 import EmailConfiguration from "../../components/settings/emailConfiguration/EmailConfiguration";
-import SenderSettings from "../../components/settings/senderSettings/SenderSettings";
+import FeedbackState from "../../components/feedback/FeedbackState";
+import Icon from "../../components/icons/Icon";
 import { getSmtpAccounts, deleteSmtpAccount } from "../../api/smtp";
 import styles from "./settings.module.css";
 
@@ -96,9 +97,10 @@ function Settings()
                            ? styles.active
                            : ""
                      }`}
-                     onClick={() => setActiveSection("email")}
+                  onClick={() => setActiveSection("email")}
+                  type="button"
                   >
-                     <span>✉</span>
+                     <Icon name="settings" size={18} />
                      Email Configuration
                   </button>
 
@@ -131,24 +133,24 @@ function Settings()
                               <button
                                  className={styles.addButton}
                                  onClick={handleCreate}
-                              >
-                                 + Add SMTP Account
+                                 type="button"
+                                 >
+                                 <Icon name="plus" size={16} />
+                                 Add SMTP Account
                               </button>
                            )}
                         </div>
 
                         {error && (
-                           <div className={styles.error}>
+                           <FeedbackState type="error">
                               {error}
-                           </div>
+                           </FeedbackState>
                         )}
 
                         {loading && (
-                           <div className={styles.emptySmtp}>
-                              <p>
-                                 Loading SMTP accounts...
-                              </p>
-                           </div>
+                           <FeedbackState>
+                              Loading SMTP accounts...
+                           </FeedbackState>
                         )}
 
                         {!loading && !showConfiguration && smtpAccounts.length === 0 && (
@@ -162,8 +164,10 @@ function Settings()
                               <button
                                  className={styles.addButton}
                                  onClick={handleCreate}
-                              >
-                                 + Add SMTP Account
+                                 type="button"
+                                 >
+                                 <Icon name="plus" size={16} />
+                                 Add SMTP Account
                               </button>
                            </div>
                         )}
@@ -215,14 +219,18 @@ function Settings()
                                        <button
                                           className={styles.editButton}
                                           onClick={() => handleEdit(account)}
-                                       >
+                                          type="button"
+                                          >
+                                          <Icon name="edit" size={15} />
                                           Edit
                                        </button>
 
                                        <button
                                           className={styles.deleteButton}
                                           onClick={() => handleDelete(account.id)}
-                                       >
+                                          type="button"
+                                          >
+                                          <Icon name="trash" size={15} />
                                           Delete
                                        </button>
                                     </div>

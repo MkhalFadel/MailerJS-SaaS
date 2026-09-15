@@ -9,12 +9,15 @@
 }
 
 .backButton {
+   display: inline-flex;
+   align-items: center;
+   gap: 6px;
    margin-bottom: 16px;
    padding: 0;
    background: transparent;
    color: var(--color-text-muted);
    border: 0;
-   font-size: 12px;
+   font-size: 13px;
 }
 
 .backButton:hover {
@@ -23,13 +26,13 @@
 
 .header h1 {
    color: var(--color-text);
-   font-size: 28px;
+   font-size: 30px;
 }
 
 .header p {
    margin-top: 6px;
    color: var(--color-text-secondary);
-   font-size: 14px;
+   font-size: 15px;
 }
 
 .card {
@@ -43,7 +46,7 @@
 .form {
    display: grid;
    grid-template-columns: 1fr 1fr;
-   gap: 18px;
+   gap: 20px;
    padding: 24px;
 }
 
@@ -55,14 +58,14 @@
 
 .field span {
    color: var(--color-text-secondary);
-   font-size: 12px;
+   font-size: 13px;
    font-weight: 600;
 }
 
 .field input,
 .field select {
    width: 100%;
-   padding: 11px 12px;
+   padding: 10px 12px;
    background: var(--color-input-bg);
    color: var(--color-text);
    border: 1px solid var(--color-input-border);
@@ -125,22 +128,28 @@
 }
 
 .cancelButton {
+   min-height: 42px;
    padding: 10px 16px;
    background: transparent;
    color: var(--color-text-secondary);
    border: 1px solid var(--color-border);
    border-radius: var(--radius-md);
-   font-size: 12px;
+   font-size: 13px;
    font-weight: 600;
 }
 
 .saveButton {
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   gap: 7px;
+   min-height: 42px;
    padding: 10px 18px;
    background: var(--color-primary);
    color: var(--color-primary-text);
    border: 1px solid var(--color-primary);
    border-radius: var(--radius-md);
-   font-size: 12px;
+   font-size: 13px;
    font-weight: 600;
 }
 

@@ -9,12 +9,15 @@
 }
 
 .backButton {
+   display: inline-flex;
+   align-items: center;
+   gap: 6px;
    margin-bottom: 16px;
    padding: 0;
    background: transparent;
    color: var(--color-text-muted);
    border: 0;
-   font-size: 12px;
+   font-size: 13px;
 }
 
 .backButton:hover {
@@ -23,13 +26,13 @@
 
 .header h1 {
    color: var(--color-text);
-   font-size: 28px;
+   font-size: 30px;
 }
 
 .header p {
    margin-top: 6px;
    color: var(--color-text-secondary);
-   font-size: 14px;
+   font-size: 15px;
 }
 
 .card {
@@ -80,13 +83,13 @@
 
 .dropzone strong {
    color: var(--color-text);
-   font-size: 14px;
+   font-size: 16px;
 }
 
 .dropzone span {
    margin-top: 6px;
    color: var(--color-text-muted);
-   font-size: 11px;
+   font-size: 13px;
 }
 
 .info {
@@ -97,13 +100,13 @@
 
 .info h2 {
    color: var(--color-text);
-   font-size: 13px;
+   font-size: 16px;
 }
 
 .info p {
    margin-top: 6px;
    color: var(--color-text-muted);
-   font-size: 11px;
+   font-size: 13px;
 }
 
 .columns {
@@ -129,22 +132,28 @@
 }
 
 .cancelButton {
+   min-height: 42px;
    padding: 10px 16px;
    background: transparent;
    color: var(--color-text-secondary);
    border: 1px solid var(--color-border);
    border-radius: var(--radius-md);
-   font-size: 12px;
+   font-size: 13px;
    font-weight: 600;
 }
 
 .importButton {
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   gap: 7px;
+   min-height: 42px;
    padding: 10px 18px;
    background: var(--color-primary);
    color: var(--color-primary-text);
    border: 1px solid var(--color-primary);
    border-radius: var(--radius-md);
-   font-size: 12px;
+   font-size: 13px;
    font-weight: 600;
 }
 

@@ -11,6 +11,7 @@ import {
 } from "../../../api/campaigns";
 import { getContacts } from "../../../api/contacts";
 import ContactSelector from "../contactSelector/ContactSelector";
+import Icon from "../../icons/Icon";
 
 function isActiveCampaignSend(campaignSend)
 {
@@ -373,6 +374,7 @@ function CampaignDetails({ campaign, onBack })
                   className={styles.backButton}
                   onClick={onBack}
                >
+                  <Icon name="arrowLeft" size={16} />
                   Back to Campaigns
                </button>
 
@@ -399,6 +401,7 @@ function CampaignDetails({ campaign, onBack })
                      recipients.length === 0
                   }
                >
+                  <Icon name="send" size={16} />
                   {sending
                      ? "Queueing..."
                      : campaignSend?.status === "QUEUED"
@@ -495,6 +498,7 @@ function CampaignDetails({ campaign, onBack })
                   onClick={handleChooseContacts}
                   disabled={loadingContacts || addingRecipients}
                >
+                  <Icon name="plus" size={16} />
                   {loadingContacts
                      ? "Loading Contacts..."
                      : "Add Contacts"}
@@ -560,6 +564,7 @@ function CampaignDetails({ campaign, onBack })
                                              recipient.contactId
                                           }
                                        >
+                                          <Icon name="trash" size={15} />
                                           {removingRecipientId ===
                                           recipient.contactId
                                              ? "Removing..."

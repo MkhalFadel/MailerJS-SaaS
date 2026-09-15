@@ -1,4 +1,5 @@
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme } from "../../context/themeContext";
+import Icon from "../icons/Icon";
 import styles from "./themeToggle.module.css";
 
 function ThemeToggle() {
@@ -18,7 +19,7 @@ function ThemeToggle() {
                isDark ? styles.active : ""
             }`}
          >
-            ☾
+            <Icon name="moon" size={15} />
          </span>
 
          <span
@@ -26,7 +27,7 @@ function ThemeToggle() {
                !isDark ? styles.active : ""
             }`}
          >
-            ☀
+            <Icon name="sun" size={15} />
          </span>
       </button>
    );

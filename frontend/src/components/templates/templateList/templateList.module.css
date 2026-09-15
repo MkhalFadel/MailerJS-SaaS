@@ -11,17 +11,22 @@
 
 .header h1 {
    color: var(--color-text);
-   font-size: 28px;
+   font-size: 30px;
    font-weight: 700;
 }
 
 .header p {
    margin-top: 6px;
    color: var(--color-text-secondary);
-   font-size: 14px;
+   font-size: 15px;
 }
 
 .primaryButton {
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   gap: 7px;
+   min-height: 42px;
    padding: 10px 16px;
    background: var(--color-primary);
    color: var(--color-primary-text);
@@ -55,6 +60,7 @@
    border: 1px solid var(--color-input-border);
    border-radius: var(--radius-md);
    outline: none;
+   font-size: 14px;
 }
 
 .searchWrapper input:focus {
@@ -173,7 +179,7 @@
 }
 
 .cardContent {
-   padding: 16px;
+   padding: 18px;
 }
 
 .cardTitle {
@@ -184,7 +190,7 @@
 
 .cardTitle h2 {
    color: var(--color-text);
-   font-size: 14px;
+   font-size: 16px;
    font-weight: 650;
 }
 
@@ -193,7 +199,7 @@
    overflow: hidden;
    max-width: 220px;
    color: var(--color-text-muted);
-   font-size: 11px;
+   font-size: 13px;
    text-overflow: ellipsis;
    white-space: nowrap;
 }
@@ -221,7 +227,7 @@
 
 .cardFooter > span {
    color: var(--color-text-muted);
-   font-size: 10px;
+   font-size: 12px;
 }
 
 .actions {
@@ -231,17 +237,35 @@
 }
 
 .actions button {
+   display: inline-flex;
+   align-items: center;
+   gap: 4px;
+   min-height: 32px;
    padding: 5px 7px;
    background: transparent;
    color: var(--color-text-secondary);
    border: 0;
    border-radius: var(--radius-md);
-   font-size: 10px;
+   font-size: 12px;
+   font-weight: 600;
 }
 
 .actions button:hover {
    background: var(--color-surface-hover);
    color: var(--color-primary);
+}
+
+.actions .deleteButton:hover {
+   background: var(--color-danger-light);
+   color: var(--color-danger);
+}
+
+.emptyCard {
+   overflow: hidden;
+   background: var(--color-surface);
+   border: 1px solid var(--color-border);
+   border-radius: var(--radius-lg);
+   box-shadow: var(--shadow-sm);
 }
 
 .emptyState {

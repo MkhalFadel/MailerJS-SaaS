@@ -4,6 +4,7 @@ import ContactList from "../../components/contacts/contactList/ContactList";
 import ContactForm from "../../components/contacts/contactForm/ContactForm";
 import ContactDetails from "../../components/contacts/contactDetails/ContactDetails";
 import ImportContacts from "../../components/contacts/importContacts/ImportContacts";
+import FeedbackState from "../../components/feedback/FeedbackState";
 import { getContacts } from "../../api/contacts";
 import styles from "./contacts.module.css";
 
@@ -61,15 +62,15 @@ function Contacts() {
       <DashboardLayout>
          <div className={styles.page}>
             {loading && (
-               <div>
+               <FeedbackState>
                   Loading contacts...
-               </div>
+               </FeedbackState>
             )}
 
             {!loading && error && (
-               <div>
+               <FeedbackState type="error">
                   Failed to load contacts.
-               </div>
+               </FeedbackState>
             )}
 
             {!loading && !error && view === "list" && (

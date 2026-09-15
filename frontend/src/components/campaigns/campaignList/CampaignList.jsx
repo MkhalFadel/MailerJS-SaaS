@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import styles from "./campaignList.module.css";
 import { formatTemplateDate } from "../../../utils/utils";
+import EmptyState from "../../feedback/EmptyState";
+import Icon from "../../icons/Icon";
 
 function CampaignList({ campaigns, onCreate, onView }) {
    const [search, setSearch] = useState("");
@@ -26,14 +28,16 @@ function CampaignList({ campaigns, onCreate, onView }) {
             <button
                className={styles.primaryButton}
                onClick={onCreate}
-            >
-               + Create Campaign
+               type="button"
+               >
+               <Icon name="plus" size={16} />
+               Create Campaign
             </button>
          </div>
 
          <div className={styles.toolbar}>
             <div className={styles.searchWrapper}>
-               <span className={styles.searchIcon}>⌕</span>
+               <Icon className={styles.searchIcon} name="search" size={18} />
 
                <input
                   type="text"
@@ -46,20 +50,13 @@ function CampaignList({ campaigns, onCreate, onView }) {
 
          <div className={styles.card}>
             {filteredCampaigns.length === 0 ? (
-               <div className={styles.emptyState}>
-                  <div className={styles.emptyIcon}>✉</div>
-                  <h2>No campaigns found</h2>
-                  <p>
-                     Try changing your search or create a new campaign.
-                  </p>
-
-                  <button
-                     className={styles.primaryButton}
-                     onClick={onCreate}
-                  >
-                     Create Campaign
-                  </button>
-               </div>
+               <EmptyState
+                  actionLabel="Create Campaign"
+                  description="Try changing your search or create a new campaign."
+                  icon="campaign"
+                  onAction={onCreate}
+                  title="No campaigns found"
+               />
             ) : (
                <div className={styles.tableWrapper}>
                   <table>
@@ -96,8 +93,10 @@ function CampaignList({ campaigns, onCreate, onView }) {
                                  <button
                                     className={styles.moreButton}
                                     onClick={() => onView(campaign)}
+                                    aria-label={`View ${campaign.name}`}
+                                    type="button"
                                  >
-                                    ⋮
+                                    <Icon name="more" size={18} />
                                  </button>
                               </td>
                            </tr>

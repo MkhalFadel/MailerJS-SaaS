@@ -5,6 +5,7 @@ import CurrentPlan from "../../components/billing/currentPlan/CurrentPlan";
 import Usage from "../../components/billing/usage/Usage";
 import Plans from "../../components/billing/plans/Plans";
 import BillingHistory from "../../components/billing/billingHistory/BillingHistory";
+import Icon from "../../components/icons/Icon";
 
 function Billing() {
    const [activeSection, setActiveSection] = useState("overview");
@@ -34,7 +35,10 @@ function Billing() {
       <div className={styles.page}>
          <div className={styles.header}>
             <div>
-               <NavLink key={"/account"} to={"/account"} className={styles.backBtn}>← Back to Account settings</NavLink>
+               <NavLink key={"/account"} to={"/account"} className={styles.backBtn}>
+                  <Icon name="arrowLeft" size={16} />
+                  Back to Account Settings
+               </NavLink>
             </div>
             <div>
                <h1>Billing</h1>
@@ -54,7 +58,7 @@ function Billing() {
                   onClick={() => setActiveSection("overview")}
                >
                   <span>Overview</span>
-                  <span>›</span>
+                  <Icon className={styles.navArrow} name="arrowRight" size={15} />
                </button>
 
                <button
@@ -64,7 +68,7 @@ function Billing() {
                   onClick={() => setActiveSection("plans")}
                >
                   <span>Plans</span>
-                  <span>›</span>
+                  <Icon className={styles.navArrow} name="arrowRight" size={15} />
                </button>
 
                <button
@@ -74,7 +78,7 @@ function Billing() {
                   onClick={() => setActiveSection("history")}
                >
                   <span>Billing History</span>
-                  <span>›</span>
+                  <Icon className={styles.navArrow} name="arrowRight" size={15} />
                </button>
             </aside>
 

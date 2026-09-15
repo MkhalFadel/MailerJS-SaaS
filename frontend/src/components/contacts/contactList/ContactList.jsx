@@ -1,6 +1,8 @@
 import { useMemo,useState } from "react";
 import styles from "./contactList.module.css";
 import { deleteContact } from "../../../api/contacts";
+import EmptyState from "../../feedback/EmptyState";
+import Icon from "../../icons/Icon";
 
 function ContactList({ contacts, setContacts, onCreate, onEdit, onDetails, onImport }) 
 {
@@ -44,26 +46,28 @@ function ContactList({ contacts, setContacts, onCreate, onEdit, onDetails, onImp
 
             <div className={styles.headerActions}>
                <button
-                  className={styles.secondaryButton}
-                  onClick={onImport}
+               className={styles.secondaryButton}
+               onClick={onImport}
+               type="button"
                >
+                  <Icon name="upload" size={16} />
                   Import
                </button>
 
                <button
-                  className={styles.primaryButton}
-                  onClick={onCreate}
+               className={styles.primaryButton}
+               onClick={onCreate}
+               type="button"
                >
-                  + Add Contact
+                  <Icon name="plus" size={16} />
+                  Add Contact
                </button>
             </div>
          </div>
 
          <div className={styles.toolbar}>
             <div className={styles.searchWrapper}>
-               <span className={styles.searchIcon}>
-                  ⌕
-               </span>
+               <Icon className={styles.searchIcon} name="search" size={18} />
 
                <input
                   type="text"
@@ -125,16 +129,23 @@ function ContactList({ contacts, setContacts, onCreate, onEdit, onDetails, onImp
 
                         <td>
                            <div className={styles.actions}>
-                              <button onClick={() => onDetails(contact)}>
+                              <button onClick={() => onDetails(contact)} type="button">
+                                 <Icon name="eye" size={15} />
                                  View
                               </button>
 
-                              <button onClick={() => onEdit(contact)}>
+                              <button onClick={() => onEdit(contact)} type="button">
+                                 <Icon name="edit" size={15} />
                                  Edit
                               </button>
 
-                              <button onClick={() => deleteContacts(contact.id)}>
-                                 delete
+                              <button
+                                 className={styles.deleteButton}
+                                 onClick={() => deleteContacts(contact.id)}
+                                 type="button"
+                              >
+                                 <Icon name="trash" size={15} />
+                                 Delete
                               </button>
                            </div>
                         </td>
@@ -144,24 +155,13 @@ function ContactList({ contacts, setContacts, onCreate, onEdit, onDetails, onImp
             </table>
 
             {filteredContacts.length === 0 && (
-               <div className={styles.emptyState}>
-                  <div className={styles.emptyIcon}>
-                     ◉
-                  </div>
-
-                  <h2>No contacts found</h2>
-
-                  <p>
-                     Try changing your search or add a new contact.
-                  </p>
-
-                  <button
-                     className={styles.primaryButton}
-                     onClick={onCreate}
-                  >
-                     Add Contact
-                  </button>
-               </div>
+               <EmptyState
+                  actionLabel="Add Contact"
+                  description="Try changing your search or add a new contact."
+                  icon="contacts"
+                  onAction={onCreate}
+                  title="No contacts found"
+               />
             )}
          </div>
 

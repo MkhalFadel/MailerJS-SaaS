@@ -1,47 +1,68 @@
 import { useState } from "react";
-import styles from "./dangerZone.module.css";
+import styles from "./accountActions.module.css";
 import { useNavigate } from "react-router-dom";
 import { deleteUser } from "../../../api/auth";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/authContext";
 
-function DangerZone() {
+function AccountActions() {
    const [showConfirmation,setShowConfirmation] = useState(false);
    const [action, setAction] = useState("");
+   const [error, setError] = useState(null);
+   const [loading, setLoading] = useState(false);
 
    const navigate = useNavigate();
    const { logout } = useAuth();
 
    async function signout()
    {
+      setLoading(true);
+      setError(null);
+
       try {
-         await logout()
-         navigate("/login")
+         await logout();
+         navigate("/login");
       } catch (error) {
-         console.log(error);
+         console.error("Failed to sign out:", error);
+         setError(error.message || "Unable to sign out.");
+      } finally {
+         setLoading(false);
       }
    }
 
    async function deleteAccount()
    {
+      setLoading(true);
+      setError(null);
+
       try {
          await deleteUser();
+         await logout();
          navigate('/login');
       } catch (error) {
-         console.log(error);
+         console.error("Failed to delete account:", error);
+         setError(error.message || "Unable to delete your account.");
+      } finally {
+         setLoading(false);
       }
    }
 
    return (
       <section className={styles.container}>
          <div className={styles.header}>
-            <h2>Danger Zone</h2>
+            <h2>Account Actions</h2>
 
             <p>
-               Irreversible actions affecting your account.
+               Manage your active session or permanently remove your account.
             </p>
          </div>
 
-         <div className={styles.dangerCard}>
+         {error && (
+            <p className={styles.error} role="alert">
+               {error}
+            </p>
+         )}
+
+         <div className={styles.actionCard}>
             <div className={styles.content}>
                <div>
                   <h3>
@@ -49,12 +70,14 @@ function DangerZone() {
                   </h3>
 
                   <p>
-                     Sign out of your Account
+                     Sign out of your account on this device.
                   </p>
                </div>
 
                <button
-                  className={styles.deleteButton}
+                  type="button"
+                  className={styles.signOutButton}
+                  disabled={loading}
                   onClick={() => {
                      setShowConfirmation(true)
                      setAction("signOut")
@@ -74,20 +97,27 @@ function DangerZone() {
 
                   <div className={styles.confirmationActions}>
                      <button
+                        type="button"
                         className={styles.cancelButton}
+                        disabled={loading}
                         onClick={() => setShowConfirmation(false)}
                      >
                         Cancel
                      </button>
 
-                     <button className={styles.confirmButton} onClick={signout}>
-                        Yes, Sign out
+                     <button
+                        type="button"
+                        className={styles.confirmButton}
+                        disabled={loading}
+                        onClick={signout}
+                     >
+                        {loading ? "Signing Out..." : "Yes, Sign Out"}
                      </button>
                   </div>
                </div>
             )}
          </div>
-         <div className={styles.dangerCard}>
+         <div className={`${styles.actionCard} ${styles.destructive}`}>
             <div className={styles.content}>
                <div>
                   <h3>
@@ -101,7 +131,9 @@ function DangerZone() {
                </div>
 
                <button
+                  type="button"
                   className={styles.deleteButton}
+                  disabled={loading}
                   onClick={() => {
                      setShowConfirmation(true)
                      setAction("delete")
@@ -126,14 +158,21 @@ function DangerZone() {
 
                   <div className={styles.confirmationActions}>
                      <button
+                        type="button"
                         className={styles.cancelButton}
+                        disabled={loading}
                         onClick={() => setShowConfirmation(false)}
                      >
                         Cancel
                      </button>
 
-                     <button className={styles.confirmButton} onClick={deleteAccount}>
-                        Yes, Delete My Account
+                     <button
+                        type="button"
+                        className={styles.confirmButton}
+                        disabled={loading}
+                        onClick={deleteAccount}
+                     >
+                        {loading ? "Deleting..." : "Yes, Delete My Account"}
                      </button>
                   </div>
                </div>
@@ -143,4 +182,4 @@ function DangerZone() {
    );
 }
 
-export default DangerZone;
+export default AccountActions;

@@ -7,18 +7,38 @@ function PersonalInformation({
    email,
    setFirstName,
    setLastName,
-   setEmail
+   setEmail,
+   onSave
 }) {
    const [saved,setSaved] = useState(false);
+   const [saving, setSaving] = useState(false);
+   const [error, setError] = useState(null);
 
-   function handleSubmit(event) {
+   async function handleSubmit(event) {
       event.preventDefault();
 
-      setSaved(true);
+      setSaving(true);
+      setSaved(false);
+      setError(null);
 
-      setTimeout(() => {
-         setSaved(false);
-      },3000);
+      try {
+         if(onSave)
+         {
+            await onSave({
+               firstName: firstName.trim(),
+               lastName: lastName.trim(),
+               email: email.trim()
+            });
+         }
+
+         setSaved(true);
+      } catch(error) {
+         console.error("Failed to update personal information:", error);
+         setError(error.message || "Unable to save personal information.");
+      } finally {
+         setSaving(false);
+      }
+
    }
 
    return (
@@ -71,14 +91,20 @@ function PersonalInformation({
             </label>
 
             <div className={styles.actions}>
+               {error && (
+                  <span className={styles.error} role="alert">
+                     {error}
+                  </span>
+               )}
+
                {saved && (
-                  <span>
+                  <span className={styles.success} role="status">
                      Changes saved successfully.
                   </span>
                )}
 
-               <button type="submit">
-                  Save Changes
+               <button disabled={saving} type="submit">
+                  {saving ? "Saving..." : "Save Changes"}
                </button>
             </div>
          </form>

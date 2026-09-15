@@ -11,7 +11,9 @@
    border-radius: 999px;
    box-shadow: var(--shadow-sm);
    cursor: pointer;
-   transition: background var(--transition-fast),border-color var(--transition-fast);
+   transition:
+      background var(--transition-fast),
+      border-color var(--transition-fast);
 }
 
 .icon {
@@ -21,8 +23,9 @@
    height: 26px;
    color: var(--color-text-muted);
    border-radius: 50%;
-   font-size: 14px;
-   transition: background var(--transition-fast),color var(--transition-fast);
+   transition:
+      background var(--transition-fast),
+      color var(--transition-fast);
 }
 
 .icon.active {

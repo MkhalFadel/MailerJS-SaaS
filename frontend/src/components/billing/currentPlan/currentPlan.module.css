@@ -17,7 +17,7 @@
 
 .eyebrow {
    color: var(--color-text-muted);
-   font-size: 9px;
+   font-size: 12px;
 }
 
 .header h2 {
@@ -30,7 +30,7 @@
 .header p {
    margin-top: 4px;
    color: var(--color-text-secondary);
-   font-size: 9px;
+   font-size: 13px;
 }
 
 .badge {
@@ -38,7 +38,7 @@
    background: var(--color-primary-light);
    color: var(--color-primary);
    border-radius: var(--radius-full);
-   font-size: 8px;
+   font-size: 11px;
    font-weight: 600;
 }
 
@@ -62,7 +62,7 @@
 
 .price span {
    color: var(--color-text-muted);
-   font-size: 9px;
+   font-size: 12px;
 }
 
 .info {
@@ -73,12 +73,12 @@
 
 .info span {
    color: var(--color-text-muted);
-   font-size: 8px;
+   font-size: 12px;
 }
 
 .info strong {
    color: var(--color-text);
-   font-size: 9px;
+   font-size: 13px;
    font-weight: 600;
 }
 
@@ -88,29 +88,30 @@
    justify-content: space-between;
    gap: 20px;
    padding: 15px 25px;
-   background: var(--color-background-secondary);
+   background: var(--color-bg-secondary);
    border-top: 1px solid var(--color-border);
 }
 
 .footer span {
    color: var(--color-text);
-   font-size: 9px;
+   font-size: 13px;
    font-weight: 600;
 }
 
 .footer p {
    margin-top: 3px;
    color: var(--color-text-muted);
-   font-size: 8px;
+   font-size: 12px;
 }
 
 .footer button {
+   min-height: 40px;
    padding: 8px 13px;
    background: var(--color-primary);
    color: var(--color-primary-text);
    border: 1px solid var(--color-primary);
    border-radius: var(--radius-md);
-   font-size: 9px;
+   font-size: 13px;
    font-weight: 600;
 }
 

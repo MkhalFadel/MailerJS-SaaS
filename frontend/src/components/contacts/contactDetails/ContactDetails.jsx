@@ -1,4 +1,5 @@
 import styles from "./contactDetails.module.css";
+import Icon from "../../icons/Icon";
 
 function ContactDetails({ contact, onBack, onEdit }) {
    const initials = `${contact.firstName.charAt(0)}${contact.lastName.charAt(0)}`;
@@ -10,8 +11,10 @@ function ContactDetails({ contact, onBack, onEdit }) {
                <button
                   className={styles.backButton}
                   onClick={onBack}
-               >
-                  ← Back to Contacts
+                  type="button"
+                  >
+                  <Icon name="arrowLeft" size={16} />
+                  Back to Contacts
                </button>
 
                <div className={styles.profile}>
@@ -34,7 +37,9 @@ function ContactDetails({ contact, onBack, onEdit }) {
             <button
                className={styles.editButton}
                onClick={onEdit}
-            >
+               type="button"
+               >
+               <Icon name="edit" size={16} />
                Edit Contact
             </button>
          </div>

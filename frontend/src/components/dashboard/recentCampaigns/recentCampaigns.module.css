@@ -13,14 +13,14 @@
 
 .header h2 {
    color: var(--color-text);
-   font-size: 15px;
+   font-size: 17px;
    font-weight: 650;
 }
 
 .header p {
    margin-top: 4px;
    color: var(--color-text-muted);
-   font-size: 12px;
+   font-size: 13px;
 }
 
 .tableWrapper {
@@ -29,6 +29,7 @@
 
 table {
    width: 100%;
+   min-width: 700px;
    border-collapse: collapse;
 }
 
@@ -41,7 +42,7 @@ td {
 
 th {
    color: var(--color-text-muted);
-   font-size: 11px;
+   font-size: 12px;
    font-weight: 600;
    text-transform: uppercase;
 }
@@ -49,7 +50,7 @@ th {
 td {
    color: var(--color-text-secondary);
    border-top: 1px solid var(--color-border);
-   font-size: 13px;
+   font-size: 14px;
 }
 
 .campaignDetails {
@@ -70,16 +71,18 @@ td {
 .campaignDetails span {
    overflow: hidden;
    color: var(--color-text-muted);
-   font-size: 11px;
+   font-size: 12px;
    white-space: nowrap;
    text-overflow: ellipsis;
 }
 
 .status {
-   display: inline-block;
-   padding: 4px 8px;
+   display: inline-flex;
+   align-items: center;
+   min-height: 26px;
+   padding: 4px 9px;
    border-radius: 999px;
-   font-size: 11px;
+   font-size: 12px;
    font-weight: 600;
 }
 

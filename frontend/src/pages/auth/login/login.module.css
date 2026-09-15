@@ -10,21 +10,21 @@
 
 .header h1 {
    color: var(--color-text);
-   font-size: 25px;
+   font-size: 28px;
    font-weight: 700;
 }
 
 .header p {
    margin-top: 7px;
    color: var(--color-text-secondary);
-   font-size: 12px;
+   font-size: 14px;
 }
 
 .form {
    display: flex;
    flex-direction: column;
-   gap: 18px;
-   padding: 25px;
+   gap: 20px;
+   padding: 28px;
    background: var(--color-surface);
    border: 1px solid var(--color-border);
    border-radius: var(--radius-lg);
@@ -40,7 +40,7 @@
 .field > span,
 .labelRow > span {
    color: var(--color-text-secondary);
-   font-size: 11px;
+   font-size: 13px;
    font-weight: 600;
 }
 
@@ -52,19 +52,19 @@
 
 .labelRow a {
    color: var(--color-primary);
-   font-size: 10px;
+   font-size: 12px;
 }
 
 .field input[type="email"],
 .passwordWrapper input {
    width: 100%;
-   padding: 11px 12px;
+   padding: 10px 12px;
    background: var(--color-input-bg);
    color: var(--color-text);
    border: 1px solid var(--color-input-border);
    border-radius: var(--radius-md);
    outline: none;
-   font-size: 12px;
+   font-size: 14px;
 }
 
 .field input:focus {
@@ -84,15 +84,18 @@
 }
 
 .passwordWrapper button {
+   display: grid;
+   place-items: center;
+   width: 34px;
+   height: 34px;
    position: absolute;
    top: 50%;
    right: 10px;
-   padding: 3px;
+   padding: 0;
    background: transparent;
    color: var(--color-primary);
    border: 0;
-   font-size: 9px;
-   font-weight: 600;
+   border-radius: var(--radius-sm);
    transform: translateY(-50%);
 }
 
@@ -101,7 +104,7 @@
    align-items: center;
    gap: 7px;
    color: var(--color-text-secondary);
-   font-size: 10px;
+   font-size: 13px;
 }
 
 .remember input {
@@ -111,13 +114,14 @@
 }
 
 .submit {
+   min-height: 44px;
    width: 100%;
    padding: 11px;
    background: var(--color-primary);
    color: var(--color-primary-text);
    border: 1px solid var(--color-primary);
    border-radius: var(--radius-md);
-   font-size: 11px;
+   font-size: 14px;
    font-weight: 600;
 }
 
@@ -131,10 +135,22 @@
    gap: 5px;
    margin-top: 18px;
    color: var(--color-text-muted);
-   font-size: 10px;
+   font-size: 13px;
 }
 
 .signup a {
    color: var(--color-primary);
    font-weight: 600;
+}
+
+.error {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+   padding: 11px 12px;
+   background: var(--color-danger-light);
+   color: var(--color-danger);
+   border: 1px solid var(--color-danger);
+   border-radius: var(--radius-md);
+   font-size: 13px;
 }

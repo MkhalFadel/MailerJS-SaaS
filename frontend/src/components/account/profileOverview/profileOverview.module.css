@@ -32,14 +32,14 @@
 
 .details h2 {
    color: var(--color-text);
-   font-size: 15px;
+   font-size: 18px;
    font-weight: 600;
 }
 
 .details p {
    margin-top: 4px;
    color: var(--color-text-muted);
-   font-size: 9px;
+   font-size: 13px;
 }
 
 .verification {
@@ -47,7 +47,7 @@
    align-items: center;
    gap: 5px;
    color: var(--color-success);
-   font-size: 9px;
+   font-size: 12px;
    font-weight: 600;
 }
 
@@ -61,16 +61,17 @@
 }
 
 .avatarButton {
+   min-height: 38px;
    padding: 8px 11px;
-   background: var(--color-background);
+   background: var(--color-bg);
    color: var(--color-text-secondary);
    border: 1px solid var(--color-border);
    border-radius: var(--radius-md);
-   font-size: 9px;
+   font-size: 12px;
 }
 
 .avatarButton:hover {
-   background: var(--color-background-secondary);
+   background: var(--color-bg-secondary);
    color: var(--color-text);
 }
 

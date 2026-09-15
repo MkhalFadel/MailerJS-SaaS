@@ -1,7 +1,11 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { getCurrentUser, loginUser, logoutUser } from "../api/auth";
-
-const AuthContext = createContext(null);
+import { useEffect, useState } from "react";
+import {
+   getCurrentUser,
+   loginUser,
+   logoutUser,
+   updateCurrentUser
+} from "../api/auth";
+import { AuthContext } from "./authContext";
 
 export function AuthProvider({ children })
 {
@@ -15,7 +19,7 @@ export function AuthProvider({ children })
             const response = await getCurrentUser();
 
             setUser(response.data);
-         } catch(error) {
+         } catch {
             setUser(null);
          } finally {
             setLoading(false);
@@ -41,6 +45,15 @@ export function AuthProvider({ children })
       setUser(null);
    }
 
+   async function updateProfile(profile)
+   {
+      const response = await updateCurrentUser(profile);
+
+      setUser(response.data);
+
+      return response;
+   }
+
    return (
       <AuthContext.Provider
          value={{
@@ -48,15 +61,11 @@ export function AuthProvider({ children })
             loading,
             isAuthenticated: Boolean(user),
             login,
-            logout
+            logout,
+            updateProfile
          }}
       >
          {children}
       </AuthContext.Provider>
    );
-}
-
-export function useAuth()
-{
-   return useContext(AuthContext);
 }

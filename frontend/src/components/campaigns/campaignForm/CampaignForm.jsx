@@ -5,6 +5,7 @@ import { getSmtpAccounts } from "../../../api/smtp";
 import { createCampaign, addCampaignRecipients } from "../../../api/campaigns";
 import { getContacts } from "../../../api/contacts";
 import ContactSelector from "../contactSelector/ContactSelector";
+import Icon from "../../icons/Icon";
 
 function CampaignForm({ onCancel, onCreated })
 {
@@ -192,7 +193,8 @@ function CampaignForm({ onCancel, onCreated })
                   className={styles.backButton}
                   onClick={onCancel}
                >
-                  ← Back to Campaigns
+                  <Icon name="arrowLeft" size={16} />
+                  Back to Campaigns
                </button>
 
                <h1>Create Campaign</h1>
@@ -355,9 +357,7 @@ function CampaignForm({ onCancel, onCreated })
                            : "Choose Contacts"}
                   </span>
 
-                  <span>
-                     →
-                  </span>
+                  <Icon name="arrowRight" size={18} />
                </button>
 
                {selectedContacts.length > 0 && (
@@ -380,7 +380,9 @@ function CampaignForm({ onCancel, onCreated })
                            <button
                               type="button"
                               onClick={() => removeSelectedContact(contact.id)}
+                              aria-label={`Remove ${contact.email}`}
                            >
+                              <Icon name="close" size={15} />
                               Remove
                            </button>
                         </div>
@@ -419,6 +421,7 @@ function CampaignForm({ onCancel, onCreated })
                      selectedContacts.length === 0
                   }
                >
+                  <Icon name={createdCampaign ? "check" : "plus"} size={16} />
                   {createdCampaign
                      ? "Campaign Created"
                      : loading

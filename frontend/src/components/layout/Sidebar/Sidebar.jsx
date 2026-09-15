@@ -1,26 +1,28 @@
 import { NavLink } from "react-router-dom";
+import { useAuth } from "../../../context/authContext";
+import Icon from "../../icons/Icon";
 import styles from "./sidebar.module.css";
 
 const navigation = [
    {
       label: "Dashboard",
       path: "/dashboard",
-      icon: "⌂",
+      icon: "dashboard",
    },
    {
       label: "Campaigns",
       path: "/campaigns",
-      icon: "✉",
+      icon: "campaign",
    },
    {
       label: "Templates",
       path: "/templates",
-      icon: "▤",
+      icon: "template",
    },
    {
       label: "Contacts",
       path: "/contacts",
-      icon: "♙",
+      icon: "contacts",
 },
 ];
 
@@ -33,13 +35,28 @@ const secondaryNavigation = [
    {
       label: "Settings",
       path: "/settings",
-      icon: "⚙",
+      icon: "settings",
    },
 ];
 
-function Sidebar() {
+function getInitials(user)
+{
+   const firstName = user?.first_name || user?.firstName || "";
+   const lastName = user?.last_name || user?.lastName || "";
+
+   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || "MJ";
+}
+
+function Sidebar({ isOpen, onNavigate }) {
+   const { user } = useAuth();
+   const firstName = user?.first_name || user?.firstName || "";
+   const lastName = user?.last_name || user?.lastName || "";
+   const userName = `${firstName} ${lastName}`.trim() || "Account";
+
    return (
-      <aside className={styles.sidebar}>
+      <aside
+         className={`${styles.sidebar} ${isOpen ? styles.open : ""}`}
+      >
          <div className={styles.logo}>
          <div className={styles.logoMark}>M</div>
          <span>MailerJS</span>
@@ -56,8 +73,9 @@ function Sidebar() {
                className={({ isActive }) =>
                   `${styles.navItem} ${isActive ? styles.active : ""}`
                }
+               onClick={onNavigate}
                >
-               <span className={styles.icon}>{item.icon}</span>
+               <Icon className={styles.icon} name={item.icon} size={19} />
                <span>{item.label}</span>
                </NavLink>
             ))}
@@ -73,8 +91,9 @@ function Sidebar() {
                className={({ isActive }) =>
                   `${styles.navItem} ${isActive ? styles.active : ""}`
                }
+               onClick={onNavigate}
                >
-               <span className={styles.icon}>{item.icon}</span>
+               <Icon className={styles.icon} name={item.icon} size={19} />
                <span>{item.label}</span>
                </NavLink>
             ))}
@@ -82,12 +101,17 @@ function Sidebar() {
          </nav>
 
          <div className={styles.sidebarBottom}>
-         <NavLink key={"/account"} to={"/account"} className={styles.user}>
-            <div className={styles.avatar}>FM</div>
+         <NavLink
+            key={"/account"}
+            to={"/account"}
+            className={styles.user}
+            onClick={onNavigate}
+         >
+            <div className={styles.avatar}>{getInitials(user)}</div>
 
             <div className={styles.userInfo}>
-               <span className={styles.userName}>Fadel Mkahal</span>
-               <span className={styles.userEmail}>fadel@example.com</span>
+               <span className={styles.userName}>{userName}</span>
+               <span className={styles.userEmail}>{user?.email || ""}</span>
             </div>
          </NavLink>
          </div>

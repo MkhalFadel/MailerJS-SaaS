@@ -1,17 +1,28 @@
 import styles from "./usageOverview.module.css";
 
-function UsageOverview() {
-   const usage = {
-      emails: 1248,
-      campaigns: 24,
-      templates: 8,
-      contacts: 463
-   };
-
-   const emailLimit = 5000;
-   const emailPercentage = Math.round(
-      (usage.emails / emailLimit) * 100
-   );
+function UsageOverview({ stats, loading, error }) {
+   const acceptedEmails = stats?.acceptedEmails ?? 0;
+   const failedEmails = stats?.failedEmails ?? 0;
+   const deliveryAttempts = acceptedEmails + failedEmails;
+   const successRate = stats?.successRate ?? 0;
+   const usage = [
+      {
+         label: "Email Attempts",
+         value: deliveryAttempts.toLocaleString()
+      },
+      {
+         label: "Campaigns",
+         value: (stats?.totalCampaigns ?? 0).toLocaleString()
+      },
+      {
+         label: "Templates",
+         value: (stats?.totalTemplates ?? 0).toLocaleString()
+      },
+      {
+         label: "Contacts",
+         value: (stats?.totalContacts ?? 0).toLocaleString()
+      }
+   ];
 
    return (
       <section className={styles.container}>
@@ -23,64 +34,56 @@ function UsageOverview() {
             </p>
          </div>
 
-         <div className={styles.content}>
-            <div className={styles.grid}>
-               <div className={styles.item}>
-                  <span>Emails Sent</span>
+         {loading && (
+            <p className={styles.status} role="status">
+               Loading account usage...
+            </p>
+         )}
 
-                  <strong>
-                     {usage.emails.toLocaleString()}
-                  </strong>
+         {error && (
+            <p className={styles.error} role="alert">
+               {error}
+            </p>
+         )}
+
+         {!loading && !error && (
+            <div className={styles.content}>
+               <div className={styles.grid}>
+                  {usage.map((item) => (
+                     <div className={styles.item} key={item.label}>
+                        <span>{item.label}</span>
+
+                        <strong>{item.value}</strong>
+                     </div>
+                  ))}
                </div>
 
-               <div className={styles.item}>
-                  <span>Campaigns</span>
+               <div className={styles.emailUsage}>
+                  <div className={styles.usageHeader}>
+                     <span>Delivery Results</span>
 
-                  <strong>
-                     {usage.campaigns}
-                  </strong>
-               </div>
+                     <strong>
+                        {acceptedEmails.toLocaleString()} accepted · {failedEmails.toLocaleString()} failed
+                     </strong>
+                  </div>
 
-               <div className={styles.item}>
-                  <span>Templates</span>
+                  <div className={styles.progressTrack}>
+                     <div
+                        className={styles.progressBar}
+                        style={{
+                           width: `${Math.min(Math.max(successRate, 0), 100)}%`
+                        }}
+                     />
+                  </div>
 
-                  <strong>
-                     {usage.templates}
-                  </strong>
-               </div>
-
-               <div className={styles.item}>
-                  <span>Contacts</span>
-
-                  <strong>
-                     {usage.contacts}
-                  </strong>
+                  <p>
+                     {deliveryAttempts === 0
+                        ? "No delivery attempts yet."
+                        : `${successRate}% of delivery attempts were accepted by your SMTP provider.`}
+                  </p>
                </div>
             </div>
-
-            <div className={styles.emailUsage}>
-               <div className={styles.usageHeader}>
-                  <span>Monthly Emails</span>
-
-                  <strong>
-                     {usage.emails.toLocaleString()} / {emailLimit.toLocaleString()}
-                  </strong>
-               </div>
-
-               <div className={styles.progressTrack}>
-                  <div
-                     className={styles.progressBar}
-                     style={{
-                        width: `${emailPercentage}%`
-                     }}
-                  />
-               </div>
-
-               <p>
-                  {emailPercentage}% of your monthly email limit used.
-               </p>
-            </div>
-         </div>
+         )}
       </section>
    );
 }

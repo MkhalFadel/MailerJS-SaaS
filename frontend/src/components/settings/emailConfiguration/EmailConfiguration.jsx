@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import styles from "./emailConfiguration.module.css";
 import { createSmtpAccount, updateSmtpAccount, testSmtpConnection } from "../../../api/smtp";
+import Icon from "../../icons/Icon";
 
 const providers = [
    {
@@ -52,9 +53,27 @@ const defaultFormData = {
    senderEmail: ""
 };
 
+function getInitialFormData(account)
+{
+   return {
+      provider: account?.provider || "Gmail",
+      host: account?.host || "smtp.gmail.com",
+      port: account?.port
+         ? String(account.port)
+         : "587",
+      secure: account?.secure || false,
+      username: account?.username || "",
+      password: "",
+      senderName: account?.senderName || "",
+      senderEmail: account?.senderEmail || ""
+   };
+}
+
 function EmailConfiguration({ account, setSmtpAccounts, onCancel })
 {
-   const [formData,setFormData] = useState(defaultFormData);
+   const [formData,setFormData] = useState(
+      () => account ? getInitialFormData(account) : defaultFormData
+   );
 
    const [showPassword, setShowPassword] = useState(false);
    const [loading, setLoading] = useState(false);
@@ -64,24 +83,6 @@ function EmailConfiguration({ account, setSmtpAccounts, onCancel })
    const [connectionStatus, setConnectionStatus] = useState(null);
 
    const isEditing = Boolean(account);
-
-   useEffect(() => {
-      setFormData({
-         provider: account?.provider || "Gmail",
-         host: account?.host || "smtp.gmail.com",
-         port: account?.port
-            ? String(account.port)
-            : "587",
-         secure: account?.secure || false,
-         username: account?.username || "",
-         password: "",
-         senderName: account?.senderName || "",
-         senderEmail: account?.senderEmail || ""
-      });
-
-      setError(null);
-      setMessage(null);
-   },[account]);
 
    function handleChange(event)
    {
@@ -242,7 +243,11 @@ function EmailConfiguration({ account, setSmtpAccounts, onCancel })
                </p>
             </div>
 
-            <span className={styles.status}>
+            <span
+               className={`${styles.status} ${
+                  isEditing ? styles.configured : styles.unconfigured
+               }`}
+            >
                <span></span>
                {isEditing ? "Configured" : "Not configured"}
             </span>
@@ -379,11 +384,12 @@ function EmailConfiguration({ account, setSmtpAccounts, onCancel })
                      {!isEditing && (
                         <button
                            type="button"
+                           aria-label={showPassword ? "Hide password" : "Show password"}
                            onClick={() =>
                               setShowPassword(current => !current)
                            }
                         >
-                           {showPassword ? "Hide" : "Show"}
+                           <Icon name={showPassword ? "eyeOff" : "eye"} size={17} />
                         </button>
                      )}
                   </div>
@@ -429,7 +435,10 @@ function EmailConfiguration({ account, setSmtpAccounts, onCancel })
                   }
                >
                   <span>
-                     {connectionStatus.success ? "✓" : "⚠"}
+                     <Icon
+                        name={connectionStatus.success ? "check" : "alert"}
+                        size={17}
+                     />
                   </span>
 
                   <span>
@@ -446,6 +455,7 @@ function EmailConfiguration({ account, setSmtpAccounts, onCancel })
                      onClick={handleTestConnection}
                      disabled={testing || loading}
                   >
+                     <Icon name="send" size={16} />
                      {testing
                         ? "Testing..."
                         : "Test Connection"}
@@ -457,6 +467,7 @@ function EmailConfiguration({ account, setSmtpAccounts, onCancel })
                   className={styles.saveButton}
                   disabled={loading || testing}
                >
+                  <Icon name={isEditing ? "edit" : "plus"} size={16} />
                   {loading
                      ? "Saving..."
                      : isEditing

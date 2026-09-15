@@ -8,14 +8,14 @@
 
 .header h2 {
    color: var(--color-text);
-   font-size: 15px;
+   font-size: 18px;
    font-weight: 600;
 }
 
 .header p {
    margin-top: 5px;
    color: var(--color-text-secondary);
-   font-size: 10px;
+   font-size: 13px;
 }
 
 .grid {
@@ -47,7 +47,7 @@
    background: var(--color-primary-light);
    color: var(--color-primary);
    border-radius: var(--radius-full);
-   font-size: 7px;
+   font-size: 11px;
    font-weight: 600;
 }
 
@@ -61,7 +61,7 @@
    min-height: 28px;
    margin-top: 6px;
    color: var(--color-text-secondary);
-   font-size: 8px;
+   font-size: 12px;
    line-height: 1.5;
 }
 
@@ -79,7 +79,7 @@
 
 .price span {
    color: var(--color-text-muted);
-   font-size: 8px;
+   font-size: 12px;
 }
 
 .divider {
@@ -102,15 +102,16 @@
    align-items: center;
    gap: 7px;
    color: var(--color-text-secondary);
-   font-size: 9px;
+   font-size: 13px;
 }
 
-.card li span {
+.card li svg {
+   flex-shrink: 0;
    color: var(--color-success);
-   font-weight: 700;
 }
 
 .card button {
+   min-height: 42px;
    width: 100%;
    margin-top: 22px;
    padding: 9px;
@@ -118,7 +119,7 @@
    color: var(--color-primary-text);
    border: 1px solid var(--color-primary);
    border-radius: var(--radius-md);
-   font-size: 9px;
+   font-size: 13px;
    font-weight: 600;
 }
 
@@ -127,13 +128,13 @@
 }
 
 .card button.currentButton {
-   background: var(--color-background-secondary);
+   background: var(--color-bg-secondary);
    color: var(--color-text-secondary);
    border-color: var(--color-border);
 }
 
 .card button.currentButton:hover {
-   background: var(--color-background-secondary);
+   background: var(--color-bg-secondary);
 }
 
 @media (max-width: 850px) {

@@ -3,6 +3,7 @@ import DashboardLayout from "../../layouts/dashboard/DashboardLayout";
 import TemplateList from "../../components/templates/templateList/TemplateList";
 import TemplateEditor from "../../components/templates/templateEditor/TemplateEditor";
 import TemplatePreview from "../../components/templates/templatePreview/TemplatePreview";
+import FeedbackState from "../../components/feedback/FeedbackState";
 import { getTemplates } from "../../api/templates";
 import styles from "./templates.module.css";
 
@@ -55,9 +56,17 @@ function Templates() {
       <DashboardLayout>
          <div className={styles.page}>
 
-            {loading && <div>Loading...</div>}
+            {loading && (
+               <FeedbackState>
+                  Loading templates...
+               </FeedbackState>
+            )}
 
-            {error && <div>Error finding templates</div> }
+            {!loading && error && (
+               <FeedbackState type="error">
+                  Error finding templates.
+               </FeedbackState>
+            )}
 
             {!loading && !error && view === "list" && (
                <TemplateList

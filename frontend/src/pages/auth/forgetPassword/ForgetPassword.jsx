@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import AuthLayout from "../../../components/auth/authLayout/AuthLayout";
 import styles from "./forgetPassword.module.css";
+import Icon from "../../../components/icons/Icon";
 
 function ForgetPassword() {
    const [email,setEmail] = useState("");
@@ -16,7 +17,7 @@ function ForgetPassword() {
       <AuthLayout>
          <div className={styles.container}>
             <div className={styles.icon}>
-               ✉
+               <Icon name="campaign" size={23} />
             </div>
 
             <div className={styles.header}>
@@ -54,7 +55,7 @@ function ForgetPassword() {
             ) : (
                <div className={styles.success}>
                   <div className={styles.successIcon}>
-                     ✓
+                     <Icon name="check" size={21} />
                   </div>
 
                   <h2>Check your inbox</h2>
@@ -70,7 +71,8 @@ function ForgetPassword() {
                className={styles.back}
                to="/login"
             >
-               ← Back to Sign In
+               <Icon name="arrowLeft" size={16} />
+               Back to Sign In
             </Link>
          </div>
       </AuthLayout>

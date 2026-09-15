@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import AuthLayout from "../../../components/auth/authLayout/AuthLayout";
 import styles from "./resetPassword.module.css";
+import Icon from "../../../components/icons/Icon";
 
 function ResetPassword() {
    const [password,setPassword] = useState("");
@@ -19,7 +20,7 @@ function ResetPassword() {
             <div className={styles.container}>
                <div className={styles.success}>
                   <div className={styles.successIcon}>
-                     ✓
+                     <Icon name="check" size={21} />
                   </div>
 
                   <h1>Password updated</h1>
@@ -99,7 +100,8 @@ function ResetPassword() {
                className={styles.back}
                to="/login"
             >
-               ← Back to Sign In
+               <Icon name="arrowLeft" size={16} />
+               Back to Sign In
             </Link>
          </div>
       </AuthLayout>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import styles from "./contactForm.module.css";
 import { createContact, updateContact } from "../../../api/contacts";
+import Icon from "../../icons/Icon";
 
 function ContactForm({ contact, setContacts, onCancel }) {
    const [firstName, setFirstName] = useState(contact?.firstName || "");
@@ -58,10 +59,12 @@ function ContactForm({ contact, setContacts, onCancel }) {
       <div className={styles.container}>
          <div className={styles.header}>
             <button
-               className={styles.backButton}
-               onClick={onCancel}
+            className={styles.backButton}
+            onClick={onCancel}
+            type="button"
             >
-               ← Back to Contacts
+               <Icon name="arrowLeft" size={16} />
+               Back to Contacts
             </button>
 
             <h1>
@@ -113,16 +116,19 @@ function ContactForm({ contact, setContacts, onCancel }) {
 
             <div className={styles.actions}>
                <button
-                  className={styles.cancelButton}
-                  onClick={onCancel}
+               className={styles.cancelButton}
+               onClick={onCancel}
+               type="button"
                >
                   Cancel
                </button>
 
                <button
-                  className={styles.saveButton}
-                  onClick={isEditing ? editContact : createNewContact}
+               className={styles.saveButton}
+               onClick={isEditing ? editContact : createNewContact}
+               type="button"
                >
+                  <Icon name={isEditing ? "edit" : "plus"} size={16} />
                   {isEditing ? "Save Changes" : "Add Contact"}
                </button>
             </div>

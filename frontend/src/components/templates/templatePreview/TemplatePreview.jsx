@@ -1,4 +1,5 @@
 import styles from "./templatePreview.module.css";
+import Icon from "../../icons/Icon";
 
 function TemplatePreview({ template, onBack, onEdit }) {
    return (
@@ -8,8 +9,10 @@ function TemplatePreview({ template, onBack, onEdit }) {
                <button
                   className={styles.backButton}
                   onClick={onBack}
-               >
-                  ← Back to Templates
+                  type="button"
+                  >
+                  <Icon name="arrowLeft" size={16} />
+                  Back to Templates
                </button>
 
                <h1>{template.name}</h1>
@@ -20,7 +23,9 @@ function TemplatePreview({ template, onBack, onEdit }) {
             <button
                className={styles.editButton}
                onClick={onEdit}
-            >
+               type="button"
+               >
+               <Icon name="edit" size={16} />
                Edit Template
             </button>
          </div>

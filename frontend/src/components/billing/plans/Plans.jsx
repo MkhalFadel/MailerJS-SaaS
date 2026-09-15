@@ -1,4 +1,5 @@
 import styles from "./plans.module.css";
+import Icon from "../../icons/Icon";
 
 function Plans() {
    const plans = [
@@ -82,7 +83,7 @@ function Plans() {
                   <ul>
                      {plan.features.map((feature) => (
                         <li key={feature}>
-                           <span>✓</span>
+                           <Icon name="check" size={15} />
                            {feature}
                         </li>
                      ))}

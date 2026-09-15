@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createTemplate, updateTemplate } from "../../../api/templates";
 import styles from "./templateEditor.module.css";
+import Icon from "../../icons/Icon";
 
 function TemplateEditor({ template, setTemplates, onCancel }) {
    const [name, setName] = useState(template?.name || "");
@@ -58,8 +59,10 @@ function TemplateEditor({ template, setTemplates, onCancel }) {
             <button
                className={styles.backButton}
                onClick={onCancel}
-            >
-               ← Back to Templates
+               type="button"
+               >
+               <Icon name="arrowLeft" size={16} />
+               Back to Templates
             </button>
 
             <h1>
@@ -132,11 +135,17 @@ function TemplateEditor({ template, setTemplates, onCancel }) {
                <button
                   className={styles.cancelButton}
                   onClick={onCancel}
+                  type="button"
                >
                   Cancel
                </button>
 
-               <button className={styles.saveButton} onClick={isEditing ? editExistingTemplate : createNewTemplate}>
+               <button
+                  className={styles.saveButton}
+                  onClick={isEditing ? editExistingTemplate : createNewTemplate}
+                  type="button"
+               >
+                  <Icon name={isEditing ? "edit" : "plus"} size={16} />
                   Save Template
                </button>
             </div>

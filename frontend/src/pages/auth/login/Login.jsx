@@ -2,14 +2,16 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import AuthLayout from "../../../components/auth/authLayout/AuthLayout";
 import styles from "./login.module.css";
-import { useAuth } from "../../../context/AuthContext"
+import { useAuth } from "../../../context/authContext"
 import { useNavigate } from "react-router-dom";
+import Icon from "../../../components/icons/Icon";
 
 function Login() {
    const [email, setEmail] = useState("");
    const [password, setPassword] = useState("");
    const [remember, setRemember] = useState(false);
    const [showPassword, setShowPassword] = useState(false);
+   const [error, setError] = useState(null);
 
    const navigate = useNavigate("");
 
@@ -17,6 +19,7 @@ function Login() {
 
    async function handleSubmit(event) {
       event.preventDefault();
+      setError(null);
 
       try {
          await login({
@@ -26,7 +29,8 @@ function Login() {
 
          navigate("/dashboard")
       } catch (error) {
-         console.log(error);
+         console.error(error);
+         setError(error.message || "Unable to sign in.");
       }
 
    }
@@ -46,6 +50,13 @@ function Login() {
                className={styles.form}
                onSubmit={handleSubmit}
             >
+               {error && (
+                  <div className={styles.error} role="alert">
+                     <Icon name="alert" size={17} />
+                     {error}
+                  </div>
+               )}
+
                <label className={styles.field}>
                   <span>Email</span>
 
@@ -78,9 +89,10 @@ function Login() {
 
                      <button
                         type="button"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
                         onClick={() => setShowPassword(!showPassword)}
                      >
-                        {showPassword ? "Hide" : "Show"}
+                        <Icon name={showPassword ? "eyeOff" : "eye"} size={17} />
                      </button>
                   </div>
                </label>
@@ -99,7 +111,6 @@ function Login() {
 
                <button
                   className={styles.submit}
-                  onClick={e => handleSubmit(e)}
                   type="submit"
                >
                   Sign In

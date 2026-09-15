@@ -1,5 +1,6 @@
 import { useState } from "react";
 import styles from "./importContacts.module.css";
+import Icon from "../../icons/Icon";
 
 function ImportContacts({ onCancel }) {
    const [file,setFile] = useState(null);
@@ -18,8 +19,10 @@ function ImportContacts({ onCancel }) {
             <button
                className={styles.backButton}
                onClick={onCancel}
-            >
-               ← Back to Contacts
+               type="button"
+               >
+               <Icon name="arrowLeft" size={16} />
+               Back to Contacts
             </button>
 
             <h1>Import Contacts</h1>
@@ -38,7 +41,7 @@ function ImportContacts({ onCancel }) {
                />
 
                <div className={styles.uploadIcon}>
-                  ↑
+                  <Icon name="upload" size={22} />
                </div>
 
                <strong>
@@ -74,6 +77,7 @@ function ImportContacts({ onCancel }) {
                <button
                   className={styles.cancelButton}
                   onClick={onCancel}
+                  type="button"
                >
                   Cancel
                </button>
@@ -81,7 +85,9 @@ function ImportContacts({ onCancel }) {
                <button
                   className={styles.importButton}
                   disabled={!file}
-               >
+                  type="button"
+                  >
+                  <Icon name="upload" size={16} />
                   Import Contacts
                </button>
             </div>

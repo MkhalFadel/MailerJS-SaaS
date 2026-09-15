@@ -34,6 +34,10 @@
 
    --color-info: #0284c7;
    --color-info-light: #e0f2fe;
+   --color-overlay: rgba(15, 23, 42, 0.55);
+   --color-email-preview-surface: #ffffff;
+   --color-email-preview-text: #17181a;
+   --color-email-preview-muted: #555b64;
 
    /* Inputs */
    --color-input-bg: #ffffff;
@@ -51,10 +55,11 @@
    --radius-md: 8px;
    --radius-lg: 12px;
    --radius-xl: 16px;
+   --radius-full: 999px;
 
    /* Transitions */
    --transition-fast: 150ms ease;
---transition-normal: 250ms ease;
+   --transition-normal: 250ms ease;
 }
 
 [data-theme="dark"] {
@@ -93,6 +98,10 @@
 
    --color-info: #38bdf8;
    --color-info-light: #164e63;
+   --color-overlay: rgba(2, 6, 23, 0.68);
+   --color-email-preview-surface: #ffffff;
+   --color-email-preview-text: #17181a;
+   --color-email-preview-muted: #555b64;
 
    /* Inputs */
    --color-input-bg: #0f172a;
@@ -127,7 +136,11 @@ body {
       BlinkMacSystemFont,
       "Segoe UI",
       sans-serif;
-   transition: background var(--transition-normal), color var(--transition-normal);
+   font-size: 14px;
+   line-height: 1.5;
+   transition:
+      background var(--transition-normal),
+      color var(--transition-normal);
 }
 
 button,
@@ -139,6 +152,43 @@ select {
 
 button {
    cursor: pointer;
+}
+
+button,
+input,
+textarea,
+select {
+   transition:
+      background var(--transition-fast),
+      border-color var(--transition-fast),
+      box-shadow var(--transition-fast),
+      color var(--transition-fast);
+}
+
+button:disabled,
+input:disabled,
+textarea:disabled,
+select:disabled {
+   cursor: not-allowed;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+   outline: 0;
+   box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+input:not([type="checkbox"]):not([type="radio"]),
+textarea,
+select {
+   min-height: 42px;
+}
+
+textarea {
+   line-height: 1.5;
 }
 
 a {
