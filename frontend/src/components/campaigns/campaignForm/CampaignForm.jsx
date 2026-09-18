@@ -2,19 +2,23 @@ import { useEffect, useState } from "react";
 import styles from "./campaignForm.module.css";
 import { getTemplates } from "../../../api/templates";
 import { getSmtpAccounts } from "../../../api/smtp";
-import { createCampaign, addCampaignRecipients } from "../../../api/campaigns";
+import {
+   createCampaign,
+   addCampaignRecipients,
+   updateCampaign
+} from "../../../api/campaigns";
 import { getContacts } from "../../../api/contacts";
 import ContactSelector from "../contactSelector/ContactSelector";
 import Icon from "../../icons/Icon";
 import BackButton from "../../navigation/BackButton";
 
-function CampaignForm({ onCancel, onCreated })
+function CampaignForm({ campaign, onCancel, onCreated, onUpdated })
 {
    const [formData, setFormData] = useState({
-      name: "",
-      subject: "",
-      templateId: "",
-      smtpAccountId: ""
+      name: campaign?.name || "",
+      subject: campaign?.subject || "",
+      templateId: campaign?.templateId || "",
+      smtpAccountId: campaign?.smtpAccountId || ""
    });
 
    const [templates, setTemplates] = useState([]);
@@ -29,6 +33,7 @@ function CampaignForm({ onCancel, onCreated })
    const [loading, setLoading] = useState(false);
    const [error, setError] = useState(null);
    const [createdCampaign, setCreatedCampaign] = useState(null);
+   const isEditing = Boolean(campaign);
 
    useEffect(() => {
       async function loadOptions()
@@ -42,11 +47,14 @@ function CampaignForm({ onCancel, onCreated })
             setTemplates(templatesResponse.data);
             setSmtpAccounts(smtpResponse.data);
 
-            setFormData(current => ({
-               ...current,
-               templateId: templatesResponse.data[0]?.id || "",
-               smtpAccountId: smtpResponse.data[0]?.id || ""
-            }));
+            if(!isEditing)
+            {
+               setFormData(current => ({
+                  ...current,
+                  templateId: templatesResponse.data[0]?.id || "",
+                  smtpAccountId: smtpResponse.data[0]?.id || ""
+               }));
+            }
          } catch(error) {
             console.error("Failed to load campaign options:", error);
 
@@ -57,7 +65,7 @@ function CampaignForm({ onCancel, onCreated })
       }
 
       loadOptions();
-   },[]);
+   },[isEditing]);
 
    function handleChange(event)
    {
@@ -114,6 +122,30 @@ function CampaignForm({ onCancel, onCreated })
       }
    }
 
+   async function handleUpdateCampaign()
+   {
+      setLoading(true);
+      setError(null);
+
+      try {
+         const response = await updateCampaign(campaign.id, formData);
+
+         if(onUpdated)
+         {
+            onUpdated({
+               ...response.data,
+               recipients: campaign.recipients,
+               accepted: campaign.accepted
+            });
+         }
+      } catch(error) {
+         console.error("Failed to update campaign:", error);
+         setError(error.message || "Unable to update campaign.");
+      } finally {
+         setLoading(false);
+      }
+   }
+
    function handleSubmit(event)
    {
       event.preventDefault();
@@ -142,13 +174,16 @@ function CampaignForm({ onCancel, onCreated })
          return;
       }
 
-      if(selectedContacts.length === 0)
+      if(!isEditing && selectedContacts.length === 0)
       {
          setError("Please select at least one contact.");
          return;
       }
 
-      handleCreateCampaign();
+      if(isEditing)
+         handleUpdateCampaign();
+      else
+         handleCreateCampaign();
    }
 
    async function handleChooseContacts()
@@ -193,10 +228,12 @@ function CampaignForm({ onCancel, onCreated })
                   Back to Campaigns
                </BackButton>
 
-               <h1>Create Campaign</h1>
+               <h1>{isEditing ? "Edit Campaign" : "Create Campaign"}</h1>
 
                <p>
-                  Create and configure a new email campaign.
+                  {isEditing
+                     ? "Update this campaign's content and sending account."
+                     : "Create and configure a new email campaign."}
                </p>
             </div>
          </div>
@@ -330,6 +367,7 @@ function CampaignForm({ onCancel, onCreated })
                )}
             </div>
 
+            {!isEditing && (
             <div className={styles.section}>
                <div className={styles.sectionHeader}>
                   <h2>Recipients</h2>
@@ -395,6 +433,7 @@ function CampaignForm({ onCancel, onCreated })
                   />
                )}
             </div>
+            )}
 
             <div className={styles.formActions}>
                <button
@@ -411,18 +450,25 @@ function CampaignForm({ onCancel, onCreated })
                   className={styles.primaryButton}
                   disabled={
                      loading ||
-                     createdCampaign ||
+                     (!isEditing && createdCampaign) ||
                      loadingOptions ||
                      !canCreateCampaign ||
-                     selectedContacts.length === 0
+                     (!isEditing && selectedContacts.length === 0)
                   }
                >
-                  <Icon name={createdCampaign ? "check" : "plus"} size={16} />
+                  <Icon
+                     name={createdCampaign ? "check" : isEditing ? "edit" : "plus"}
+                     size={16}
+                  />
                   {createdCampaign
                      ? "Campaign Created"
                      : loading
-                        ? "Creating..."
-                        : "Create Campaign"}
+                        ? isEditing
+                           ? "Saving..."
+                           : "Creating..."
+                        : isEditing
+                           ? "Save Campaign"
+                           : "Create Campaign"}
                </button>
             </div>
          </form>

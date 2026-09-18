@@ -45,7 +45,7 @@ function getCampaignSendTitle(campaignSend)
    return "Campaign Send Failed";
 }
 
-function CampaignDetails({ campaign, onBack })
+function CampaignDetails({ campaign, onBack, onEdit })
 {
    const [recipients, setRecipients] = useState([]);
    const [deliveries, setDeliveries] = useState([]);
@@ -387,14 +387,22 @@ function CampaignDetails({ campaign, onBack })
 
             <div className={styles.headerActions}>
                <button
+                  className={styles.secondaryButton}
+                  onClick={onEdit}
+                  type="button"
+               >
+                  <Icon name="edit" size={16} />
+                  Edit Campaign
+               </button>
+
+               <button
                   type="button"
                   className={styles.primaryButton}
                   onClick={handleSendCampaign}
                   disabled={
                      sending ||
                      loadingSend ||
-                     sendingIsActive ||
-                     recipients.length === 0
+                     sendingIsActive
                   }
                >
                   <Icon name="send" size={16} />
@@ -408,6 +416,20 @@ function CampaignDetails({ campaign, onBack })
                </button>
             </div>
          </div>
+
+         {!campaign.template && (
+            <div className={styles.configurationWarning}>
+               <Icon name="alert" size={17} />
+               This campaign is missing its template. Edit the campaign and select another template before sending.
+            </div>
+         )}
+
+         {!loadingRecipients && recipients.length === 0 && (
+            <div className={styles.configurationWarning}>
+               <Icon name="alert" size={17} />
+               This campaign has no recipients. Add at least one contact before sending.
+            </div>
+         )}
 
          {sendError && (
             <div className={styles.error}>

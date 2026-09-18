@@ -90,19 +90,64 @@ async function deleteTemplate(req, res, next)
 {
    try {
       const { id } = req.params;
-      const userId = req.user.id
+      const userId = req.user.id;
+      const confirmed = req.query.confirm === "true";
 
-      const result = await prisma.templates.deleteMany({
+      const template = await prisma.templates.findFirst({
          where: {
-            id: id,
+            id,
             user_id: userId
          }
       });
 
-      if(result.count === 0)
+      if(!template)
+      {
          return res.status(404).json({
             error: "Template not found"
+         });
+      }
+
+      const [campaignCount, activeSendCount] = await Promise.all([
+         prisma.campaigns.count({
+            where: {
+               user_id: userId,
+               template_id: template.id
+            }
+         }),
+         prisma.campaign_sends.count({
+            where: {
+               status: {
+                  in: ["QUEUED", "PROCESSING"]
+               },
+               campaign: {
+                  user_id: userId,
+                  template_id: template.id
+               }
+            }
          })
+      ]);
+
+      if(activeSendCount > 0)
+      {
+         return res.status(409).json({
+            error: "This template is currently being used by an active campaign send. Try again after the send finishes."
+         });
+      }
+
+      if(campaignCount > 0 && !confirmed)
+      {
+         return res.status(409).json({
+            error: "This template is used by one or more campaigns. Confirm deletion to remove it from those campaigns.",
+            requiresConfirmation: true,
+            campaignCount
+         });
+      }
+
+      await prisma.templates.delete({
+         where: {
+            id: template.id
+         }
+      });
 
       return res.status(204).send();
    } catch (error) {

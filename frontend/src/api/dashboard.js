@@ -33,6 +33,7 @@ function mapDashboard(dashboard)
          id: campaign.id,
          name: campaign.name,
          subject: campaign.subject,
+         templateId: campaign.template_id,
          createdAt: campaign.created_at,
          recipientCount: campaign.recipient_count,
          latestSend: mapCampaignSend(campaign.latest_send)

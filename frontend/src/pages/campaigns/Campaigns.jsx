@@ -50,6 +50,21 @@ function Campaigns() {
       setCampaigns(current => [campaign, ...current]);
    }
 
+   function handleEditCampaign(campaign)
+   {
+      setSelectedCampaign(campaign);
+      setView("edit");
+   }
+
+   function handleCampaignUpdated(campaign)
+   {
+      setCampaigns(current =>
+         current.map(item => item.id === campaign.id ? campaign : item)
+      );
+      setSelectedCampaign(campaign);
+      setView("details");
+   }
+
 
    return (
       <DashboardLayout>
@@ -81,10 +96,19 @@ function Campaigns() {
                />
             )}
 
+            {view === "edit" && selectedCampaign && (
+               <CampaignForm
+                  campaign={selectedCampaign}
+                  onCancel={handleBack}
+                  onUpdated={handleCampaignUpdated}
+               />
+            )}
+
             {view === "details" && selectedCampaign && (
                <CampaignDetails
                   campaign={selectedCampaign}
                   onBack={handleBack}
+                  onEdit={() => handleEditCampaign(selectedCampaign)}
                />
             )}
          </div>

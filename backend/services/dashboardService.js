@@ -82,6 +82,7 @@ async function getDashboard(userId)
             id: true,
             name: true,
             subject: true,
+            template_id: true,
             created_at: true,
             _count: {
                select: {
@@ -131,6 +132,7 @@ async function getDashboard(userId)
          id: campaign.id,
          name: campaign.name,
          subject: campaign.subject,
+         template_id: campaign.template_id,
          created_at: campaign.created_at,
          recipient_count: campaign._count.recipients,
          latest_send: serializeLatestSend(campaign.sends[0])

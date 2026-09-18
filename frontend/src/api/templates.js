@@ -48,9 +48,11 @@ export async function updateTemplate(id,template)
    };
 }
 
-export function deleteTemplate(id)
+export function deleteTemplate(id, confirm = false)
 {
-   return apiRequest(`/templates/${id}`,{
+   const confirmation = confirm ? "?confirm=true" : "";
+
+   return apiRequest(`/templates/${id}${confirmation}`,{
       method: "DELETE"
    });
 }

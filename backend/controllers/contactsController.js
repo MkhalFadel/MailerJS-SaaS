@@ -94,20 +94,45 @@ async function deleteContact(req, res, next)
    try {
       const userId = req.user.id;
       const { id } = req.params;
+      const confirmed = req.query.confirm === "true";
 
-      const result = await prisma.contacts.deleteMany({
+      const contact = await prisma.contacts.findFirst({
          where: {
-            id: id,
+            id,
             user_id: userId
          }
       });
 
-      if(result.count === 0)
+      if(!contact)
       {
          return res.status(404).json({
             error: "Contact not found"
          });
       }
+
+      const campaignCount = await prisma.campaign_recipients.count({
+         where: {
+            contact_id: contact.id,
+            campaign: {
+               user_id: userId
+            }
+         }
+      });
+
+      if(campaignCount > 0 && !confirmed)
+      {
+         return res.status(409).json({
+            error: "This contact is used by one or more campaigns. Confirm deletion to remove it from those recipient lists.",
+            requiresConfirmation: true,
+            campaignCount
+         });
+      }
+
+      await prisma.contacts.delete({
+         where: {
+            id: contact.id
+         }
+      });
 
       return res.status(204).send();
    } catch(error) {

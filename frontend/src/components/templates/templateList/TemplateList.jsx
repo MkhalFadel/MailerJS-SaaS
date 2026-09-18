@@ -3,10 +3,14 @@ import styles from "./templateList.module.css";
 import { deleteTemplate } from "../../../api/templates";
 import { formatTemplateDate } from "../../../utils/utils";
 import EmptyState from "../../feedback/EmptyState";
+import ConfirmModal from "../../feedback/ConfirmModal";
 import Icon from "../../icons/Icon";
 
 function TemplateList({ templates, setTemplates, onCreate, onEdit, onPreview }) {
    const [search, setSearch] = useState("");
+   const [templateToDelete, setTemplateToDelete] = useState(null);
+   const [deleteError, setDeleteError] = useState(null);
+   const [deleting, setDeleting] = useState(false);
 
    const filteredTemplates = useMemo(() => {
       return templates.filter((template) => {
@@ -18,17 +22,68 @@ function TemplateList({ templates, setTemplates, onCreate, onEdit, onPreview }) 
       });
    }, [templates, search]);
 
-   async function deleteTemplateById(id)
+   function removeTemplate(id)
    {
-      try {
-         await deleteTemplate(id);
+      setTemplates(current =>
+         current.filter(item => item.id !== id)
+      );
+   }
 
-         setTemplates(current =>
-            current.filter(item => item.id !== id)
-         );
+   async function requestTemplateDeletion(template)
+   {
+      if(deleting)
+         return;
+
+      setDeleteError(null);
+      setDeleting(true);
+
+      try {
+         await deleteTemplate(template.id);
+         removeTemplate(template.id);
       } catch(error) {
-         console.error(error);
+         if(error.status === 409 && error.data?.requiresConfirmation)
+         {
+            setTemplateToDelete({
+               ...template,
+               campaignCount: error.data.campaignCount
+            });
+            return;
+         }
+
+         console.error("Failed to delete template:", error);
+         setDeleteError(error.message || "Unable to delete this template.");
+      } finally {
+         setDeleting(false);
       }
+   }
+
+   async function confirmTemplateDeletion()
+   {
+      if(!templateToDelete || deleting)
+         return;
+
+      setDeleteError(null);
+      setDeleting(true);
+
+      try {
+         await deleteTemplate(templateToDelete.id, true);
+         removeTemplate(templateToDelete.id);
+         setTemplateToDelete(null);
+      } catch(error) {
+         console.error("Failed to delete template:", error);
+         setDeleteError(error.message || "Unable to delete this template.");
+      } finally {
+         setDeleting(false);
+      }
+   }
+
+   function closeTemplateConfirmation()
+   {
+      if(deleting)
+         return;
+
+      setTemplateToDelete(null);
+      setDeleteError(null);
    }
 
    return (
@@ -63,6 +118,10 @@ function TemplateList({ templates, setTemplates, onCreate, onEdit, onPreview }) 
                />
             </div>
          </div>
+
+         {deleteError && !templateToDelete && (
+            <div className={styles.deleteError}>{deleteError}</div>
+         )}
 
          {filteredTemplates.length === 0 ? (
             <div className={styles.emptyCard}>
@@ -134,7 +193,7 @@ function TemplateList({ templates, setTemplates, onCreate, onEdit, onPreview }) 
 
                               <button
                                  className={styles.deleteButton}
-                                 onClick={() => deleteTemplateById(template.id)}
+                                 onClick={() => requestTemplateDeletion(template)}
                                  type="button"
                               >
                                  <Icon name="trash" size={15} />
@@ -151,6 +210,18 @@ function TemplateList({ templates, setTemplates, onCreate, onEdit, onPreview }) 
          <div className={styles.footer}>
             Showing {filteredTemplates.length} of {templates.length} templates
          </div>
+
+         {templateToDelete && (
+            <ConfirmModal
+               confirmLabel="Delete Template"
+               description={`${templateToDelete.name} is currently used by ${templateToDelete.campaignCount} campaign${templateToDelete.campaignCount === 1 ? "" : "s"}. Deleting it will remove the template from those campaigns. Those campaigns cannot be sent until another template is selected.`}
+               error={deleteError}
+               loading={deleting}
+               onCancel={closeTemplateConfirmation}
+               onConfirm={confirmTemplateDeletion}
+               title="Delete template?"
+            />
+         )}
       </div>
    );
 }

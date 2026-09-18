@@ -43,6 +43,19 @@ function getSendStatus(latestSend)
    };
 }
 
+function getCampaignWarning(campaign)
+{
+   const warnings = [];
+
+   if(!campaign.templateId)
+      warnings.push("Template missing");
+
+   if(campaign.recipientCount === 0)
+      warnings.push("No recipients");
+
+   return warnings.join(" · ");
+}
+
 function RecentCampaigns({ campaigns })
 {
    return (
@@ -82,6 +95,7 @@ function RecentCampaigns({ campaigns })
                   <tbody>
                      {campaigns.map((campaign) => {
                         const sendStatus = getSendStatus(campaign.latestSend);
+                        const warning = getCampaignWarning(campaign);
 
                         return (
                            <tr key={campaign.id}>
@@ -89,6 +103,12 @@ function RecentCampaigns({ campaigns })
                                  <div className={styles.campaignDetails}>
                                     <strong>{campaign.name}</strong>
                                     <span>{campaign.subject}</span>
+
+                                    {warning && (
+                                       <span className={styles.configurationWarning}>
+                                          {warning}
+                                       </span>
+                                    )}
                                  </div>
                               </td>
 

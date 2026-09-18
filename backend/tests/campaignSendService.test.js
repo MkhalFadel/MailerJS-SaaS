@@ -43,6 +43,7 @@ function createCampaign(recipients = [])
 {
    return {
       id: "campaign-id",
+      template_id: "template-id",
       template: {
          content: "Hello {{first_name}}"
       },
@@ -102,16 +103,54 @@ test("createCampaignSend rejects missing campaigns and recipients", async (conte
       (error) => error.status === 404
    );
 
+   const noRecipientsPrisma = createPrisma(createCampaign());
    const noRecipients = loadCampaignSendService(
-      createPrisma(createCampaign()),
+      noRecipientsPrisma,
       async () => null
    );
    context.after(() => noRecipients.restore());
 
    await assert.rejects(
       () => noRecipients.service.createCampaignSend("campaign-id", "user-id"),
-      (error) => error.status === 400
+      (error) =>
+         error.status === 400 &&
+         error.message === "This campaign has no recipients. Edit the campaign and add at least one contact before sending."
    );
+   assert.equal(noRecipientsPrisma.getCreatedData(), undefined);
+});
+
+test("createCampaignSend rejects a campaign whose template was deleted before queueing", async (context) => {
+   const campaign = createCampaign([
+      {
+         id: "campaign-recipient-id",
+         contact: {
+            email: "ada@example.com",
+            first_name: "Ada",
+            last_name: "Lovelace"
+         }
+      }
+   ]);
+   campaign.template = null;
+   campaign.template_id = null;
+   const prisma = createPrisma(campaign);
+   let queued = false;
+   const serviceModule = loadCampaignSendService(
+      prisma,
+      async () => {
+         queued = true;
+      }
+   );
+   context.after(() => serviceModule.restore());
+
+   await assert.rejects(
+      () => serviceModule.service.createCampaignSend("campaign-id", "user-id"),
+      (error) =>
+         error.status === 400 &&
+         error.message === "This campaign cannot be sent because its template was deleted. Edit the campaign and select another template."
+   );
+
+   assert.equal(prisma.getCreatedData(), undefined);
+   assert.equal(queued, false);
 });
 
 test("createCampaignSend snapshots recipients and queues only a send id", async (context) => {

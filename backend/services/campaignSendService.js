@@ -28,7 +28,12 @@ function serializeCampaignSend(campaignSend)
 
 function getCampaignConfigurationError(campaign)
 {
-   if(!campaign.template || !campaign.template.content)
+   if(!campaign.template_id || !campaign.template)
+   {
+      return "This campaign cannot be sent because its template was deleted. Edit the campaign and select another template.";
+   }
+
+   if(!campaign.template.content)
       return "Campaign template is not configured";
 
    if(
@@ -74,7 +79,12 @@ async function createCampaignSend(campaignId, userId)
             throw new CampaignSendError(configurationError, 400);
 
          if(campaign.recipients.length === 0)
-            throw new CampaignSendError("Campaign has no recipients", 400);
+         {
+            throw new CampaignSendError(
+               "This campaign has no recipients. Edit the campaign and add at least one contact before sending.",
+               400
+            );
+         }
 
          const activeSend = await transaction.campaign_sends.findFirst({
             where: {

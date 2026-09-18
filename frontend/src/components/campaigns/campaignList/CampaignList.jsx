@@ -4,6 +4,28 @@ import { formatTemplateDate } from "../../../utils/utils";
 import EmptyState from "../../feedback/EmptyState";
 import Icon from "../../icons/Icon";
 
+function getCampaignWarning(campaign)
+{
+   const warnings = [];
+
+   if(!campaign.templateId || !campaign.template)
+      warnings.push("Template missing");
+
+   if(campaign.recipients === 0)
+      warnings.push("No recipients");
+
+   return warnings.join(" · ");
+}
+
+function handleRowKeyDown(event, campaign, onView)
+{
+   if(event.key === "Enter" || event.key === " ")
+   {
+      event.preventDefault();
+      onView(campaign);
+   }
+}
+
 function CampaignList({ campaigns, onCreate, onView }) {
    const [search, setSearch] = useState("");
 
@@ -66,41 +88,44 @@ function CampaignList({ campaigns, onCreate, onView }) {
                            <th>Recipients</th>
                            <th>Accepted</th>
                            <th>Created</th>
-                           <th>Actions</th>
                         </tr>
                      </thead>
 
                      <tbody>
-                        {filteredCampaigns.map((campaign) => (
-                           <tr key={campaign.id}>
-                              <td>
-                                 <button
-                                    className={styles.campaignButton}
-                                    onClick={() => onView(campaign)}
-                                 >
+                        {filteredCampaigns.map((campaign) => {
+                           const warning = getCampaignWarning(campaign);
+
+                           return (
+                              <tr
+                                 key={campaign.id}
+                                 aria-label={`View ${campaign.name}`}
+                                 className={styles.clickableRow}
+                                 onClick={() => onView(campaign)}
+                                 onKeyDown={(event) => handleRowKeyDown(event, campaign, onView)}
+                                 role="button"
+                                 tabIndex="0"
+                              >
+                                 <td>
+                                 <div className={styles.campaignDetails}>
                                     <strong>{campaign.name}</strong>
                                     <span>{campaign.subject}</span>
-                                 </button>
-                              </td>
 
-                              <td>{campaign.recipients}</td>
+                                    {warning && (
+                                       <span className={styles.configurationWarning}>
+                                          {warning}
+                                       </span>
+                                    )}
+                                 </div>
+                                 </td>
 
-                              <td>{campaign.accepted}</td>
+                                 <td>{campaign.recipients}</td>
 
-                              <td>{formatTemplateDate(campaign.createdAt)}</td>
+                                 <td>{campaign.accepted}</td>
 
-                              <td>
-                                 <button
-                                    className={styles.moreButton}
-                                    onClick={() => onView(campaign)}
-                                    aria-label={`View ${campaign.name}`}
-                                    type="button"
-                                 >
-                                    <Icon name="more" size={18} />
-                                 </button>
-                              </td>
-                           </tr>
-                        ))}
+                                 <td>{formatTemplateDate(campaign.createdAt)}</td>
+                              </tr>
+                           );
+                        })}
                      </tbody>
                   </table>
                </div>

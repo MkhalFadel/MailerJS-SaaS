@@ -45,9 +45,11 @@ export async function updateContact(id, contact)
    };
 }
 
-export function deleteContact(id)
+export function deleteContact(id, confirm = false)
 {
-   return apiRequest(`/contacts/${id}`,{
+   const confirmation = confirm ? "?confirm=true" : "";
+
+   return apiRequest(`/contacts/${id}${confirmation}`,{
       method: "DELETE"
    });
 }

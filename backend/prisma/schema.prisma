@@ -88,13 +88,13 @@ model campaigns {
   user_id         String
   name            String
   subject         String
-  template_id     String
+  template_id     String?
   smtp_account_id String
   created_at      DateTime @default(now()) @db.Timestamptz(6)
   updated_at      DateTime @updatedAt @db.Timestamptz(6)
 
   user         users                 @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  template     templates             @relation(fields: [template_id], references: [id], onDelete: Restrict)
+  template     templates?            @relation(fields: [template_id], references: [id], onDelete: SetNull)
   smtp_account smtp_accounts         @relation(fields: [smtp_account_id], references: [id], onDelete: Restrict)
   recipients   campaign_recipients[]
   sends        campaign_sends[]
@@ -132,7 +132,7 @@ model campaign_recipients {
   updated_at  DateTime @updatedAt @db.Timestamptz(6)
 
   campaign   campaigns             @relation(fields: [campaign_id], references: [id], onDelete: Cascade)
-  contact    contacts              @relation(fields: [contact_id], references: [id], onDelete: Restrict)
+  contact    contacts              @relation(fields: [contact_id], references: [id], onDelete: Cascade)
   deliveries campaign_deliveries[]
 
   @@unique([campaign_id, contact_id])

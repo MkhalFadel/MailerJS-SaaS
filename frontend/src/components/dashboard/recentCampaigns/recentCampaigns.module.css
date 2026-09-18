@@ -80,6 +80,15 @@
    text-overflow: ellipsis;
 }
 
+.campaignDetails .configurationWarning {
+   padding: 3px 7px;
+   background: var(--color-warning-light);
+   color: var(--color-warning);
+   border-radius: var(--radius-full);
+   font-size: 10px;
+   font-weight: 700;
+}
+
 .status {
    display: inline-flex;
    align-items: center;

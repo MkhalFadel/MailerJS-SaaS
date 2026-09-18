@@ -32,7 +32,8 @@
 }
 
 .primaryButton,
-.addContactButton {
+.addContactButton,
+.secondaryButton {
    display: inline-flex;
    align-items: center;
    justify-content: center;
@@ -53,6 +54,18 @@
    background: var(--color-primary-hover);
 }
 
+.secondaryButton {
+   margin-right: 8px;
+   background: var(--color-surface);
+   color: var(--color-text-secondary);
+   border-color: var(--color-border);
+}
+
+.secondaryButton:hover {
+   background: var(--color-surface-hover);
+   color: var(--color-text);
+}
+
 .primaryButton:disabled,
 .addContactButton:disabled {
    opacity: 0.6;
@@ -69,6 +82,20 @@
    border-radius: var(--radius-md);
    font-size: 13px;
    font-weight: 500;
+}
+
+.configurationWarning {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+   margin-bottom: 16px;
+   padding: 11px 13px;
+   background: var(--color-warning-light);
+   color: var(--color-warning);
+   border: 1px solid var(--color-warning);
+   border-radius: var(--radius-md);
+   font-size: 13px;
+   font-weight: 600;
 }
 
 .cardError {
@@ -307,8 +334,19 @@ td {
    }
 
    .headerActions,
-   .primaryButton {
+   .primaryButton,
+   .secondaryButton {
       width: 100%;
+   }
+
+   .headerActions {
+      display: grid;
+      gap: 8px;
+      width: 100%;
+   }
+
+   .secondaryButton {
+      margin-right: 0;
    }
 
    .statistics {

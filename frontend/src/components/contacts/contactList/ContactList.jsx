@@ -2,11 +2,15 @@ import { useMemo,useState } from "react";
 import styles from "./contactList.module.css";
 import { deleteContact } from "../../../api/contacts";
 import EmptyState from "../../feedback/EmptyState";
+import ConfirmModal from "../../feedback/ConfirmModal";
 import Icon from "../../icons/Icon";
 
 function ContactList({ contacts, setContacts, onCreate, onEdit, onDetails, onImport }) 
 {
    const [search, setSearch] = useState("");
+   const [contactToDelete, setContactToDelete] = useState(null);
+   const [deleteError, setDeleteError] = useState(null);
+   const [deleting, setDeleting] = useState(false);
 
    const filteredContacts = useMemo(() => {
       return contacts.filter((contact) => {
@@ -20,17 +24,74 @@ function ContactList({ contacts, setContacts, onCreate, onEdit, onDetails, onImp
       });
    },[contacts, search]);
 
-   async function deleteContacts(id)
+   function removeContact(id)
    {
-      try {
-         await deleteContact(id);
+      setContacts(current =>
+         current.filter(item => item.id !== id)
+      );
+   }
 
-         setContacts(current =>
-            current.filter(item => item.id !== id)
-         );
-      } catch (error) {
-         console.log(error)
+   function getContactName(contact)
+   {
+      return `${contact.firstName} ${contact.lastName}`.trim() ||
+         contact.email;
+   }
+
+   async function requestContactDeletion(contact)
+   {
+      if(deleting)
+         return;
+
+      setDeleteError(null);
+      setDeleting(true);
+
+      try {
+         await deleteContact(contact.id);
+         removeContact(contact.id);
+      } catch(error) {
+         if(error.status === 409 && error.data?.requiresConfirmation)
+         {
+            setContactToDelete({
+               ...contact,
+               campaignCount: error.data.campaignCount
+            });
+            return;
+         }
+
+         console.error("Failed to delete contact:", error);
+         setDeleteError(error.message || "Unable to delete this contact.");
+      } finally {
+         setDeleting(false);
       }
+   }
+
+   async function confirmContactDeletion()
+   {
+      if(!contactToDelete || deleting)
+         return;
+
+      setDeleteError(null);
+      setDeleting(true);
+
+      try {
+         await deleteContact(contactToDelete.id, true);
+         removeContact(contactToDelete.id);
+         setContactToDelete(null);
+      } catch(error) {
+         console.error("Failed to delete contact:", error);
+         setDeleteError(error.message || "Unable to delete this contact.");
+      } finally {
+         setDeleting(false);
+      }
+   }
+
+   function closeContactConfirmation()
+   {
+      if(deleting)
+         return;
+
+      setContactToDelete(null);
+      setDeleteError(null);
    }
 
    return (
@@ -77,6 +138,10 @@ function ContactList({ contacts, setContacts, onCreate, onEdit, onDetails, onImp
                />
             </div>
          </div>
+
+         {deleteError && !contactToDelete && (
+            <div className={styles.deleteError}>{deleteError}</div>
+         )}
 
          <div className={styles.tableWrapper}>
             <table className={styles.table}>
@@ -141,7 +206,7 @@ function ContactList({ contacts, setContacts, onCreate, onEdit, onDetails, onImp
 
                               <button
                                  className={styles.deleteButton}
-                                 onClick={() => deleteContacts(contact.id)}
+                                 onClick={() => requestContactDeletion(contact)}
                                  type="button"
                               >
                                  <Icon name="trash" size={15} />
@@ -168,6 +233,18 @@ function ContactList({ contacts, setContacts, onCreate, onEdit, onDetails, onImp
          <div className={styles.footer}>
             Showing {filteredContacts.length} of {contacts.length} contacts
          </div>
+
+         {contactToDelete && (
+            <ConfirmModal
+               confirmLabel="Delete Contact"
+               description={`${getContactName(contactToDelete)} is currently used in ${contactToDelete.campaignCount} campaign${contactToDelete.campaignCount === 1 ? "" : "s"}. Deleting this contact will remove it from those campaign recipient lists. Existing campaign delivery history will be preserved.`}
+               error={deleteError}
+               loading={deleting}
+               onCancel={closeContactConfirmation}
+               onConfirm={confirmContactDeletion}
+               title="Delete contact?"
+            />
+         )}
       </div>
    );
 }
