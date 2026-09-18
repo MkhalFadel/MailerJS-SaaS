@@ -1,5 +1,6 @@
 import styles from "./contactDetails.module.css";
 import Icon from "../../icons/Icon";
+import BackButton from "../../navigation/BackButton";
 
 function ContactDetails({ contact, onBack, onEdit }) {
    const initials = `${contact.firstName.charAt(0)}${contact.lastName.charAt(0)}`;
@@ -8,14 +9,9 @@ function ContactDetails({ contact, onBack, onEdit }) {
       <div className={styles.container}>
          <div className={styles.header}>
             <div>
-               <button
-                  className={styles.backButton}
-                  onClick={onBack}
-                  type="button"
-                  >
-                  <Icon name="arrowLeft" size={16} />
+               <BackButton onClick={onBack}>
                   Back to Contacts
-               </button>
+               </BackButton>
 
                <div className={styles.profile}>
                   <div className={styles.avatar}>

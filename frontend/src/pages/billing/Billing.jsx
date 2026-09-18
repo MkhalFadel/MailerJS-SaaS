@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
 import styles from "./billing.module.css";
 import CurrentPlan from "../../components/billing/currentPlan/CurrentPlan";
 import Usage from "../../components/billing/usage/Usage";
 import Plans from "../../components/billing/plans/Plans";
 import BillingHistory from "../../components/billing/billingHistory/BillingHistory";
 import Icon from "../../components/icons/Icon";
+import BackButton from "../../components/navigation/BackButton";
 
 function Billing() {
    const [activeSection, setActiveSection] = useState("overview");
@@ -35,10 +35,9 @@ function Billing() {
       <div className={styles.page}>
          <div className={styles.header}>
             <div>
-               <NavLink key={"/account"} to={"/account"} className={styles.backBtn}>
-                  <Icon name="arrowLeft" size={16} />
+               <BackButton to="/account">
                   Back to Account Settings
-               </NavLink>
+               </BackButton>
             </div>
             <div>
                <h1>Billing</h1>

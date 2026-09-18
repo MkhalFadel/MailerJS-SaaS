@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import AuthLayout from "../../../components/auth/authLayout/AuthLayout";
 import styles from "./resetPassword.module.css";
 import Icon from "../../../components/icons/Icon";
+import BackButton from "../../../components/navigation/BackButton";
 
 function ResetPassword() {
    const [password,setPassword] = useState("");
@@ -96,13 +97,9 @@ function ResetPassword() {
                </button>
             </form>
 
-            <Link
-               className={styles.back}
-               to="/login"
-            >
-               <Icon name="arrowLeft" size={16} />
+            <BackButton centered to="/login">
                Back to Sign In
-            </Link>
+            </BackButton>
          </div>
       </AuthLayout>
    );

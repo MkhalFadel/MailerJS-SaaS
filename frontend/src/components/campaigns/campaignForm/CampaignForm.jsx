@@ -6,6 +6,7 @@ import { createCampaign, addCampaignRecipients } from "../../../api/campaigns";
 import { getContacts } from "../../../api/contacts";
 import ContactSelector from "../contactSelector/ContactSelector";
 import Icon from "../../icons/Icon";
+import BackButton from "../../navigation/BackButton";
 
 function CampaignForm({ onCancel, onCreated })
 {
@@ -188,14 +189,9 @@ function CampaignForm({ onCancel, onCreated })
       <div className={styles.container}>
          <div className={styles.header}>
             <div>
-               <button
-                  type="button"
-                  className={styles.backButton}
-                  onClick={onCancel}
-               >
-                  <Icon name="arrowLeft" size={16} />
+               <BackButton onClick={onCancel}>
                   Back to Campaigns
-               </button>
+               </BackButton>
 
                <h1>Create Campaign</h1>
 

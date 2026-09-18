@@ -1,6 +1,7 @@
 import { useState } from "react";
 import styles from "./importContacts.module.css";
 import Icon from "../../icons/Icon";
+import BackButton from "../../navigation/BackButton";
 
 function ImportContacts({ onCancel }) {
    const [file,setFile] = useState(null);
@@ -16,14 +17,9 @@ function ImportContacts({ onCancel }) {
    return (
       <div className={styles.container}>
          <div className={styles.header}>
-            <button
-               className={styles.backButton}
-               onClick={onCancel}
-               type="button"
-               >
-               <Icon name="arrowLeft" size={16} />
+            <BackButton onClick={onCancel}>
                Back to Contacts
-            </button>
+            </BackButton>
 
             <h1>Import Contacts</h1>
 

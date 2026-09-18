@@ -135,9 +135,10 @@
    border-bottom: 1px solid var(--color-border);
    font-size: 11px;
    font-weight: 600;
-   text-align: left;
+   text-align: center;
    text-transform: uppercase;
    letter-spacing: 0.04em;
+   vertical-align: middle;
 }
 
 .table td {
@@ -145,6 +146,8 @@
    color: var(--color-text-secondary);
    border-bottom: 1px solid var(--color-border);
    font-size: 14px;
+   text-align: center;
+   vertical-align: middle;
 }
 
 .table tbody tr:last-child td {
@@ -164,6 +167,7 @@
 .nameButton {
    display: flex;
    align-items: center;
+   justify-content: center;
    gap: 10px;
    padding: 0;
    background: transparent;
@@ -218,6 +222,7 @@
 
 .tags {
    display: flex;
+   justify-content: center;
    flex-wrap: wrap;
    gap: 4px;
 }
@@ -232,6 +237,7 @@
 
 .actions {
    display: flex;
+   justify-content: center;
    gap: 4px;
 }
 

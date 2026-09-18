@@ -12,6 +12,7 @@ import {
 import { getContacts } from "../../../api/contacts";
 import ContactSelector from "../contactSelector/ContactSelector";
 import Icon from "../../icons/Icon";
+import BackButton from "../../navigation/BackButton";
 
 function isActiveCampaignSend(campaignSend)
 {
@@ -369,14 +370,9 @@ function CampaignDetails({ campaign, onBack })
       <div className={styles.container}>
          <div className={styles.header}>
             <div>
-               <button
-                  type="button"
-                  className={styles.backButton}
-                  onClick={onBack}
-               >
-                  <Icon name="arrowLeft" size={16} />
+               <BackButton onClick={onBack}>
                   Back to Campaigns
-               </button>
+               </BackButton>
 
                <div className={styles.titleRow}>
                   <h1>

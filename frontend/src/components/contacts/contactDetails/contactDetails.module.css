@@ -11,22 +11,6 @@
    margin-bottom: 28px;
 }
 
-.backButton {
-   display: inline-flex;
-   align-items: center;
-   gap: 6px;
-   margin-bottom: 18px;
-   padding: 0;
-   background: transparent;
-   color: var(--color-text-muted);
-   border: 0;
-   font-size: 13px;
-}
-
-.backButton:hover {
-   color: var(--color-primary);
-}
-
 .profile {
    display: flex;
    align-items: center;

@@ -1,3 +1,4 @@
+import { NavLink } from "react-router-dom";
 import styles from "./navbar.module.css";
 import ThemeToggle from "../../themeToggle/ThemeToggle";
 import { useAuth } from "../../../context/authContext";
@@ -25,17 +26,16 @@ function Navbar({ onMenuToggle }) {
 
          <div className={styles.actions}>
          <ThemeToggle />
-         <button className={styles.iconButton} aria-label="Notifications" type="button">
-            <Icon name="bell" size={19} />
-         </button>
 
-         <button className={styles.profile} type="button">
+         <NavLink
+            aria-label="Open account settings"
+            className={styles.profile}
+            to="/account"
+         >
             <span className={styles.avatar}>{initials}</span>
 
             <span className={styles.profileName}>{firstName || "Account"}</span>
-
-            <Icon className={styles.chevron} name="chevronDown" size={16} />
-         </button>
+         </NavLink>
          </div>
       </header>
    );

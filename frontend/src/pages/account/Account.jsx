@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { NavLink } from "react-router-dom";
 import styles from "./account.module.css";
 import ProfileOverview from "../../components/account/profileOverview/ProfileOverview";
 import PersonalInformation from "../../components/account/personalInformation/PersonalInformation";
@@ -9,6 +8,7 @@ import CurrentPlan from "../../components/account/currentPlan/CurrentPlan";
 import Security from "../../components/account/security/Security";
 import AccountActions from "../../components/account/accountActions/AccountActions";
 import Icon from "../../components/icons/Icon";
+import BackButton from "../../components/navigation/BackButton";
 import { useAuth } from "../../context/authContext";
 import { getDashboard } from "../../api/dashboard";
 
@@ -117,10 +117,9 @@ function Account() {
       <div className={styles.page}>
          <div className={styles.header}>
             <div>
-               <NavLink key={"/dashboard"} to={"/dashboard"} className={styles.backBtn}>
-                  <Icon name="arrowLeft" size={16} />
+               <BackButton to="/dashboard">
                   Back to Dashboard
-               </NavLink>
+               </BackButton>
             </div>
             <div>
                <h1>Account Settings</h1>

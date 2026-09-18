@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import AuthLayout from "../../../components/auth/authLayout/AuthLayout";
 import styles from "./forgetPassword.module.css";
 import Icon from "../../../components/icons/Icon";
+import BackButton from "../../../components/navigation/BackButton";
 
 function ForgetPassword() {
    const [email,setEmail] = useState("");
@@ -67,13 +67,9 @@ function ForgetPassword() {
                </div>
             )}
 
-            <Link
-               className={styles.back}
-               to="/login"
-            >
-               <Icon name="arrowLeft" size={16} />
+            <BackButton centered to="/login">
                Back to Sign In
-            </Link>
+            </BackButton>
          </div>
       </AuthLayout>
    );

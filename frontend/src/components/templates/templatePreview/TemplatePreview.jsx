@@ -1,19 +1,15 @@
 import styles from "./templatePreview.module.css";
 import Icon from "../../icons/Icon";
+import BackButton from "../../navigation/BackButton";
 
 function TemplatePreview({ template, onBack, onEdit }) {
    return (
       <div className={styles.container}>
          <div className={styles.header}>
             <div>
-               <button
-                  className={styles.backButton}
-                  onClick={onBack}
-                  type="button"
-                  >
-                  <Icon name="arrowLeft" size={16} />
+               <BackButton onClick={onBack}>
                   Back to Templates
-               </button>
+               </BackButton>
 
                <h1>{template.name}</h1>
 

@@ -8,22 +8,6 @@
    margin-bottom: 24px;
 }
 
-.backButton {
-   display: inline-flex;
-   align-items: center;
-   gap: 6px;
-   margin-bottom: 16px;
-   padding: 0;
-   background: transparent;
-   color: var(--color-text-muted);
-   border: 0;
-   font-size: 13px;
-}
-
-.backButton:hover {
-   color: var(--color-primary);
-}
-
 .header h1 {
    color: var(--color-text);
    font-size: 30px;

@@ -67,7 +67,7 @@ function RecentCampaigns({ campaigns })
             </div>
          ) : (
             <div className={styles.tableWrapper}>
-               <table>
+               <table className={styles.table}>
                   <thead>
                      <tr>
                         <th>Campaign</th>

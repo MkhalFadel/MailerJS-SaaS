@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../../context/authContext";
 import Icon from "../../icons/Icon";
+import mailerjsFullLogo from "../../../assets/mailerjsFullLogo.png";
 import styles from "./sidebar.module.css";
 
 const navigation = [
@@ -58,8 +59,11 @@ function Sidebar({ isOpen, onNavigate }) {
          className={`${styles.sidebar} ${isOpen ? styles.open : ""}`}
       >
          <div className={styles.logo}>
-         <div className={styles.logoMark}>M</div>
-         <span>MailerJS</span>
+         <img
+            alt="MailerJS"
+            className={styles.logoImage}
+            src={mailerjsFullLogo}
+         />
          </div>
 
          <nav className={styles.navigation}>

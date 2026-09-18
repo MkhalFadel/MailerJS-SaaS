@@ -28,10 +28,6 @@ function ProfileOverview({ firstName, lastName, email })
                Email verified
             </div>
          </div>
-
-         <button className={styles.avatarButton}>
-            Change Avatar
-         </button>
       </section>
    );
 }

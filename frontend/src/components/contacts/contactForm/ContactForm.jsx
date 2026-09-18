@@ -2,6 +2,7 @@ import { useState } from "react";
 import styles from "./contactForm.module.css";
 import { createContact, updateContact } from "../../../api/contacts";
 import Icon from "../../icons/Icon";
+import BackButton from "../../navigation/BackButton";
 
 function ContactForm({ contact, setContacts, onCancel }) {
    const [firstName, setFirstName] = useState(contact?.firstName || "");
@@ -58,14 +59,9 @@ function ContactForm({ contact, setContacts, onCancel }) {
    return (
       <div className={styles.container}>
          <div className={styles.header}>
-            <button
-            className={styles.backButton}
-            onClick={onCancel}
-            type="button"
-            >
-               <Icon name="arrowLeft" size={16} />
+            <BackButton onClick={onCancel}>
                Back to Contacts
-            </button>
+            </BackButton>
 
             <h1>
                {isEditing ? "Edit Contact" : "Add Contact"}

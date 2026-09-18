@@ -60,21 +60,6 @@
    border-radius: 50%;
 }
 
-.avatarButton {
-   min-height: 38px;
-   padding: 8px 11px;
-   background: var(--color-bg);
-   color: var(--color-text-secondary);
-   border: 1px solid var(--color-border);
-   border-radius: var(--radius-md);
-   font-size: 12px;
-}
-
-.avatarButton:hover {
-   background: var(--color-bg-secondary);
-   color: var(--color-text);
-}
-
 @media (max-width: 800px) {
    .container {
       align-items: flex-start;
@@ -96,7 +81,4 @@
       width: 100%;
    }
 
-   .avatarButton {
-      width: 100%;
-   }
 }

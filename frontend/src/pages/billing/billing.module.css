@@ -24,19 +24,6 @@
    font-size: 14px;
 }
 
-.backBtn {
-   display: inline-flex;
-   align-items: center;
-   gap: 6px;
-   color: var(--color-text-secondary);
-   margin-right: 32px;
-   font-size: 13px;
-}
-
-.backBtn:hover {
-   color: var(--color-primary);
-}
-
 .layout {
    display: grid;
    grid-template-columns: 220px minmax(0, 1fr);
