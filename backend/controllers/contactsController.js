@@ -1,6 +1,32 @@
 const prisma = require("../lib/prisma");
 const { updateContactsFields } = require("../utils/contacts");
 
+const MAX_IMPORTED_CONTACTS = 1000;
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function normalizeImportedContact(contact)
+{
+   const email = typeof contact?.email === "string"
+      ? contact.email.trim().toLowerCase()
+      : "";
+
+   if(!email || !emailPattern.test(email) || email.length > 255)
+      return null;
+
+   const firstName = typeof contact.firstName === "string"
+      ? contact.firstName.trim().slice(0, 100)
+      : "";
+   const lastName = typeof contact.lastName === "string"
+      ? contact.lastName.trim().slice(0, 100)
+      : "";
+
+   return {
+      email,
+      first_name: firstName || null,
+      last_name: lastName || null
+   };
+}
+
 async function fetchContacts(req, res, next)
 {
    try {
@@ -43,6 +69,103 @@ async function createContact(req, res, next)
 
    } catch (error) {
       next(error)
+   }
+}
+
+async function importContacts(req, res, next)
+{
+   try {
+      const importedContacts = req.body.contacts;
+
+      if(!Array.isArray(importedContacts) || importedContacts.length === 0)
+      {
+         return res.status(400).json({
+            error: "Choose a file containing at least one contact."
+         });
+      }
+
+      if(importedContacts.length > MAX_IMPORTED_CONTACTS)
+      {
+         return res.status(400).json({
+            error: `A single import can contain up to ${MAX_IMPORTED_CONTACTS} contacts.`
+         });
+      }
+
+      const contactsByEmail = new Map();
+      let invalidCount = 0;
+      let duplicateInFileCount = 0;
+
+      for(const importedContact of importedContacts)
+      {
+         const contact = normalizeImportedContact(importedContact);
+
+         if(!contact)
+         {
+            invalidCount += 1;
+            continue;
+         }
+
+         if(contactsByEmail.has(contact.email))
+         {
+            duplicateInFileCount += 1;
+            continue;
+         }
+
+         contactsByEmail.set(contact.email, contact);
+      }
+
+      const contacts = [...contactsByEmail.values()];
+
+      if(contacts.length === 0)
+      {
+         return res.status(400).json({
+            error: "No valid email addresses were found in this file."
+         });
+      }
+
+      const existingContacts = await prisma.contacts.findMany({
+         where: {
+            user_id: req.user.id,
+            email: {
+               in: contacts.map(contact => contact.email)
+            }
+         },
+         select: {
+            email: true
+         }
+      });
+      const existingEmails = new Set(
+         existingContacts.map(contact => contact.email.toLowerCase())
+      );
+      const contactsToCreate = contacts.filter(
+         contact => !existingEmails.has(contact.email)
+      );
+      const result = contactsToCreate.length > 0
+         ? await prisma.contacts.createMany({
+            data: contactsToCreate.map((contact) => ({
+               ...contact,
+               user_id: req.user.id
+            })),
+            skipDuplicates: true
+         })
+         : { count: 0 };
+      const duplicateCount =
+         duplicateInFileCount +
+         existingEmails.size +
+         (contactsToCreate.length - result.count);
+
+      return res.status(200).json({
+         message: `${result.count} contact${result.count === 1 ? "" : "s"} imported successfully.`,
+         data: {
+            total: importedContacts.length,
+            imported: result.count,
+            invalid: invalidCount,
+            duplicates: duplicateCount,
+            skipped: invalidCount + duplicateCount
+         }
+      });
+   } catch(error) {
+      next(error);
    }
 }
 
@@ -140,4 +263,10 @@ async function deleteContact(req, res, next)
    }
 }
 
-module.exports = { createContact, fetchContacts, deleteContact, updateContact }
+module.exports = {
+   createContact,
+   fetchContacts,
+   importContacts,
+   deleteContact,
+   updateContact
+}

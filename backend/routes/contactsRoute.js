@@ -1,6 +1,12 @@
 const express = require("express");
 const router = express.Router()
-const { createContact, fetchContacts, updateContact, deleteContact } = require("../controllers/contactsController")
+const {
+   createContact,
+   fetchContacts,
+   importContacts,
+   updateContact,
+   deleteContact
+} = require("../controllers/contactsController")
 const { contactValidator, contactUpdateValidator } = require("../validators/contactValidator")
 const validte = require("../middleware/validationMiddleware");
 const authMiddleware = require("../middleware/authMiddleware");
@@ -10,6 +16,9 @@ router.get("/", authMiddleware, fetchContacts);
 
 // Create contact
 router.post("/", authMiddleware, contactValidator, validte, createContact);
+
+// Import multiple contacts from a parsed CSV or text file
+router.post("/import", authMiddleware, importContacts);
 
 // Update contact
 router.put("/:id", authMiddleware, contactUpdateValidator, validte, updateContact);

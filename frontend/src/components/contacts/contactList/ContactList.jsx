@@ -37,6 +37,25 @@ function ContactList({ contacts, setContacts, onCreate, onEdit, onDetails, onImp
          contact.email;
    }
 
+   function hasContactName(contact)
+   {
+      return Boolean(`${contact.firstName} ${contact.lastName}`.trim());
+   }
+
+   function getContactInitials(contact)
+   {
+      const initials = `${contact.firstName.charAt(0)}${contact.lastName.charAt(0)}`;
+
+      return initials || contact.email.charAt(0).toUpperCase();
+   }
+
+   function getContactDisplayName(contact)
+   {
+      return hasContactName(contact)
+         ? getContactName(contact)
+         : "No name provided";
+   }
+
    async function requestContactDeletion(contact)
    {
       if(deleting)
@@ -176,12 +195,17 @@ function ContactList({ contacts, setContacts, onCreate, onEdit, onDetails, onImp
                               onClick={() => onDetails(contact)}
                            >
                               <span className={styles.avatar}>
-                                 {contact.firstName.charAt(0)}
-                                 {contact.lastName.charAt(0)}
+                                 {getContactInitials(contact)}
                               </span>
 
-                              <span>
-                                 {contact.firstName} {contact.lastName}
+                              <span
+                                 className={
+                                    !hasContactName(contact)
+                                       ? styles.missingName
+                                       : ""
+                                 }
+                              >
+                                 {getContactDisplayName(contact)}
                               </span>
                            </button>
                         </td>

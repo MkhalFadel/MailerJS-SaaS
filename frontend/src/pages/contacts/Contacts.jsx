@@ -58,6 +58,17 @@ function Contacts() {
       setView("list");
    }
 
+   async function handleImportedContacts()
+   {
+      try {
+         const response = await getContacts();
+
+         setContacts(response.data);
+      } catch(error) {
+         console.error("Failed to refresh imported contacts:", error);
+      }
+   }
+
    return (
       <DashboardLayout>
          <div className={styles.page}>
@@ -103,6 +114,7 @@ function Contacts() {
             {!loading && !error && view === "import" && (
                <ImportContacts
                   onCancel={handleBack}
+                  onImported={handleImportedContacts}
                />
             )}
          </div>

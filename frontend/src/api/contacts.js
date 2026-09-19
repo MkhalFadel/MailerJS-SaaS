@@ -30,6 +30,16 @@ export async function createContact(contact)
    return {...res, data: mappedData};
 }
 
+export function importContacts(contacts)
+{
+   return apiRequest("/contacts/import", {
+      method: "POST",
+      body: JSON.stringify({
+         contacts
+      })
+   });
+}
+
 export async function updateContact(id, contact)
 {
    const res = await apiRequest(`/contacts/${id}`,{
