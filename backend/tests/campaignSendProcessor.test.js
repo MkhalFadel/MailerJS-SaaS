@@ -1,7 +1,11 @@
 const assert = require("node:assert/strict");
 const test = require("node:test");
 
-function loadCampaignSendProcessor(prisma, sendEmail)
+function loadCampaignSendProcessor(
+   prisma,
+   sendEmail,
+   renderTemplate = (content) => content
+)
 {
    const processorPath = require.resolve("../services/campaignSendProcessor");
    const prismaPath = require.resolve("../lib/prisma");
@@ -27,7 +31,7 @@ function loadCampaignSendProcessor(prisma, sendEmail)
    };
    require.cache[rendererPath] = {
       exports: {
-         renderTemplate: (content) => content
+         renderTemplate
       }
    };
    require.cache[sendServicePath] = {
@@ -88,7 +92,7 @@ function loadCampaignSendProcessor(prisma, sendEmail)
    };
 }
 
-function createPrisma(deliveries)
+function createPrisma(deliveries, campaignOverrides = {})
 {
    const campaignSend = {
       id: "send-id",
@@ -103,12 +107,15 @@ function createPrisma(deliveries)
    const campaign = {
       id: "campaign-id",
       subject: "Hello",
+      ...campaignOverrides,
       template: {
-         content: "Hello"
+         content: "Hello",
+         ...campaignOverrides.template
       },
       smtp_account: {
          sender_name: "Mailer",
-         sender_email: "mailer@example.com"
+         sender_email: "mailer@example.com",
+         ...campaignOverrides.smtp_account
       }
    };
 
@@ -204,6 +211,43 @@ test("worker skips accepted recipients when a send is retried", async (context) 
       (await prisma.campaign_sends.findUnique()).status,
       "COMPLETED"
    );
+});
+
+test("worker uses the personalized campaign subject and template body", async (context) => {
+   const deliveries = [
+      {
+         id: "delivery-id",
+         campaign_send_id: "send-id",
+         recipient_email: "ada@example.com",
+         recipient_first_name: "Ada",
+         recipient_last_name: "Lovelace",
+         status: "pending"
+      }
+   ];
+   let sentMessage;
+   const prisma = createPrisma(deliveries, {
+      subject: "Welcome, {{first_name}}",
+      template: {
+         content: "<p>Hello {{last_name}}</p>",
+         subject: "Unused legacy subject"
+      }
+   });
+   const processorModule = loadCampaignSendProcessor(
+      prisma,
+      async (transporter, data) => {
+         sentMessage = data;
+      },
+      (content, recipient) => content
+         .replaceAll("{{first_name}}", recipient.first_name || "")
+         .replaceAll("{{last_name}}", recipient.last_name || "")
+         .replaceAll("{{email}}", recipient.email || "")
+   );
+   context.after(() => processorModule.restore());
+
+   await processorModule.processor.processCampaignSend("send-id");
+
+   assert.equal(sentMessage.subject, "Welcome, Ada");
+   assert.equal(sentMessage.html, "<p>Hello Lovelace</p>");
 });
 
 test("worker records recipient failures and completes remaining recipients", async (context) => {

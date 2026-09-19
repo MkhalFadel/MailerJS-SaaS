@@ -16,7 +16,7 @@ function TemplateList({ templates, setTemplates, onCreate, onEdit, onPreview }) 
       return templates.filter((template) => {
          const matchesSearch =
             template.name.toLowerCase().includes(search.toLowerCase()) ||
-            template.subject.toLowerCase().includes(search.toLowerCase());
+            template.content.toLowerCase().includes(search.toLowerCase());
 
          return matchesSearch;
       });
@@ -171,7 +171,6 @@ function TemplateList({ templates, setTemplates, onCreate, onEdit, onPreview }) 
                         <div className={styles.cardTitle}>
                            <div>
                               <h2>{template.name}</h2>
-                              <p>{template.subject}</p>
                            </div>
                         </div>
 

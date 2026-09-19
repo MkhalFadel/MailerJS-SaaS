@@ -6,7 +6,6 @@ import BackButton from "../../navigation/BackButton";
 
 function TemplateEditor({ template, setTemplates, onCancel }) {
    const [name, setName] = useState(template?.name || "");
-   const [subject, setSubject] = useState(template?.subject || "");
    const [content, setContent] = useState(template?.content?.trim() || "");
 
    const isEditing = Boolean(template);
@@ -16,7 +15,6 @@ function TemplateEditor({ template, setTemplates, onCancel }) {
       try {
          const response = await createTemplate({
             name,
-            subject,
             content
          });
 
@@ -36,7 +34,6 @@ function TemplateEditor({ template, setTemplates, onCancel }) {
       try {
          const response = await updateTemplate(template.id,{
             name,
-            subject,
             content
          });
 
@@ -82,17 +79,6 @@ function TemplateEditor({ template, setTemplates, onCancel }) {
                      value={name}
                      onChange={(event) => setName(event.target.value)}
                      placeholder="Welcome Email"
-                  />
-               </label>
-
-               <label className={styles.field}>
-                  <span>Subject</span>
-
-                  <input
-                     type="text"
-                     value={subject}
-                     onChange={(event) => setSubject(event.target.value)}
-                     placeholder="Welcome to {{company}}"
                   />
                </label>
             </div>

@@ -8,7 +8,6 @@ function mapTemplate(template)
    return {
       id: template.id,
       name: template.name,
-      subject: template.subject,
       content: template.content,
       createdAt: template.created_at,
       updatedAt: template.updated_at

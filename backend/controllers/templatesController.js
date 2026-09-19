@@ -31,7 +31,6 @@ async function createTemplate(req, res, next)
          data:{
             user_id: id,
             name: data.name,
-            subject: data.subject,
             content: data.content
          }
       })

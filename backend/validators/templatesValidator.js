@@ -6,15 +6,15 @@ const templatesValidator = [
       .notEmpty()
       .withMessage("Template name is required"),
 
-   body("subject")
-      .trim()
-      .notEmpty()
-      .withMessage("Subject is required"),
-
    body("content")
       .trim()
       .notEmpty()
-      .withMessage("Content is required")
+      .withMessage("Content is required"),
+
+   body("subject")
+      .not()
+      .exists()
+      .withMessage("Template subjects are no longer supported")
 ];
 
 const templatesUpdateValidator = [
@@ -24,17 +24,16 @@ const templatesUpdateValidator = [
       .notEmpty()
       .withMessage("Template name cannot be empty"),
 
-   body("subject")
-      .optional()
-      .trim()
-      .notEmpty()
-      .withMessage("Subject cannot be empty"),
-
    body("content")
       .optional()
       .trim()
       .notEmpty()
-      .withMessage("Content cannot be empty")
+      .withMessage("Content cannot be empty"),
+
+   body("subject")
+      .not()
+      .exists()
+      .withMessage("Template subjects are no longer supported")
 ];
 
 module.exports = { templatesValidator, templatesUpdateValidator }

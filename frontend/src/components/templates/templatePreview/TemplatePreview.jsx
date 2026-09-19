@@ -13,7 +13,7 @@ function TemplatePreview({ template, onBack, onEdit }) {
 
                <h1>{template.name}</h1>
 
-               <p>{template.subject}</p>
+               <p>Preview this reusable email content.</p>
             </div>
 
             <button
@@ -27,18 +27,6 @@ function TemplatePreview({ template, onBack, onEdit }) {
          </div>
 
          <div className={styles.previewCard}>
-            <div className={styles.previewToolbar}>
-               <div>
-                  <span>From</span>
-                  <strong>you@example.com</strong>
-               </div>
-
-               <div>
-                  <span>Subject</span>
-                  <strong>{template.subject}</strong>
-               </div>
-            </div>
-
             <div className={styles.emailPreview}>
                <div
                   dangerouslySetInnerHTML={{

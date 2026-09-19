@@ -263,7 +263,9 @@ Use an application-specific password when a provider requires one. Do not put SM
 
 ## Template personalization
 
-Templates and campaign subjects support these variables:
+Campaign subjects and template content support these variables. A template
+provides the reusable email body, while the campaign is the only source of the
+outgoing email subject.
 
 | Variable | Replaced with |
 | --- | --- |

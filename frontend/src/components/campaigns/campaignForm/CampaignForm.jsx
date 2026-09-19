@@ -271,7 +271,7 @@ function CampaignForm({ campaign, onCancel, onCreated, onUpdated })
                   </label>
 
                   <label className={styles.field}>
-                     <span>Subject</span>
+                     <span>Email Subject</span>
 
                      <input
                         type="text"

@@ -205,16 +205,6 @@
    font-weight: 650;
 }
 
-.cardTitle p {
-   margin-top: 5px;
-   overflow: hidden;
-   max-width: 220px;
-   color: var(--color-text-muted);
-   font-size: 13px;
-   text-overflow: ellipsis;
-   white-space: nowrap;
-}
-
 .status {
    align-self: flex-start;
    padding: 4px 8px;
