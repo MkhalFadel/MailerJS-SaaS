@@ -9,7 +9,6 @@ import Register from "./pages/auth/register/Register";
 import ForgetPassword from "./pages/auth/forgetPassword/ForgetPassword";
 import ResetPassword from "./pages/auth/resetPassword/ResetPassword";
 import Account from "./pages/account/Account";
-import Billing from "./pages/billing/Billing";
 import ProtectedRoute from "./components/auth/protectedRoutes/ProtectedRoute";
 import PublicRoute from "./components/auth/publicRoute/PublicRoute";
 
@@ -31,7 +30,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgetPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/account" element={<Account />} />
-        <Route path="/billing" element={<Billing />} />
+        <Route path="/billing" element={<Navigate to="/account" replace />} />
       </Route>
     </Routes>
   );

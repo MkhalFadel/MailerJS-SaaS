@@ -1,16 +1,13 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import styles from "./account.module.css";
 import ProfileOverview from "../../components/account/profileOverview/ProfileOverview";
 import PersonalInformation from "../../components/account/personalInformation/PersonalInformation";
 import AccountInformation from "../../components/account/accountInformation/AccountInformation";
-import UsageOverview from "../../components/account/usageOverview/UsageOverview";
-import CurrentPlan from "../../components/account/currentPlan/CurrentPlan";
 import Security from "../../components/account/security/Security";
 import AccountActions from "../../components/account/accountActions/AccountActions";
 import Icon from "../../components/icons/Icon";
 import BackButton from "../../components/navigation/BackButton";
 import { useAuth } from "../../context/authContext";
-import { getDashboard } from "../../api/dashboard";
 
 function Account() {
    const { user, updateProfile, changePassword } = useAuth();
@@ -19,40 +16,6 @@ function Account() {
    const [firstName,setFirstName] = useState(user?.first_name || "");
    const [lastName,setLastName] = useState(user?.last_name || "");
    const [email,setEmail] = useState(user?.email || "");
-   const [usage, setUsage] = useState(null);
-   const [usageLoading, setUsageLoading] = useState(true);
-   const [usageError, setUsageError] = useState(null);
-
-   useEffect(() => {
-      let isCurrent = true;
-
-      async function loadUsage()
-      {
-         setUsageLoading(true);
-         setUsageError(null);
-
-         try {
-            const response = await getDashboard();
-
-            if(isCurrent)
-               setUsage(response.data.stats);
-         } catch(error) {
-            console.error("Failed to load account usage:", error);
-
-            if(isCurrent)
-               setUsageError(error.message || "Unable to load account usage.");
-         } finally {
-            if(isCurrent)
-               setUsageLoading(false);
-         }
-      }
-
-      loadUsage();
-
-      return () => {
-         isCurrent = false;
-      };
-   },[user?.id]);
 
    async function handleProfileSave(profile)
    {
@@ -86,14 +49,6 @@ function Account() {
                   />
 
                   <AccountInformation user={user} />
-
-                  <UsageOverview
-                     stats={usage}
-                     loading={usageLoading}
-                     error={usageError}
-                  />
-
-                  <CurrentPlan />
                </div>
             );
 
