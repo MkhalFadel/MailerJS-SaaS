@@ -7,7 +7,10 @@ const {
    closeCampaignQueue
 } = require("../queues/campaignQueue");
 const { createRedisConnection, closeRedisConnection } = require("../queues/redis");
-const { recoverQueuedCampaignSends } = require("../services/campaignSendService");
+const {
+   finalizeCampaignSendCancellation,
+   recoverQueuedCampaignSends
+} = require("../services/campaignSendService");
 const {
    markCampaignSendFailed,
    processCampaignSend
@@ -56,6 +59,18 @@ async function startWorker()
       }
 
       try {
+         const campaignSend = await prisma.campaign_sends.findUnique({
+            where: {
+               id: job.data.campaignSendId
+            }
+         });
+
+         if(campaignSend?.status === "CANCEL_REQUESTED")
+         {
+            await finalizeCampaignSendCancellation(campaignSend.id);
+            return;
+         }
+
          await markCampaignSendFailed(job.data.campaignSendId, error);
       } catch(updateError) {
          console.error(

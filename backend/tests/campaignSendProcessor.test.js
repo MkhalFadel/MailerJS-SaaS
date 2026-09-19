@@ -32,7 +32,41 @@ function loadCampaignSendProcessor(prisma, sendEmail)
    };
    require.cache[sendServicePath] = {
       exports: {
-         getCampaignConfigurationError: () => null
+         getCampaignConfigurationError: () => null,
+         finalizeCampaignSendCancellation: async (campaignSendId) => {
+            const acceptedCount = await prisma.campaign_deliveries.count({
+               where: {
+                  campaign_send_id: campaignSendId,
+                  status: "accepted"
+               }
+            });
+            const failedCount = await prisma.campaign_deliveries.count({
+               where: {
+                  campaign_send_id: campaignSendId,
+                  status: "failed"
+               }
+            });
+
+            await prisma.campaign_sends.updateMany({
+               where: {
+                  id: campaignSendId,
+                  status: "CANCEL_REQUESTED"
+               },
+               data: {
+                  status: "CANCELLED",
+                  active_key: null,
+                  accepted_count: acceptedCount,
+                  failed_count: failedCount,
+                  completed_at: new Date()
+               }
+            });
+
+            return prisma.campaign_sends.findUnique({
+               where: {
+                  id: campaignSendId
+               }
+            });
+         }
       }
    };
    delete require.cache[processorPath];
@@ -205,4 +239,42 @@ test("worker records recipient failures and completes remaining recipients", asy
       (await prisma.campaign_sends.findUnique()).status,
       "COMPLETED_WITH_ERRORS"
    );
+});
+
+test("worker finalizes cancellation without attempting remaining recipients", async (context) => {
+   const deliveries = [
+      {
+         id: "accepted-delivery",
+         campaign_send_id: "send-id",
+         recipient_email: "accepted@example.com",
+         status: "pending"
+      },
+      {
+         id: "pending-delivery",
+         campaign_send_id: "send-id",
+         recipient_email: "pending@example.com",
+         status: "pending"
+      }
+   ];
+   const sentRecipients = [];
+   const prisma = createPrisma(deliveries);
+   const campaignSend = await prisma.campaign_sends.findUnique();
+   const processorModule = loadCampaignSendProcessor(
+      prisma,
+      async (transporter, data) => {
+         sentRecipients.push(data.recipient);
+         campaignSend.status = "CANCEL_REQUESTED";
+      }
+   );
+   context.after(() => processorModule.restore());
+
+   await processorModule.processor.processCampaignSend("send-id");
+
+   assert.deepEqual(sentRecipients, ["accepted@example.com"]);
+   assert.equal(deliveries[0].status, "accepted");
+   assert.equal(deliveries[1].status, "pending");
+   assert.equal(campaignSend.status, "CANCELLED");
+   assert.equal(campaignSend.active_key, null);
+   assert.equal(campaignSend.accepted_count, 1);
+   assert.equal(campaignSend.failed_count, 0);
 });

@@ -10,6 +10,8 @@ datasource db {
 enum campaign_send_status {
   QUEUED
   PROCESSING
+  CANCEL_REQUESTED
+  CANCELLED
   COMPLETED
   COMPLETED_WITH_ERRORS
   FAILED

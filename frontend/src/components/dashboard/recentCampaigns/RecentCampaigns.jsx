@@ -23,6 +23,14 @@ function getSendStatus(latestSend)
          label: "Sending",
          className: styles.processing
       },
+      CANCEL_REQUESTED: {
+         label: "Cancelling",
+         className: styles.cancelling
+      },
+      CANCELLED: {
+         label: "Cancelled",
+         className: styles.cancelled
+      },
       COMPLETED: {
          label: "Completed",
          className: styles.completed

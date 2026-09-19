@@ -204,6 +204,21 @@ export async function getCampaignSend(campaignId, campaignSendId)
    };
 }
 
+export async function cancelCampaignSend(campaignId, campaignSendId)
+{
+   const response = await apiRequest(
+      `/campaigns/${campaignId}/sends/${campaignSendId}/cancel`,
+      {
+         method: "POST"
+      }
+   );
+
+   return {
+      ...response,
+      data: mapCampaignSend(response.data)
+   };
+}
+
 export async function getCampaignDeliveries(campaignId)
 {
    const response = await apiRequest(`/campaigns/${campaignId}/deliveries`);
@@ -214,6 +229,7 @@ export async function getCampaignDeliveries(campaignId)
          id: delivery.id,
          campaignSendId: delivery.campaign_send_id,
          campaignSendCreatedAt: delivery.campaign_send_created_at,
+         campaignSendStatus: delivery.campaign_send_status,
          status: delivery.status,
          errorMessage: delivery.error_message,
          sentAt: delivery.sent_at,

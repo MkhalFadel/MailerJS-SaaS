@@ -5,6 +5,7 @@ function ConfirmModal({
    description,
    error,
    loading = false,
+   loadingLabel = "Deleting...",
    onCancel,
    onConfirm,
    title
@@ -45,7 +46,7 @@ function ConfirmModal({
                   onClick={onConfirm}
                   type="button"
                >
-                  {loading ? "Deleting..." : confirmLabel}
+                  {loading ? loadingLabel : confirmLabel}
                </button>
             </div>
          </section>

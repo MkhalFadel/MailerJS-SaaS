@@ -9,6 +9,7 @@ const {
    sendCampaign,
    fetchCampaignSends,
    fetchCampaignSend,
+   cancelCampaignSendRequest,
    fetchCampaignDeliveries
 } = require("../controllers/campaignsController");
 const authMiddleware = require("../middleware/authMiddleware");
@@ -23,6 +24,13 @@ router.get("/:id/sends", authMiddleware, fetchCampaignSends);
 
 // Fetch a campaign send
 router.get("/:id/sends/:sendId", authMiddleware, fetchCampaignSend);
+
+// Cancel a queued or processing campaign send
+router.post(
+   "/:id/sends/:sendId/cancel",
+   authMiddleware,
+   cancelCampaignSendRequest
+);
 
 // Fetch a single user's campaign
 router.get("/:id", authMiddleware, fetchCampaign );

@@ -1,7 +1,10 @@
 const prisma = require("../lib/prisma");
 const { createTransporter, sendEmail } = require("./smtpService");
 const { renderTemplate } = require("../utils/templateRenderer");
-const { getCampaignConfigurationError } = require("./campaignSendService");
+const {
+   finalizeCampaignSendCancellation,
+   getCampaignConfigurationError
+} = require("./campaignSendService");
 
 function getSafeErrorMessage(error)
 {
@@ -63,6 +66,25 @@ async function markCampaignSendFailed(campaignSendId, error)
    );
 }
 
+async function stopIfCampaignSendCancellationRequested(campaignSendId)
+{
+   const campaignSend = await prisma.campaign_sends.findUnique({
+      where: {
+         id: campaignSendId
+      }
+   });
+
+   if(!campaignSend || campaignSend.status === "CANCELLED")
+      return true;
+
+   if(campaignSend.status !== "CANCEL_REQUESTED")
+      return false;
+
+   await finalizeCampaignSendCancellation(campaignSendId);
+
+   return true;
+}
+
 async function processCampaignSend(campaignSendId)
 {
    await prisma.campaign_sends.updateMany({
@@ -84,10 +106,18 @@ async function processCampaignSend(campaignSendId)
 
    if(
       !campaignSend ||
-      ["COMPLETED", "COMPLETED_WITH_ERRORS", "FAILED"].includes(
+      [
+         "COMPLETED",
+         "COMPLETED_WITH_ERRORS",
+         "FAILED",
+         "CANCELLED"
+      ].includes(
          campaignSend.status
       )
    )
+      return;
+
+   if(await stopIfCampaignSendCancellationRequested(campaignSendId))
       return;
 
    console.info(`Campaign worker started send ${campaignSendId}`);
@@ -137,6 +167,11 @@ async function processCampaignSend(campaignSendId)
 
    for(const delivery of deliveries)
    {
+      // An SMTP request in progress is allowed to finish; cancellation stops
+      // the next recipient attempt after the persisted state is rechecked.
+      if(await stopIfCampaignSendCancellationRequested(campaignSendId))
+         return;
+
       if(!delivery.recipient_email)
       {
          await prisma.campaign_deliveries.updateMany({
@@ -153,6 +188,10 @@ async function processCampaignSend(campaignSendId)
          });
 
          await refreshCampaignSendCounts(campaignSendId);
+
+         if(await stopIfCampaignSendCancellationRequested(campaignSendId))
+            return;
+
          continue;
       }
 
@@ -201,7 +240,13 @@ async function processCampaignSend(campaignSendId)
       }
 
       await refreshCampaignSendCounts(campaignSendId);
+
+      if(await stopIfCampaignSendCancellationRequested(campaignSendId))
+         return;
    }
+
+   if(await stopIfCampaignSendCancellationRequested(campaignSendId))
+      return;
 
    const completedSend = await refreshCampaignSendCounts(campaignSendId);
    const processedCount =
@@ -214,9 +259,10 @@ async function processCampaignSend(campaignSendId)
       ? "COMPLETED"
       : "COMPLETED_WITH_ERRORS";
 
-   await prisma.campaign_sends.update({
+   const result = await prisma.campaign_sends.updateMany({
       where: {
-         id: campaignSendId
+         id: campaignSendId,
+         status: "PROCESSING"
       },
       data: {
          status,
@@ -226,11 +272,20 @@ async function processCampaignSend(campaignSendId)
       }
    });
 
+   if(result.count === 0)
+   {
+      if(await stopIfCampaignSendCancellationRequested(campaignSendId))
+         return;
+
+      throw new Error("Campaign send could not be finalized");
+   }
+
    console.info(`Campaign worker completed send ${campaignSendId}`);
 }
 
 module.exports = {
    markCampaignSendFailed,
    processCampaignSend,
-   refreshCampaignSendCounts
+   refreshCampaignSendCounts,
+   stopIfCampaignSendCancellationRequested
 };

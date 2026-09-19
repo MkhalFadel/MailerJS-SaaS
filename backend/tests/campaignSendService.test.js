@@ -1,7 +1,11 @@
 const assert = require("node:assert/strict");
 const test = require("node:test");
 
-function loadCampaignSendService(prisma, enqueueCampaignSend)
+function loadCampaignSendService(
+   prisma,
+   enqueueCampaignSend,
+   removeQueuedCampaignSend = async () => "not_found"
+)
 {
    const servicePath = require.resolve("../services/campaignSendService");
    const prismaPath = require.resolve("../lib/prisma");
@@ -17,7 +21,8 @@ function loadCampaignSendService(prisma, enqueueCampaignSend)
    };
    require.cache[queuePath] = {
       exports: {
-         enqueueCampaignSend
+         enqueueCampaignSend,
+         removeQueuedCampaignSend
       }
    };
    delete require.cache[servicePath];
@@ -36,6 +41,71 @@ function loadCampaignSendService(prisma, enqueueCampaignSend)
                delete require.cache[modulePath];
          }
       }
+   };
+}
+
+function matchesStatus(status, condition)
+{
+   if(!condition)
+      return true;
+
+   if(condition.in)
+      return condition.in.includes(status);
+
+   return status === condition;
+}
+
+function createCancellationPrisma(
+   status = "QUEUED",
+   ownerId = "user-id"
+)
+{
+   const campaignSend = {
+      id: "send-id",
+      campaign_id: "campaign-id",
+      active_key: "campaign-id",
+      status,
+      total_recipients: 3,
+      accepted_count: 1,
+      failed_count: 1,
+      created_at: new Date(),
+      started_at: null,
+      completed_at: null
+   };
+   const deliveries = [
+      { campaign_send_id: "send-id", status: "accepted" },
+      { campaign_send_id: "send-id", status: "failed" },
+      { campaign_send_id: "send-id", status: "pending" }
+   ];
+
+   return {
+      campaign_sends: {
+         findFirst: async ({ where }) => {
+            if(where.campaign?.user_id !== ownerId)
+               return null;
+
+            return campaignSend;
+         },
+         findUnique: async () => campaignSend,
+         updateMany: async ({ where, data }) => {
+            if(
+               where.id !== campaignSend.id ||
+               !matchesStatus(campaignSend.status, where.status)
+            )
+               return { count: 0 };
+
+            Object.assign(campaignSend, data);
+            return { count: 1 };
+         }
+      },
+      campaign_deliveries: {
+         count: async ({ where }) => deliveries.filter(
+            delivery =>
+               delivery.campaign_send_id === where.campaign_send_id &&
+               delivery.status === where.status
+         ).length
+      },
+      getCampaignSend: () => campaignSend
    };
 }
 
@@ -235,4 +305,96 @@ test("createCampaignSend prevents active duplicates and records queue failures",
 
    assert.equal(failedRunUpdate.status, "FAILED");
    assert.equal(failedRunUpdate.active_key, null);
+});
+
+test("cancelCampaignSend removes a queued job and preserves delivery counts", async (context) => {
+   const prisma = createCancellationPrisma();
+   let removeCalls = 0;
+   const serviceModule = loadCampaignSendService(
+      prisma,
+      async () => null,
+      async (campaignSendId) => {
+         removeCalls += 1;
+         assert.equal(campaignSendId, "send-id");
+         return "removed";
+      }
+   );
+   context.after(() => serviceModule.restore());
+
+   const campaignSend = await serviceModule.service.cancelCampaignSend(
+      "campaign-id",
+      "send-id",
+      "user-id"
+   );
+
+   assert.equal(removeCalls, 1);
+   assert.equal(campaignSend.status, "CANCELLED");
+   assert.equal(campaignSend.active_key, null);
+   assert.equal(campaignSend.accepted_count, 1);
+   assert.equal(campaignSend.failed_count, 1);
+   assert.ok(campaignSend.completed_at);
+});
+
+test("cancelCampaignSend requests cancellation for processing sends idempotently", async (context) => {
+   const prisma = createCancellationPrisma("PROCESSING");
+   let removeCalls = 0;
+   const serviceModule = loadCampaignSendService(
+      prisma,
+      async () => null,
+      async () => {
+         removeCalls += 1;
+         return "removed";
+      }
+   );
+   context.after(() => serviceModule.restore());
+
+   const campaignSend = await serviceModule.service.cancelCampaignSend(
+      "campaign-id",
+      "send-id",
+      "user-id"
+   );
+   const repeatedRequest = await serviceModule.service.cancelCampaignSend(
+      "campaign-id",
+      "send-id",
+      "user-id"
+   );
+
+   assert.equal(removeCalls, 0);
+   assert.equal(campaignSend.status, "CANCEL_REQUESTED");
+   assert.equal(repeatedRequest.status, "CANCEL_REQUESTED");
+   assert.equal(campaignSend.active_key, "campaign-id");
+});
+
+test("cancelCampaignSend enforces ownership and rejects terminal sends", async (context) => {
+   const otherUserModule = loadCampaignSendService(
+      createCancellationPrisma("QUEUED", "other-user-id"),
+      async () => null
+   );
+   context.after(() => otherUserModule.restore());
+
+   await assert.rejects(
+      () => otherUserModule.service.cancelCampaignSend(
+         "campaign-id",
+         "send-id",
+         "user-id"
+      ),
+      (error) => error.status === 404
+   );
+
+   otherUserModule.restore();
+
+   const terminalModule = loadCampaignSendService(
+      createCancellationPrisma("COMPLETED"),
+      async () => null
+   );
+   context.after(() => terminalModule.restore());
+
+   await assert.rejects(
+      () => terminalModule.service.cancelCampaignSend(
+         "campaign-id",
+         "send-id",
+         "user-id"
+      ),
+      (error) => error.status === 409
+   );
 });

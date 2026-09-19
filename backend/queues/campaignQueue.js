@@ -39,6 +39,34 @@ async function enqueueCampaignSend(campaignSendId)
    );
 }
 
+async function removeQueuedCampaignSend(campaignSendId)
+{
+   const job = await getCampaignQueue().getJob(
+      `campaign-send-${campaignSendId}`
+   );
+
+   if(!job)
+      return "not_found";
+
+   const state = await job.getState();
+
+   if(!["waiting", "delayed", "prioritized", "paused"].includes(state))
+      return "active";
+
+   try {
+      await job.remove();
+   } catch(error) {
+      const currentState = await job.getState();
+
+      if(!["waiting", "delayed", "prioritized", "paused"].includes(currentState))
+         return "active";
+
+      throw error;
+   }
+
+   return "removed";
+}
+
 async function closeCampaignQueue()
 {
    if(campaignQueue)
@@ -52,5 +80,6 @@ async function closeCampaignQueue()
 module.exports = {
    CAMPAIGN_QUEUE_NAME,
    enqueueCampaignSend,
+   removeQueuedCampaignSend,
    closeCampaignQueue
 };

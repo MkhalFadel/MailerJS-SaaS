@@ -2,11 +2,29 @@ const prisma = require("../lib/prisma");
 const { updateCampaignFields } = require("../utils/campaigns");
 const {
    CampaignSendError,
+   cancelCampaignSend,
    createCampaignSend,
    getCampaignSend,
    getCampaignSends,
    serializeCampaignSend
 } = require("../services/campaignSendService");
+
+function isCampaignCancellationSchemaError(error)
+{
+   const errorDetails = [
+      error.code,
+      error.message,
+      error.meta?.message
+   ].filter(Boolean).join(" ").toLowerCase();
+
+   return (
+      errorDetails.includes("campaign_send_status") &&
+      (
+         errorDetails.includes("cancel_requested") ||
+         errorDetails.includes("cancelled")
+      )
+   );
+}
 
 async function fetchCampaigns(req, res, next)
 {
@@ -333,6 +351,37 @@ async function fetchCampaignSend(req, res, next)
    }
 }
 
+async function cancelCampaignSendRequest(req, res, next)
+{
+   try {
+      const { id, sendId } = req.params;
+      const campaignSend = await cancelCampaignSend(id, sendId, req.user.id);
+
+      return res.status(200).json({
+         message: campaignSend.status === "CANCELLED"
+            ? "Campaign send cancelled"
+            : "Campaign cancellation requested",
+         data: serializeCampaignSend(campaignSend)
+      });
+   } catch(error) {
+      if(error instanceof CampaignSendError)
+      {
+         return res.status(error.status).json({
+            error: error.message
+         });
+      }
+
+      if(isCampaignCancellationSchemaError(error))
+      {
+         return res.status(503).json({
+            error: "Campaign cancellation is not available until the database migration is deployed."
+         });
+      }
+
+      next(error);
+   }
+}
+
 async function fetchCampaignDeliveries(req, res, next)
 {
    try {
@@ -374,7 +423,8 @@ async function fetchCampaignDeliveries(req, res, next)
             },
             campaign_send: {
                select: {
-                  created_at: true
+                  created_at: true,
+                  status: true
                }
             }
          },
@@ -396,6 +446,7 @@ async function fetchCampaignDeliveries(req, res, next)
             id: delivery.id,
             campaign_send_id: delivery.campaign_send_id,
             campaign_send_created_at: delivery.campaign_send?.created_at,
+            campaign_send_status: delivery.campaign_send?.status,
             status: delivery.status,
             error_message: delivery.error_message,
             sent_at: delivery.sent_at,
@@ -422,5 +473,6 @@ module.exports = {
    sendCampaign,
    fetchCampaignSends,
    fetchCampaignSend,
+   cancelCampaignSendRequest,
    fetchCampaignDeliveries
 };

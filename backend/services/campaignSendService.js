@@ -1,5 +1,8 @@
 const prisma = require("../lib/prisma");
-const { enqueueCampaignSend } = require("../queues/campaignQueue");
+const {
+   enqueueCampaignSend,
+   removeQueuedCampaignSend
+} = require("../queues/campaignQueue");
 
 class CampaignSendError extends Error
 {
@@ -46,6 +49,102 @@ function getCampaignConfigurationError(campaign)
       return "Campaign SMTP account is not configured";
 
    return null;
+}
+
+function isTerminalCampaignSendStatus(status)
+{
+   return [
+      "COMPLETED",
+      "COMPLETED_WITH_ERRORS",
+      "FAILED",
+      "CANCELLED"
+   ].includes(status);
+}
+
+async function getCampaignSendCounts(campaignSendId)
+{
+   const [acceptedCount, failedCount] = await Promise.all([
+      prisma.campaign_deliveries.count({
+         where: {
+            campaign_send_id: campaignSendId,
+            status: "accepted"
+         }
+      }),
+      prisma.campaign_deliveries.count({
+         where: {
+            campaign_send_id: campaignSendId,
+            status: "failed"
+         }
+      })
+   ]);
+
+   return {
+      acceptedCount,
+      failedCount
+   };
+}
+
+async function finalizeCampaignSendCancellation(
+   campaignSendId,
+   cancellableStatuses = ["CANCEL_REQUESTED"]
+)
+{
+   const { acceptedCount, failedCount } = await getCampaignSendCounts(
+      campaignSendId
+   );
+   const result = await prisma.campaign_sends.updateMany({
+      where: {
+         id: campaignSendId,
+         status: {
+            in: cancellableStatuses
+         }
+      },
+      data: {
+         status: "CANCELLED",
+         active_key: null,
+         accepted_count: acceptedCount,
+         failed_count: failedCount,
+         error_message: null,
+         completed_at: new Date()
+      }
+   });
+
+   const campaignSend = await prisma.campaign_sends.findUnique({
+      where: {
+         id: campaignSendId
+      }
+   });
+
+   if(result.count > 0)
+      console.info(`Campaign send cancelled ${campaignSendId}`);
+
+   return campaignSend;
+}
+
+async function requestCampaignSendCancellation(campaignSendId)
+{
+   await prisma.campaign_sends.updateMany({
+      where: {
+         id: campaignSendId,
+         status: {
+            in: ["QUEUED", "PROCESSING"]
+         }
+      },
+      data: {
+         status: "CANCEL_REQUESTED"
+      }
+   });
+
+   const campaignSend = await prisma.campaign_sends.findUnique({
+      where: {
+         id: campaignSendId
+      }
+   });
+
+   if(campaignSend?.status === "CANCEL_REQUESTED")
+      console.info(`Campaign cancellation requested ${campaignSendId}`);
+
+   return campaignSend;
 }
 
 async function createCampaignSend(campaignId, userId)
@@ -209,6 +308,68 @@ async function getCampaignSend(campaignId, campaignSendId, userId)
    return campaignSend;
 }
 
+async function cancelCampaignSend(campaignId, campaignSendId, userId)
+{
+   let campaignSend = await getCampaignSend(
+      campaignId,
+      campaignSendId,
+      userId
+   );
+
+   if(isTerminalCampaignSendStatus(campaignSend.status))
+   {
+      throw new CampaignSendError(
+         "This campaign send has already finished and cannot be cancelled.",
+         409
+      );
+   }
+
+   if(campaignSend.status === "CANCEL_REQUESTED")
+      return campaignSend;
+
+   if(campaignSend.status === "QUEUED")
+   {
+      let queueResult;
+
+      try {
+         queueResult = await removeQueuedCampaignSend(campaignSend.id);
+      } catch(error) {
+         console.error(
+            `Failed to remove queued campaign send ${campaignSend.id}:`,
+            error.message
+         );
+
+         throw new CampaignSendError(
+            "Campaign send queue is unavailable. Please try again.",
+            503
+         );
+      }
+
+      if(["removed", "not_found"].includes(queueResult))
+      {
+         campaignSend = await finalizeCampaignSendCancellation(
+            campaignSend.id,
+            ["QUEUED"]
+         );
+
+         if(campaignSend?.status === "CANCELLED")
+            return campaignSend;
+      }
+   }
+
+   campaignSend = await requestCampaignSendCancellation(campaignSend.id);
+
+   if(!campaignSend || isTerminalCampaignSendStatus(campaignSend.status))
+   {
+      throw new CampaignSendError(
+         "This campaign send has already finished and cannot be cancelled.",
+         409
+      );
+   }
+
+   return campaignSend;
+}
+
 async function recoverQueuedCampaignSends()
 {
    const campaignSends = await prisma.campaign_sends.findMany({
@@ -235,10 +396,14 @@ async function recoverQueuedCampaignSends()
 
 module.exports = {
    CampaignSendError,
+   cancelCampaignSend,
    createCampaignSend,
+   finalizeCampaignSendCancellation,
    getCampaignConfigurationError,
+   getCampaignSendCounts,
    getCampaignSend,
    getCampaignSends,
+   isTerminalCampaignSendStatus,
    recoverQueuedCampaignSends,
    serializeCampaignSend
 };

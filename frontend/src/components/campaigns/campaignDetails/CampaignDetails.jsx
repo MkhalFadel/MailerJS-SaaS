@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./campaignDetails.module.css";
 import {
    addCampaignRecipients,
+   cancelCampaignSend,
    deleteCampaignRecipient,
    getCampaignSend,
    getCampaignSends,
@@ -13,10 +14,15 @@ import { getContacts } from "../../../api/contacts";
 import ContactSelector from "../contactSelector/ContactSelector";
 import Icon from "../../icons/Icon";
 import BackButton from "../../navigation/BackButton";
+import ConfirmModal from "../../feedback/ConfirmModal";
 
 function isActiveCampaignSend(campaignSend)
 {
-   return ["QUEUED", "PROCESSING"].includes(campaignSend?.status);
+   return [
+      "QUEUED",
+      "PROCESSING",
+      "CANCEL_REQUESTED"
+   ].includes(campaignSend?.status);
 }
 
 function isTerminalCampaignSend(campaignSend)
@@ -24,7 +30,8 @@ function isTerminalCampaignSend(campaignSend)
    return [
       "COMPLETED",
       "COMPLETED_WITH_ERRORS",
-      "FAILED"
+      "FAILED",
+      "CANCELLED"
    ].includes(campaignSend?.status);
 }
 
@@ -36,6 +43,12 @@ function getCampaignSendTitle(campaignSend)
    if(campaignSend.status === "PROCESSING")
       return "Sending Campaign";
 
+   if(campaignSend.status === "CANCEL_REQUESTED")
+      return "Stopping Campaign";
+
+   if(campaignSend.status === "CANCELLED")
+      return "Campaign Cancelled";
+
    if(campaignSend.status === "COMPLETED")
       return "Campaign Completed";
 
@@ -43,6 +56,29 @@ function getCampaignSendTitle(campaignSend)
       return "Campaign Completed With Errors";
 
    return "Campaign Send Failed";
+}
+
+function getDeliveryStatus(delivery)
+{
+   if(
+      delivery.status === "pending" &&
+      delivery.campaignSendStatus === "CANCELLED"
+   )
+   {
+      return {
+         className: styles.notSent,
+         label: "Not sent"
+      };
+   }
+
+   return {
+      className: delivery.status === "accepted"
+         ? styles.accepted
+         : delivery.status === "failed"
+            ? styles.failed
+            : styles.pending,
+      label: delivery.status
+   };
 }
 
 function CampaignDetails({ campaign, onBack, onEdit })
@@ -63,6 +99,9 @@ function CampaignDetails({ campaign, onBack, onEdit })
    const [deliveriesError, setDeliveriesError] = useState(null);
    const [sendError, setSendError] = useState(null);
    const [campaignSend, setCampaignSend] = useState(null);
+   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
+   const [cancelling, setCancelling] = useState(false);
+   const [cancelError, setCancelError] = useState(null);
 
    const loadRecipients = useCallback(async function loadRecipients()
    {
@@ -144,7 +183,11 @@ function CampaignDetails({ campaign, onBack, onEdit })
    },[loadCampaignSends,loadDeliveries,loadRecipients]);
 
    useEffect(() => {
-      if(!["QUEUED", "PROCESSING"].includes(campaignSendStatus))
+      if(![
+         "QUEUED",
+         "PROCESSING",
+         "CANCEL_REQUESTED"
+      ].includes(campaignSendStatus))
          return;
 
       let cancelled = false;
@@ -360,11 +403,60 @@ function CampaignDetails({ campaign, onBack, onEdit })
       }
    }
 
+   function handleCloseCancelConfirmation()
+   {
+      if(cancelling)
+         return;
+
+      setCancelError(null);
+      setShowCancelConfirmation(false);
+   }
+
+   async function handleCancelCampaignSend()
+   {
+      if(!campaignSend || cancelling)
+         return;
+
+      setCancelling(true);
+      setCancelError(null);
+
+      try {
+         const response = await cancelCampaignSend(
+            campaign.id,
+            campaignSend.id
+         );
+
+         setCampaignSend(response.data);
+         setShowCancelConfirmation(false);
+
+         if(isTerminalCampaignSend(response.data))
+            await loadDeliveries();
+      } catch(error) {
+         console.error("Failed to cancel campaign send:", error);
+
+         setCancelError(
+            error.message ||
+            "Unable to cancel campaign sending."
+         );
+      } finally {
+         setCancelling(false);
+      }
+   }
+
    const processedRecipients = campaignSend
       ? campaignSend.acceptedCount + campaignSend.failedCount
       : 0;
+   const notSentRecipients = campaignSend
+      ? Math.max(
+         0,
+         campaignSend.totalRecipients - processedRecipients
+      )
+      : 0;
 
    const sendingIsActive = isActiveCampaignSend(campaignSend);
+   const canCancelCampaignSend = ["QUEUED", "PROCESSING"].includes(
+      campaignSend?.status
+   );
 
    return (
       <div className={styles.container}>
@@ -412,8 +504,25 @@ function CampaignDetails({ campaign, onBack, onEdit })
                         ? "Queued"
                         : campaignSend?.status === "PROCESSING"
                            ? "Sending..."
+                           : campaignSend?.status === "CANCEL_REQUESTED"
+                              ? "Stopping..."
                      : "Send Campaign"}
                </button>
+
+               {canCancelCampaignSend && (
+                  <button
+                     className={styles.cancelSendButton}
+                     disabled={cancelling}
+                     onClick={() => {
+                        setCancelError(null);
+                        setShowCancelConfirmation(true);
+                     }}
+                     type="button"
+                  >
+                     <Icon name="close" size={16} />
+                     {cancelling ? "Cancelling..." : "Cancel Send"}
+                  </button>
+               )}
             </div>
          </div>
 
@@ -445,6 +554,8 @@ function CampaignDetails({ campaign, onBack, onEdit })
                      ? styles.sendFailed
                      : campaignSend.status === "COMPLETED_WITH_ERRORS"
                         ? styles.sendWithErrors
+                        : campaignSend.status === "CANCELLED"
+                           ? styles.sendCancelled
                         : sendingIsActive
                            ? styles.sendActive
                            : "")
@@ -454,9 +565,13 @@ function CampaignDetails({ campaign, onBack, onEdit })
                   <h2>{getCampaignSendTitle(campaignSend)}</h2>
 
                   <p>
-                     {sendingIsActive
-                        ? `${processedRecipients} of ${campaignSend.totalRecipients} recipients processed.`
-                        : "SMTP acceptance confirms server submission, not final mailbox delivery."}
+                     {campaignSend.status === "CANCEL_REQUESTED"
+                        ? "Cancellation requested. MailerJS will stop before sending the next recipient."
+                        : campaignSend.status === "CANCELLED"
+                           ? `${processedRecipients} of ${campaignSend.totalRecipients} recipients processed. ${notSentRecipients} not sent.`
+                           : sendingIsActive
+                              ? `${processedRecipients} of ${campaignSend.totalRecipients} recipients processed.`
+                              : "SMTP acceptance confirms server submission, not final mailbox delivery."}
                   </p>
                </div>
 
@@ -464,6 +579,9 @@ function CampaignDetails({ campaign, onBack, onEdit })
                   <span>Total: {campaignSend.totalRecipients}</span>
                   <span>Accepted: {campaignSend.acceptedCount}</span>
                   <span>Failed: {campaignSend.failedCount}</span>
+                  {campaignSend.status === "CANCELLED" && (
+                     <span>Not sent: {notSentRecipients}</span>
+                  )}
                </div>
 
                {campaignSend.errorMessage && (
@@ -642,48 +760,48 @@ function CampaignDetails({ campaign, onBack, onEdit })
                            </thead>
 
                            <tbody>
-                              {deliveries.map((delivery) => (
-                                 <tr key={delivery.id}>
-                                    <td>
-                                       {delivery.contact?.email || "-"}
-                                    </td>
+                              {deliveries.map((delivery) => {
+                                 const deliveryStatus = getDeliveryStatus(delivery);
 
-                                    <td>
-                                       {delivery.campaignSendCreatedAt
-                                          ? new Date(
-                                             delivery.campaignSendCreatedAt
-                                          ).toLocaleString()
-                                          : "Legacy"}
-                                    </td>
+                                 return (
+                                    <tr key={delivery.id}>
+                                       <td>
+                                          {delivery.contact?.email || "-"}
+                                       </td>
 
-                                    <td>
-                                       <span
-                                          className={
-                                             styles.recipientStatus + " " +
-                                             (delivery.status === "accepted"
-                                                ? styles.accepted
-                                                : delivery.status === "failed"
-                                                   ? styles.failed
-                                                   : styles.pending)
-                                          }
-                                       >
-                                          {delivery.status}
-                                       </span>
-                                    </td>
+                                       <td>
+                                          {delivery.campaignSendCreatedAt
+                                             ? new Date(
+                                                delivery.campaignSendCreatedAt
+                                             ).toLocaleString()
+                                             : "Legacy"}
+                                       </td>
 
-                                    <td>
-                                       {delivery.sentAt
-                                          ? new Date(
-                                             delivery.sentAt
-                                          ).toLocaleString()
-                                          : "-"}
-                                    </td>
+                                       <td>
+                                          <span
+                                             className={
+                                                styles.recipientStatus + " " +
+                                                deliveryStatus.className
+                                             }
+                                          >
+                                             {deliveryStatus.label}
+                                          </span>
+                                       </td>
 
-                                    <td>
-                                       {delivery.errorMessage || "-"}
-                                    </td>
-                                 </tr>
-                              ))}
+                                       <td>
+                                          {delivery.sentAt
+                                             ? new Date(
+                                                delivery.sentAt
+                                             ).toLocaleString()
+                                             : "-"}
+                                       </td>
+
+                                       <td>
+                                          {delivery.errorMessage || "-"}
+                                       </td>
+                                    </tr>
+                                 );
+                              })}
                            </tbody>
                         </table>
                      </div>
@@ -703,6 +821,19 @@ function CampaignDetails({ campaign, onBack, onEdit })
                excludedContactIds={
                   recipients.map(recipient => recipient.contactId)
                }
+            />
+         )}
+
+         {showCancelConfirmation && (
+            <ConfirmModal
+               confirmLabel="Cancel Send"
+               description="Emails already accepted by the SMTP provider cannot be recalled. MailerJS will stop sending to any remaining recipients."
+               error={cancelError}
+               loading={cancelling}
+               loadingLabel="Cancelling..."
+               onCancel={handleCloseCancelConfirmation}
+               onConfirm={handleCancelCampaignSend}
+               title="Cancel campaign send?"
             />
          )}
       </div>

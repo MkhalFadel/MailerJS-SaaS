@@ -114,6 +114,16 @@
    color: var(--color-primary);
 }
 
+.cancelling {
+   background: var(--color-warning-light);
+   color: var(--color-warning);
+}
+
+.cancelled {
+   background: var(--color-bg-secondary);
+   color: var(--color-text-muted);
+}
+
 .completed {
    background: var(--color-success-light);
    color: var(--color-success);
