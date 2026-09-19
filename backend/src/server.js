@@ -11,10 +11,17 @@ const campaignRouter = require("../routes/campaignsRoutes");
 const campaignRecipientRouter = require("../routes/campaignRecipientRouter");
 const dashboardRouter = require("../routes/dashboardRoutes");
 const errorHandler = require("../middleware/errorMiddleware");
+const { generalApiLimiter } = require("../middleware/rateLimiters");
 const prisma = require("../lib/prisma");
 const { closeCampaignQueue } = require("../queues/campaignQueue");
+const { closeRateLimitRedisConnection } = require("../queues/rateLimitRedis");
 
 const app = express();
+
+const trustProxyHops = Number.parseInt(process.env.TRUST_PROXY_HOPS, 10);
+
+if(Number.isInteger(trustProxyHops) && trustProxyHops >= 0)
+   app.set("trust proxy", trustProxyHops);
 
 app.use(cors({
    origin: process.env.FRONTEND_URL || "http://localhost:5173",
@@ -22,6 +29,7 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieParser());
+app.use("/api", generalApiLimiter);
 
 // Users route
 app.use("/api/users", usersRoute);
@@ -71,6 +79,7 @@ async function shutdown(signal)
    server.close(async () => {
       try {
          await closeCampaignQueue();
+         await closeRateLimitRedisConnection();
          await prisma.$disconnect();
       } catch(error) {
          console.error("Server shutdown error:", error.message);

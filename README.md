@@ -144,6 +144,10 @@ Edit the two `.env` files with local, non-production values. Do not commit them.
 | `AUTH_COOKIE_SAME_SITE` | Yes | Cookie SameSite setting; the example uses `lax`. |
 | `SMTP_ENCRYPTION_KEY` | Yes for SMTP accounts | Long random secret used to encrypt stored SMTP passwords. Changing it makes previously stored SMTP passwords unreadable. |
 | `QUEUE_REDIS_URL` | Yes for campaign sending | Redis connection URL, for example `redis://localhost:6379`. |
+| `RATE_LIMIT_ENABLED` | No | Enables HTTP API rate limiting; defaults to `true`. Set to `false` only for controlled troubleshooting or tests. |
+| `RATE_LIMIT_GENERAL_LIMIT` | No | General API requests per window; defaults to `600`. |
+| `RATE_LIMIT_GENERAL_WINDOW_MS` | No | General API rate-limit window in milliseconds; defaults to `900000` (15 minutes). |
+| `TRUST_PROXY_HOPS` | Deployment-specific | Number of trusted reverse proxies. Leave unset locally; set to `1` only when one trusted proxy sits directly in front of the API. |
 
 For a deployed API, set the standard `NODE_ENV=production` runtime setting so authentication cookies use their production secure-cookie behavior.
 
@@ -170,13 +174,34 @@ npx prisma migrate deploy
 
 ### Redis
 
-Run a Redis instance reachable at `QUEUE_REDIS_URL`. Redis is required only for enqueuing and consuming campaign send jobs; PostgreSQL remains the persistent record of send runs and delivery results.
+Run a Redis instance reachable at `QUEUE_REDIS_URL`. Redis is used for BullMQ campaign jobs and shared HTTP rate-limit counters; PostgreSQL remains the persistent record of send runs and delivery results. Rate-limit keys use the separate `mailerjs:ratelimit:` namespace and never overlap BullMQ's `bull:` keys.
 
 For a default local Redis installation, the example URL is:
 
 ```text
 redis://localhost:6379
 ```
+
+### HTTP API rate limiting
+
+The API uses a dedicated long-lived Redis connection for rate-limit counters. It is separate from BullMQ's connection and uses the `mailerjs:ratelimit:` key namespace. If that Redis store is temporarily unavailable, the API logs the infrastructure error and allows the request instead of taking the application offline.
+
+| Area | Policy | Key |
+| --- | --- | --- |
+| General API | 600 requests / 15 minutes | Client IP |
+| Login failures | 10 / 15 minutes; successful logins do not count | Client IP |
+| Registration | 5 / hour | Client IP |
+| Google sign-in | 15 / 15 minutes | Client IP |
+| Token refresh | 60 / 15 minutes | Client IP |
+| Google reauthentication | 10 / 15 minutes | Authenticated user |
+| Password or account deletion | 5 / 15 minutes | Authenticated user |
+| SMTP connection test | 15 / 10 minutes | Authenticated user |
+| Campaign send | 20 / hour | Authenticated user |
+| Campaign cancellation | 30 / 15 minutes | Authenticated user |
+
+`OPTIONS` preflight requests do not consume a quota. Campaign status polling uses only the generous general policy, and BullMQ workers and recipient SMTP sends are never rate-limited by Express middleware. The browser refreshes access tokens only after explicit access-token `401` responses, so `429` and `403` responses are shown as normal API errors without creating refresh loops.
+
+Leave `TRUST_PROXY_HOPS` unset for local development. Set it to the exact number of trusted proxies only when the API is deployed behind them; this allows Express to use the actual client IP without accepting arbitrary forwarded headers.
 
 ## Running the application
 

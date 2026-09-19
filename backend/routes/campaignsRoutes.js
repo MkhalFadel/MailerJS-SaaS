@@ -15,6 +15,10 @@ const {
 const authMiddleware = require("../middleware/authMiddleware");
 const { campaignValidator, campaignUpdateValidator } = require("../validators/campaignsValidator");
 const validate = require("../middleware/validationMiddleware")
+const {
+   campaignCancelLimiter,
+   campaignSendLimiter
+} = require("../middleware/rateLimiters");
 
 // Fetch all user's campaigns
 router.get("/", authMiddleware, fetchCampaigns);
@@ -29,6 +33,7 @@ router.get("/:id/sends/:sendId", authMiddleware, fetchCampaignSend);
 router.post(
    "/:id/sends/:sendId/cancel",
    authMiddleware,
+   campaignCancelLimiter,
    cancelCampaignSendRequest
 );
 
@@ -45,7 +50,7 @@ router.put("/:id", authMiddleware, campaignUpdateValidator, validate, updateCamp
 router.delete("/:id", authMiddleware, deleteCampaign);
 
 // Send campaign
-router.post("/:id/send", authMiddleware, sendCampaign);
+router.post("/:id/send", authMiddleware, campaignSendLimiter, sendCampaign);
 
 // Fetch delivery history
 router.get("/:id/deliveries", authMiddleware, fetchCampaignDeliveries);

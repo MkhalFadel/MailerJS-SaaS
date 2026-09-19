@@ -4,6 +4,7 @@ const { fetchSmtpAccounts, createSmtpAccount, updateSmtpAccount, deleteSmtpAccou
 const { smtpValidator, smtpUpdateValidator } = require("../validators/smtpValidator");
 const validate = require("../middleware/validationMiddleware");
 const authMiddleware = require("../middleware/authMiddleware");
+const { smtpTestLimiter } = require("../middleware/rateLimiters");
 
 // Fetch user's SMTP accounts
 router.get("/", authMiddleware, fetchSmtpAccounts);
@@ -18,6 +19,6 @@ router.put("/:id", authMiddleware, smtpUpdateValidator, validate, updateSmtpAcco
 router.delete("/:id", authMiddleware, deleteSmtpAccount);
 
 // Test SMTP connection
-router.post("/:id/test", authMiddleware, verifyConnection)
+router.post("/:id/test", authMiddleware, smtpTestLimiter, verifyConnection)
 
 module.exports = router;
