@@ -1,118 +1,180 @@
 # MailerJS
 
-MailerJS is a full-stack email-campaign application for managing contacts, email templates, SMTP accounts, and recipient-based campaigns. It has a React single-page application, an Express API backed by PostgreSQL/Prisma, and a separate BullMQ worker for durable campaign sending.
+<p align="center">
+  <img src="frontend/src/assets/mailerjsFullLogo.png" alt="MailerJS" width="300" />
+</p>
 
-Campaign emails are never sent as part of the HTTP request. The API validates and records a send run, Redis queues the work, and a dedicated worker sends recipients while persisting progress and delivery history in PostgreSQL.
+MailerJS is a full-stack email campaign application for managing contacts, HTML templates, SMTP accounts, and manually started email campaigns. It pairs a React dashboard with an Express API, PostgreSQL/Prisma persistence, and a BullMQ worker backed by Redis so campaign requests do not keep the HTTP server open while recipients are processed.
 
-<!-- Add an application screenshot here when one is available. -->
+> An **accepted** delivery means the configured SMTP server accepted the message. It does not prove that the message reached a recipient's inbox.
 
-## Features
+## Highlights
 
-### Campaigns and delivery
+- Email/password authentication and Google Identity credential sign-in
+- Secure, HTTP-only refresh-token cookies with automatic frontend access-token refresh
+- Account profile editing, password setup/change, sign-out, and account deletion
+- Per-user contacts with CSV import and plain-text email-list import
+- Reusable HTML email templates with recipient personalization
+- Encrypted SMTP account credentials and server-side SMTP connection testing
+- Campaign subjects, template and SMTP selection, and recipient management
+- Persistent BullMQ campaign-send queue, separate worker process, delivery history, progress polling, and safe retries
+- Cancellation for queued or in-progress campaign sends
+- Dashboard metrics and five most recently created campaigns
+- Redis-backed, endpoint-specific API rate limiting with a safe in-memory fallback
+- Responsive light/dark React interface using CSS Modules
 
-- Create, edit, and delete campaigns that use a saved template and SMTP account.
-- Add existing contacts as campaign recipients.
-- Queue a campaign send and receive an immediate `202 Accepted` response.
-- Track persistent send runs with queued, processing, complete, partial-error, and failed states.
-- Poll live send progress from the campaign details page, including after a page reload.
-- Keep delivery history for each send run, including accepted/failed status, send time, and safe error messages.
-- Safely send the same campaign again after its earlier send run reaches a terminal state.
+## Technology
 
-### Contact, template, and SMTP management
-
-- Create, update, list, and delete contacts scoped to the signed-in user.
-- Create, update, list, and delete reusable email templates.
-- Personalize campaign subjects and bodies with `{{first_name}}`, `{{last_name}}`, and `{{email}}`.
-- Store SMTP configuration per user, choose a default account, and test an SMTP connection.
-- Encrypt SMTP passwords at rest with `SMTP_ENCRYPTION_KEY`; passwords are not returned to the frontend.
-
-### Authentication and account security
-
-- Cookie-based JWT authentication with short-lived access tokens and refresh tokens.
-- Automatic access-token refresh in the frontend, with a single shared refresh request when several requests receive an expired-token response at once.
-- Email/password registration and sign-in.
-- Google Identity Services sign-in, verified server-side with Google token verification.
-- Account profile updates, password changes, logout, and account deletion.
-- Google-only accounts can set their first password after a fresh Google reauthentication; accounts that use passwords must provide their current password to change it.
-
-### Product experience
-
-- User-scoped dashboard metrics for contacts, campaigns, templates, SMTP accounts, and accepted/failed email counts.
-- Protected React routes and a persisted light/dark theme preference.
-- Responsive React UI built with CSS Modules and shared CSS custom properties.
-
-## Technology stack
-
-| Area | Technology |
+| Area | Implementation |
 | --- | --- |
-| Frontend | React 19, React Router, Vite, CSS Modules |
-| API | Node.js, Express, CommonJS |
-| Database | PostgreSQL, Prisma, `pg` |
-| Background processing | BullMQ and Redis (`ioredis`) |
+| Frontend | React 19, Vite, React Router, CSS Modules |
+| API | Node.js, Express 5 |
+| Database | PostgreSQL, Prisma 7, `@prisma/adapter-pg` |
+| Queue | BullMQ and Redis (`ioredis`) |
 | Email | Nodemailer |
-| Authentication | JWT, HTTP-only cookies, `bcryptjs`, Google Identity Services / `google-auth-library` |
+| Authentication | JWT, HTTP-only cookies, bcrypt, Google Identity Services / Google Auth Library |
+| Validation and security | express-validator, helmet, CORS, express-rate-limit, rate-limit-redis |
 
 ## Architecture
 
-```text
-React + Vite frontend
-        |
-        | cookie-authenticated HTTP requests
-        v
-Express API ----------------------> PostgreSQL / Prisma
-        |                                 |
-        | create CampaignSend +            | source of truth for campaigns,
-        | recipient snapshot                | send progress, and deliveries
-        v                                 |
-Redis / BullMQ <------------------------+
-        |
-        | minimal job payload: campaignSendId
-        v
-Separate campaign worker
-        |
-        | loads configuration and recipients from PostgreSQL
-        v
-SMTP provider via Nodemailer
+```mermaid
+flowchart LR
+   Browser[React / Vite frontend] -->|HTTP API + cookies| API[Express API]
+   API -->|Prisma| DB[(PostgreSQL)]
+   API -->|enqueue campaignSendId| Redis[(Redis)]
+   Redis -->|BullMQ job| Worker[Campaign worker]
+   Worker -->|Prisma state and delivery records| DB
+   Worker -->|Nodemailer| SMTP[Configured SMTP provider]
 ```
 
-The API and worker are independent processes. They share the same PostgreSQL database and Redis instance; the frontend never connects to Redis.
+The web API and campaign worker are deliberately separate processes. PostgreSQL is the source of truth for campaign sends and deliveries; Redis carries queue jobs and distributed rate-limit state.
 
-## Project structure
+## Repository layout
 
 ```text
 MailerJS/
 ├── backend/
-│   ├── prisma/                 # Prisma schema and migrations
-│   ├── queues/                 # Central Redis and BullMQ queue helpers
-│   ├── src/
-│   │   ├── controllers/        # HTTP handlers
-│   │   ├── middleware/         # Authentication and ownership checks
-│   │   ├── routes/             # Express routes
-│   │   ├── services/           # Campaign, SMTP, dashboard, and auth services
-│   │   └── utils/              # Encryption and template rendering helpers
-│   ├── tests/                  # Node test runner tests
-│   └── workers/                # Separate BullMQ campaign worker
-└── frontend/
-    └── src/
-        ├── api/                # Backend API client and response mapping
-        ├── components/         # Feature and shared UI components
-        ├── context/            # Authentication and theme state
-        ├── layouts/            # Application layout
-        ├── pages/              # Routed pages
-        └── styles/             # Global variables and base styles
+│   ├── controllers/          # HTTP request handlers
+│   ├── middleware/           # Authentication, ownership, validation, rate limiters
+│   ├── prisma/               # Prisma schema and migrations
+│   ├── queues/               # BullMQ and Redis connection modules
+│   ├── routes/               # Express route definitions
+│   ├── services/             # Campaign, SMTP, template, and account services
+│   ├── src/server.js         # API process entry point
+│   ├── tests/                # Node test-runner tests
+│   ├── utils/                # JWT, encryption, personalization, validation helpers
+│   └── workers/              # Independently runnable campaign worker
+├── frontend/
+│   └── src/
+│       ├── api/              # API clients and response mapping
+│       ├── components/       # Feature components and shared UI
+│       ├── contexts/         # Authentication and theme state
+│       ├── pages/            # Routed views
+│       └── assets/           # Application logo assets
+└── README.md
 ```
 
-## Prerequisites
+## Features
+
+### Authentication and account management
+
+- Register and sign in with an email address and password.
+- Sign in with a Google Identity credential. Google identity tokens are verified on the server before a MailerJS session is created.
+- Access tokens are short lived; refresh tokens are stored in secure HTTP-only cookies. The frontend coordinates concurrent refresh attempts and retries a request once after a successful refresh.
+- Google-only users can establish their first local password after Google reauthentication. Users who already have a password must provide their current password when changing it.
+- Update profile information, sign out, or permanently delete the account from Account Settings.
+- User-owned contacts, templates, SMTP accounts, and campaigns are deleted through the database's cascading ownership relationships when an account is deleted.
+
+### Contacts
+
+- Create, update, list, and delete contacts scoped to the authenticated user.
+- Import up to 1,000 contacts at a time from a CSV file or a plain-text file.
+  - CSV imports recognize `email` and optional `firstName`/`lastName` headers (case-insensitive header aliases are accepted by the importer).
+  - Plain-text imports treat each valid email entry as a contact; first and last names may be empty.
+  - Invalid rows and duplicate email addresses are skipped and import feedback reports the result.
+- The frontend supports selecting a file or dropping it onto the import area.
+- Deleting a contact used by campaigns requires confirmation. Associated campaign-recipient links are removed, while historical delivery snapshots remain understandable.
+
+### Templates and personalization
+
+- Store reusable HTML templates per user.
+- Templates contain message content only; the email subject belongs to the campaign.
+- Campaign subject and template HTML support these recipient placeholders:
+
+  | Placeholder | Value |
+  | --- | --- |
+  | `{{first_name}}` | Recipient first name |
+  | `{{last_name}}` | Recipient last name |
+  | `{{email}}` | Recipient email address |
+
+- A template referenced by an active queued or processing send cannot be deleted. For an inactive reference, deletion is confirmed and the campaign keeps its subject but has no template until one is chosen again.
+
+### SMTP accounts
+
+- Save one or more user-owned SMTP configurations with provider, host, port, TLS setting, username, sender name, and sender email.
+- SMTP passwords are encrypted before persistence, decrypted only on the server for SMTP use, and excluded from API responses and queue payloads.
+- Test an SMTP account connection before using it in a campaign.
+
+### Campaigns and delivery history
+
+- Create and edit campaigns with a name, required subject, template, SMTP account, and selected recipients.
+- Add or remove recipients without changing the underlying contact records.
+- View send history and recipient-level delivery history for each campaign.
+- The dashboard reports real counts for contacts, templates, SMTP accounts, campaigns, accepted emails, failed delivery attempts, and the five most recently created campaigns.
+
+### Durable queued sending
+
+Starting a campaign creates a distinct `CampaignSend` run rather than changing a generic campaign status:
+
+1. The API authenticates the caller, checks campaign ownership, and validates that the campaign has a template, SMTP account, and at least one recipient.
+2. In a PostgreSQL transaction it creates the send run and persisted recipient/delivery snapshots.
+3. It adds a minimal BullMQ job containing only `campaignSendId`, then returns `202 Accepted`.
+4. The independent worker loads authoritative data from PostgreSQL, renders recipient-specific subject and HTML, and sends recipients sequentially through Nodemailer.
+5. Each recipient result is persisted immediately, and the frontend polls the send run every 2.5 seconds while it remains active.
+
+The API does not send every email during the request.
+
+#### Send statuses
+
+| Status | Meaning |
+| --- | --- |
+| `QUEUED` | The run was saved and is waiting for a worker. |
+| `PROCESSING` | The worker is processing persisted recipients. |
+| `CANCEL_REQUESTED` | Cancellation was requested for a run the worker may currently be handling. |
+| `CANCELLED` | Processing stopped; accepted messages cannot be recalled. Unsent recipients remain not sent. |
+| `COMPLETED` | Every recipient was accepted by SMTP. |
+| `COMPLETED_WITH_ERRORS` | Processing finished, with one or more recipient failures. |
+| `FAILED` | The send run could not be processed, such as a queue or infrastructure failure. |
+
+An individual SMTP rejection is stored as a failed recipient result and does not abort the rest of the campaign.
+
+#### Retry safety and duplicate-send protection
+
+- A delivery record uniquely represents a send run and recipient. The worker skips recipients already marked accepted, so a BullMQ retry does not resend messages that were accepted before a worker crash or retry.
+- Jobs use up to three attempts with exponential backoff for infrastructure-level failures. Recipient-level failures are recorded and processing continues rather than retrying the whole run.
+- A nullable unique active key on each send run allows only one active run per campaign. A second send request while a run is queued, processing, or awaiting cancellation receives `409 Conflict`. Terminal runs clear the key, so the campaign can be sent again later without overwriting history.
+- On worker startup and at a periodic recovery check, persisted queued send runs can be re-enqueued.
+- If PostgreSQL records a run but Redis enqueueing fails, the run is marked failed, its active lock is cleared, and the request reports a service failure instead of claiming that sending was queued.
+
+#### Cancellation
+
+- A queued send is removed from the queue and finalized as cancelled when possible.
+- An in-progress send transitions to `CANCEL_REQUESTED`; the worker checks that state before starting additional recipients and finalizes it as `CANCELLED`.
+- The SMTP operation already in flight may finish. Cancellation does not recall messages already accepted by SMTP.
+
+## Requirements
 
 - Node.js and npm
-- PostgreSQL
-- Redis
-- An SMTP account/provider for sending email
-- A Google OAuth client ID only if Google sign-in is enabled
+- PostgreSQL database
+- Redis instance reachable by both the API and worker
+- A Google OAuth web client only if Google sign-in is enabled
+- SMTP account details to send email
+
+No Node.js version is declared by this repository. Use a current Node.js release supported by the installed dependencies.
 
 ## Local setup
 
-Clone the repository and install dependencies for each application:
+### 1. Clone and install dependencies
 
 ```bash
 git clone https://github.com/MkhalFadel/MailerJS-SaaS.git
@@ -120,95 +182,94 @@ cd MailerJS
 
 cd backend
 npm install
-cp .env.example .env
 
 cd ../frontend
 npm install
-cp .env.example .env
 ```
 
-Edit the two `.env` files with local, non-production values. Do not commit them.
+### 2. Configure environment files
 
-### Backend environment variables
-
-`backend/.env.example` is the authoritative list of backend configuration keys.
-
-| Variable | Required | Purpose / safe local example |
-| --- | --- | --- |
-| `PORT` | Yes | API port, for example `5000`. |
-| `DATABASE_URL` | Yes | PostgreSQL URL, for example `postgresql://USER:PASSWORD@localhost:5432/mailerjs?schema=public`. |
-| `JWT_SECRET` | Yes | Secret used to sign access tokens. Use a long random value. |
-| `REFRESH_SECRET` | Yes | Separate long random secret for refresh tokens. |
-| `GOOGLE_CLIENT_ID` | Only for Google sign-in | Google OAuth web client ID used to verify Google credentials on the server. |
-| `FRONTEND_URL` | Yes | Allowed frontend origin, for example `http://localhost:5173`. |
-| `AUTH_COOKIE_SAME_SITE` | Yes | Cookie SameSite setting; the example uses `lax`. |
-| `SMTP_ENCRYPTION_KEY` | Yes for SMTP accounts | Long random secret used to encrypt stored SMTP passwords. Changing it makes previously stored SMTP passwords unreadable. |
-| `QUEUE_REDIS_URL` | Yes for campaign sending | Redis connection URL, for example `redis://localhost:6379`. |
-| `RATE_LIMIT_ENABLED` | No | Enables HTTP API rate limiting; defaults to `true`. Set to `false` only for controlled troubleshooting or tests. |
-| `RATE_LIMIT_GENERAL_LIMIT` | No | General API requests per window; defaults to `600`. |
-| `RATE_LIMIT_GENERAL_WINDOW_MS` | No | General API rate-limit window in milliseconds; defaults to `900000` (15 minutes). |
-| `TRUST_PROXY_HOPS` | Deployment-specific | Number of trusted reverse proxies. Leave unset locally; set to `1` only when one trusted proxy sits directly in front of the API. |
-
-For a deployed API, set the standard `NODE_ENV=production` runtime setting so authentication cookies use their production secure-cookie behavior.
-
-### Frontend environment variables
-
-| Variable | Required | Purpose / safe local example |
-| --- | --- | --- |
-| `VITE_API_URL` | Yes | API base URL, for example `http://localhost:5000/api`. |
-| `VITE_GOOGLE_CLIENT_ID` | Only for Google sign-in | Google OAuth web client ID supplied to Google Identity Services in the browser. It must match the server configuration. |
-
-Vite exposes `VITE_*` values to browser code. Never place server secrets, SMTP credentials, or database URLs in the frontend environment file.
-
-### PostgreSQL and Prisma
-
-Create a PostgreSQL database, set `DATABASE_URL`, then generate the Prisma client and apply the committed migrations:
+Copy each example file before supplying local values:
 
 ```bash
 cd backend
-npx prisma generate
-npx prisma migrate deploy
+cp .env.example .env
+
+cd ../frontend
+cp .env.example .env
 ```
 
-`prisma migrate deploy` applies the repository migrations without resetting existing application data. For a new development migration, use Prisma's normal migration workflow, review the generated migration, and commit it with the schema change.
+#### Backend environment (`backend/.env`)
 
-### Redis
-
-Run a Redis instance reachable at `QUEUE_REDIS_URL`. Redis is used for BullMQ campaign jobs and shared HTTP rate-limit counters; PostgreSQL remains the persistent record of send runs and delivery results. Rate-limit keys use the separate `mailerjs:ratelimit:` namespace and never overlap BullMQ's `bull:` keys.
-
-For a default local Redis installation, the example URL is:
-
-```text
-redis://localhost:6379
-```
-
-### HTTP API rate limiting
-
-The API uses a dedicated long-lived Redis connection for rate-limit counters. It is separate from BullMQ's connection and uses the `mailerjs:ratelimit:` key namespace. If that Redis store is temporarily unavailable, the API logs the infrastructure error and allows the request instead of taking the application offline.
-
-| Area | Policy | Key |
+| Variable | Required | Purpose |
 | --- | --- | --- |
-| General API | 600 requests / 15 minutes | Client IP |
-| Login failures | 10 / 15 minutes; successful logins do not count | Client IP |
-| Registration | 5 / hour | Client IP |
-| Google sign-in | 15 / 15 minutes | Client IP |
-| Token refresh | 60 / 15 minutes | Client IP |
-| Google reauthentication | 10 / 15 minutes | Authenticated user |
-| Password or account deletion | 5 / 15 minutes | Authenticated user |
-| SMTP connection test | 15 / 10 minutes | Authenticated user |
-| Campaign send | 20 / hour | Authenticated user |
-| Campaign cancellation | 30 / 15 minutes | Authenticated user |
+| `PORT` | No | API port; the example uses `5000`. |
+| `DATABASE_URL` | Yes | PostgreSQL connection URL used by Prisma. |
+| `JWT_SECRET` | Yes | Secret for access tokens. |
+| `REFRESH_SECRET` | Yes | Secret for refresh tokens. |
+| `GOOGLE_CLIENT_ID` | For Google sign-in | Google OAuth web-client ID used to verify Google ID tokens. |
+| `FRONTEND_URL` | Yes | Allowed frontend origin for CORS; local example: `http://localhost:5173`. |
+| `AUTH_COOKIE_SAME_SITE` | No | Refresh-cookie SameSite policy; default/example is `lax`. |
+| `SMTP_ENCRYPTION_KEY` | Yes for SMTP passwords | Key used to encrypt stored SMTP passwords. |
+| `QUEUE_REDIS_URL` | Yes for queued sending | Redis URL shared by the campaign queue, worker, and distributed rate-limit store. |
+| `RATE_LIMIT_ENABLED` | No | Set `false` only to disable application rate limiters intentionally; default/example is `true`. |
+| `RATE_LIMIT_GENERAL_LIMIT` | No | Requests allowed by the general API limiter per window; default/example is `600`. |
+| `RATE_LIMIT_GENERAL_WINDOW_MS` | No | General API limiter window in milliseconds; default/example is `900000` (15 minutes). |
+| `TRUST_PROXY_HOPS` | No | Numeric trusted-proxy hop count for deployments behind a reverse proxy. Leave unset unless the proxy topology is known. |
 
-`OPTIONS` preflight requests do not consume a quota. Campaign status polling uses only the generous general policy, and BullMQ workers and recipient SMTP sends are never rate-limited by Express middleware. The browser refreshes access tokens only after explicit access-token `401` responses, so `429` and `403` responses are shown as normal API errors without creating refresh loops.
+Example `DATABASE_URL` shape (use your own credentials):
 
-Leave `TRUST_PROXY_HOPS` unset for local development. Set it to the exact number of trusted proxies only when the API is deployed behind them; this allows Express to use the actual client IP without accepting arbitrary forwarded headers.
+```dotenv
+DATABASE_URL=postgresql://USER:PASSWORD@localhost:5432/mailerjs?schema=public
+```
 
-## Running the application
+#### Frontend environment (`frontend/.env`)
 
-Run all three processes in separate terminals after PostgreSQL and Redis are available.
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `VITE_API_URL` | Yes | Base API URL; local example: `http://localhost:5000/api`. |
+| `VITE_GOOGLE_CLIENT_ID` | For Google sign-in | Same Google OAuth web-client ID used by the backend. |
+
+Do not commit `.env` files, JWT secrets, database passwords, SMTP passwords, Redis credentials, or Google credentials.
+
+### 3. Apply database migrations
+
+From `backend/`:
 
 ```bash
-# Terminal 1: API (http://localhost:5000 by default)
+npx prisma migrate deploy
+npx prisma generate
+```
+
+For local schema development, use `npx prisma migrate dev --name <migration-name>` instead of resetting an existing database. Prisma migrations preserve existing application records; do not run a database reset for normal setup or deployment.
+
+### 4. Start Redis
+
+The API may continue serving normal routes if Redis is unavailable, but campaign sends cannot be enqueued until Redis is reachable. Production deployments should use a managed Redis service or a separately managed Redis process.
+
+For a local Ubuntu/Debian installation:
+
+```bash
+sudo apt update
+sudo apt install redis-server
+sudo systemctl enable --now redis-server
+redis-cli ping
+```
+
+For a local Docker-based Redis instance:
+
+```bash
+docker run --name mailerjs-redis -p 6379:6379 redis:7-alpine
+```
+
+Then point `QUEUE_REDIS_URL` to that instance, for example `redis://127.0.0.1:6379`.
+
+### 5. Run the three local processes
+
+Open separate terminals:
+
+```bash
+# Terminal 1: API
 cd backend
 npm start
 ```
@@ -220,155 +281,120 @@ npm run worker
 ```
 
 ```bash
-# Terminal 3: Vite frontend (http://localhost:5173 by default)
+# Terminal 3: frontend
 cd frontend
 npm run dev
 ```
 
-The worker is deliberately not started by the Express server. In deployment, run the API and `npm run worker` as separate services with access to the same PostgreSQL database and Redis instance.
+The API starts from `backend/src/server.js`, and the worker starts from `backend/workers/campaignWorker.js`. Deploy them as separate services using the same PostgreSQL database and `QUEUE_REDIS_URL`.
 
-## Authentication and Google sign-in
+### Google sign-in configuration
 
-The application uses HTTP-only authentication cookies. The browser API client sends requests with credentials and retries an expired access-token request once after a refresh-token request succeeds. If refresh fails, the frontend clears its authenticated user state.
+1. Create a Google OAuth **web application** client in Google Cloud.
+2. Add each frontend origin that will load the Google sign-in button to the client's authorized JavaScript origins (for local development, typically `http://localhost:5173`).
+3. Set the same client ID in `backend/.env` as `GOOGLE_CLIENT_ID` and in `frontend/.env` as `VITE_GOOGLE_CLIENT_ID`.
+4. Restart the API and Vite processes after changing environment values.
 
-To enable Google sign-in:
-
-1. Create a Google OAuth web client in Google Cloud.
-2. Configure its authorized JavaScript origins for the frontend origin, such as `http://localhost:5173` locally.
-3. Put its client ID in both `backend/.env` as `GOOGLE_CLIENT_ID` and `frontend/.env` as `VITE_GOOGLE_CLIENT_ID`.
-4. Restart the API and Vite development server after changing environment files.
-
-Google ID tokens are verified on the server. MailerJS does not silently link a Google identity to an existing password account with the same email; use the intended account sign-in method instead. A Google-only user who wants to establish their first password must complete fresh Google reauthentication first.
-
-## Campaign queue and sending behavior
-
-### Send lifecycle
-
-When `POST /api/campaigns/:campaignId/send` succeeds, it:
-
-1. Authenticates the user and checks campaign ownership.
-2. Validates the campaign's template, SMTP account, and recipients.
-3. Creates a persistent `CampaignSend` record and recipient/delivery snapshot in PostgreSQL.
-4. Enqueues a BullMQ job containing only `campaignSendId`.
-5. Returns `202 Accepted` with send-run information.
-
-The job uses up to three attempts with exponential backoff for infrastructure-level failures. Ordinary recipient-specific SMTP errors are recorded as failed deliveries and do not abort the remaining recipients.
-
-The worker processes recipients sequentially. It loads the current send configuration and encrypted SMTP password server-side, decrypts only for the Nodemailer transporter, and writes each recipient result immediately.
-
-### Send statuses
-
-| Status | Meaning |
-| --- | --- |
-| `QUEUED` | The send run is persisted and waiting for worker processing. |
-| `PROCESSING` | The worker is sending the persisted recipient snapshot. |
-| `COMPLETED` | All recipients were accepted by the SMTP server. |
-| `COMPLETED_WITH_ERRORS` | Processing finished, but one or more recipients failed. |
-| `FAILED` | The whole run could not be processed, such as queue/configuration/infrastructure failure. |
-
-“Accepted” means that the SMTP server accepted the message. It does not guarantee final inbox delivery.
-
-### Retry safety and duplicate-send protection
-
-Each delivery record is uniquely tied to a send run and campaign recipient. If a worker crashes or BullMQ retries a job, already accepted recipients are read from PostgreSQL and skipped; the worker does not resend them.
-
-Only one `QUEUED` or `PROCESSING` run is allowed per campaign. A database-backed active key protects this rule across concurrent requests. A second request while a send is active receives `409 Conflict`. Once a run is terminal, the active key is cleared so a later send creates a new historical run.
-
-If PostgreSQL records a send successfully but Redis cannot enqueue it, the send run is marked failed, the active lock is cleared, and the API reports a service error rather than pretending the send was queued.
-
-### Frontend progress tracking
-
-The campaign details page fetches the campaign's send history on load, prefers an active run when one exists, and polls that run approximately every 2.5 seconds while it is queued or processing. It stops polling at a terminal status and refreshes delivery history. The Send button is disabled while the current campaign has an active send.
-
-## SMTP configuration
-
-Add an SMTP account in Settings with the provider details supplied by the email provider, including host, port, encryption/secure setting, username, password or app password, sender name, and sender email. MailerJS encrypts the stored password and provides an SMTP connection test endpoint.
-
-Use an application-specific password when a provider requires one. Do not put SMTP credentials in template content, campaign data, frontend variables, or queue payloads.
-
-## Template personalization
-
-Campaign subjects and template content support these variables. A template
-provides the reusable email body, while the campaign is the only source of the
-outgoing email subject.
-
-| Variable | Replaced with |
-| --- | --- |
-| `{{first_name}}` | Recipient first name |
-| `{{last_name}}` | Recipient last name |
-| `{{email}}` | Recipient email address |
-
-Example:
-
-```text
-Hi {{first_name}},
-
-We have an update for {{email}}.
-```
+MailerJS receives a Google Identity credential in the browser, verifies it using `google-auth-library` on the API, then creates its own session. This implementation does not use a frontend callback route or require a Google client secret in the application environment.
 
 ## API overview
 
-All application routes are under `/api`. Protected routes use the session cookies and enforce user ownership for contacts, templates, SMTP accounts, campaigns, recipients, deliveries, and send runs.
+All protected endpoints require the existing authentication middleware and enforce ownership of user-scoped records.
 
-| Area | Routes |
-| --- | --- |
-| User/authentication | `GET /users`, `POST /users/register`, `/users/login`, `/users/google`, `/users/google/reauthenticate`, `/users/refresh`, `/users/logout`, `PUT /users/update`, `PATCH /users/password`, `DELETE /users/delete` |
-| Contacts | `GET, POST /contacts`; `PUT, DELETE /contacts/:id` |
-| Templates | `GET, POST /templates`; `PUT, DELETE /templates/:id` |
-| SMTP accounts | `GET, POST /smtp`; `PUT, DELETE /smtp/:id`; `POST /smtp/:id/test` |
-| Campaigns | `GET, POST /campaigns`; `GET, PUT, DELETE /campaigns/:id` |
-| Campaign recipients | `GET, POST /campaigns/:campaignId/recipients`; `DELETE /campaigns/:campaignId/recipients/:contactId` |
-| Send runs | `POST /campaigns/:campaignId/send`; `GET /campaigns/:campaignId/sends`; `GET /campaigns/:campaignId/sends/:sendId` |
-| Delivery history | `GET /campaigns/:campaignId/deliveries` |
-| Dashboard | `GET /dashboard` |
+| Base path | Main endpoints | Purpose |
+| --- | --- | --- |
+| `/api/users` | `POST /register`, `POST /login`, `POST /google`, `POST /refresh`, `POST /logout` | Registration, local sign-in, Google sign-in, token refresh, and sign-out. |
+| `/api/users` | `GET /`, `PUT /update`, `PATCH /password`, `POST /google/reauthenticate`, `DELETE /delete` | Current-user profile and sensitive account actions. |
+| `/api/contacts` | `GET /`, `POST /`, `POST /import`, `PUT /:id`, `DELETE /:id` | Contact CRUD and CSV/plain-text import. |
+| `/api/templates` | `GET /`, `POST /`, `PUT /:id`, `DELETE /:id` | Template CRUD. |
+| `/api/smtp` | `GET /`, `POST /`, `PUT /:id`, `DELETE /:id`, `POST /:id/test` | SMTP account CRUD and connection testing. |
+| `/api/campaigns` | `GET /`, `POST /`, `GET/PUT/DELETE /:id` | Campaign CRUD. |
+| `/api/campaigns` | `GET/POST /:campaignId/recipients`, `DELETE /:campaignId/recipients/:contactId` | Campaign recipient management. |
+| `/api/campaigns` | `POST /:id/send`, `GET /:id/sends`, `GET /:id/sends/:sendId` | Queue a send and retrieve send progress/history. |
+| `/api/campaigns` | `POST /:id/sends/:sendId/cancel`, `GET /:id/deliveries` | Cancel a send and view recipient delivery history. |
+| `/api/dashboard` | `GET /` | Authenticated dashboard metrics and recent campaigns. |
 
-The campaign send response and status endpoints expose send-run fields such as ID, status, recipient total, accepted/failed counts, timestamps, and a safe run-level error message. They never expose Redis job details or SMTP passwords.
+The frontend API layer maps API response fields for React components, sends cookies with API requests, and does not connect directly to Redis.
 
-## Testing and verification
+## Data model notes
 
-Run the backend test suite:
+Prisma models and migrations live in `backend/prisma/`.
+
+- A `User` owns contacts, templates, SMTP accounts, and campaigns.
+- A `Campaign` has a required subject, a nullable template reference, an SMTP account, campaign recipients, and historical `CampaignSend` runs.
+- `CampaignSend` holds run-specific status, persisted totals, accepted/failed counts, timestamps, an optional safe error message, and the unique nullable active key used to prevent concurrent sends.
+- `CampaignDelivery` links a recipient outcome to a send run when applicable. It preserves recipient email/name snapshots and is nullable where necessary to remain compatible with historical delivery records.
+- Existing delivery history is not replaced when a campaign is sent again; each resend creates a new send run and delivery set.
+
+## Rate limiting
+
+Rate limiting applies only to `/api` routes. It uses the shared Redis URL when available, and safely falls back to a per-process memory store if Redis is unavailable so a Redis outage does not take down normal API requests. Redis connection errors are handled without leaking credentials.
+
+| Scope | Default policy | Key |
+| --- | --- | --- |
+| General API traffic | 600 requests / 15 minutes | Client IP |
+| Failed local login | 10 failed attempts / 15 minutes | Client IP; successful requests do not count |
+| Registration | 5 requests / hour | Client IP |
+| Google sign-in | 15 requests / 15 minutes | Client IP |
+| Refresh token | 60 requests / 15 minutes | Client IP |
+| Google reauthentication | 10 requests / 15 minutes | Authenticated user |
+| Password change and account deletion | 5 requests / 15 minutes | Authenticated user |
+| SMTP connection test | 15 requests / 10 minutes | Authenticated user |
+| Campaign send | 20 requests / hour | Authenticated user |
+| Campaign cancellation | 30 requests / 15 minutes | Authenticated user |
+
+The limiters use standard rate-limit headers, skip `OPTIONS` requests, return a structured `429` response, and fail open if their backing store has an infrastructure issue. Configure `TRUST_PROXY_HOPS` only for the known number of trusted reverse-proxy hops so client-IP limits remain meaningful.
+
+## Testing and quality checks
+
+Run backend tests from `backend/`:
 
 ```bash
-cd backend
 npm test
 ```
 
-The backend uses Node's built-in test runner. Its focused tests cover authentication/Google verification behavior, campaign send creation and processing behavior, retry safety, and dashboard aggregation.
-
-Run the frontend quality checks and production build:
+Validate the Prisma schema from `backend/`:
 
 ```bash
-cd frontend
+npx prisma validate
+```
+
+Lint and build the frontend from `frontend/`:
+
+```bash
 npm run lint
 npm run build
 ```
 
-There is no frontend test script configured in `frontend/package.json`.
+The backend test command uses Node's built-in test runner. The frontend currently exposes lint and production-build scripts; it does not define a separate frontend test script.
 
 ## Deployment notes
 
-Deploy the following separately:
+Run at least these services in production:
 
-- **Frontend:** build with `npm run build` in `frontend`; serve the generated Vite static files with a suitable web host.
-- **API:** install backend dependencies, apply `npx prisma migrate deploy`, configure the backend environment, and run `npm start`.
-- **Worker:** use the same backend release and environment, then run `npm run worker` as a separate long-running process.
-- **PostgreSQL and Redis:** make both reachable from the API and worker. Redis credentials belong only in `QUEUE_REDIS_URL` on backend services.
+1. **Frontend** — build and serve the Vite application with its production `VITE_API_URL` and, if enabled, `VITE_GOOGLE_CLIENT_ID` set at build time.
+2. **API** — run `npm start` in `backend/`; provide PostgreSQL, Redis, JWT/refresh secrets, CORS origin, cookie policy, and SMTP encryption key.
+3. **Campaign worker** — run `npm run worker` in `backend/`; provide the same PostgreSQL, Redis, and SMTP encryption configuration as the API.
+4. **PostgreSQL and Redis** — use durable managed services or independently supervised processes appropriate for the deployment.
 
-Set `FRONTEND_URL` to the deployed browser origin so credentialed CORS requests are accepted. Configure HTTPS in production so secure authentication cookies can be used correctly.
+Run `npx prisma migrate deploy` as part of the backend deployment process before serving traffic that relies on a new schema. Ensure `FRONTEND_URL`, `AUTH_COOKIE_SAME_SITE`, TLS, and `TRUST_PROXY_HOPS` match the real production topology. The API and worker close Prisma and Redis/BullMQ resources during graceful shutdown.
 
-The worker handles `SIGINT` and `SIGTERM` by closing the BullMQ worker, queue resources, Redis connections, and Prisma connection cleanly. The API also closes queue resources and Prisma during shutdown.
+## Security notes
 
-## Security considerations
-
-- Keep `.env` files, JWT secrets, SMTP encryption keys, database credentials, Redis URLs, and provider credentials out of version control.
-- Use independent, long random values for `JWT_SECRET`, `REFRESH_SECRET`, and `SMTP_ENCRYPTION_KEY`.
-- Store SMTP passwords only through the application so they are encrypted before persistence.
-- Ensure `FRONTEND_URL`, cookie settings, HTTPS, and Google OAuth origins match the deployed domains.
-- Campaign recipient content is user-scoped, and send/status/delivery routes check campaign ownership before returning or changing data.
-- Treat SMTP acceptance as transport acceptance, not proof of inbox placement.
+- Password hashes use bcrypt; passwords are never returned in API responses.
+- SMTP passwords are encrypted at rest and never placed in BullMQ payloads or returned to the frontend.
+- Queue jobs contain a campaign-send identifier, not recipient lists, campaign HTML, or SMTP credentials.
+- Authorization checks protect contacts, templates, SMTP accounts, campaigns, send runs, deliveries, cancellation, and account actions from cross-user access.
+- CSRF/XSS and broader deployment security still depend on correctly configuring HTTPS, CORS, cookie settings, reverse proxies, database access, and Redis access for the hosting environment.
 
 ## Current scope and limitations
 
-MailerJS currently provides recipient-based campaign sending with sequential worker processing. It does not include scheduled campaigns, campaign cancellation, provider-aware rate limiting, open/click tracking, inbox-delivery guarantees, or an unsubscribe-management system. Those capabilities would require additional product and operational design.
+- Campaigns are started manually; scheduled sends and cron-based campaign scheduling are not implemented.
+- Recipient processing is deliberately sequential. Provider-aware throughput controls and advanced rate scheduling are not implemented yet.
+- MailerJS tracks SMTP acceptance and failure, not opens, clicks, bounces, unsubscribe events, or final inbox placement.
+- Cancellation stops future recipient attempts when the worker observes it; it cannot recall a message already accepted by an SMTP provider.
+- A server-backed password-reset email workflow is not currently exposed by the API.
 
-No license file is currently included in this repository. Add a license deliberately before distributing or reusing the project under specific terms.
+## Contributing
+
+Keep changes focused, preserve the API's ownership and authentication checks, and validate the relevant backend and frontend commands before submitting a change. Do not commit local environment files or credentials.
