@@ -15,6 +15,10 @@ const { generalApiLimiter } = require("../middleware/rateLimiters");
 const prisma = require("../lib/prisma");
 const { closeCampaignQueue } = require("../queues/campaignQueue");
 const { closeRateLimitRedisConnection } = require("../queues/rateLimitRedis");
+const { closeCampaignWorker } = require("../workers/campaignWorker");
+const {
+   startCampaignWorkerInApiProcess
+} = require("../services/campaignWorkerRuntime");
 
 const app = express();
 
@@ -66,6 +70,13 @@ let shuttingDown = false;
 
 const server = app.listen(PORT, () => {
    console.log(`Server running on port ${PORT}`);
+
+   startCampaignWorkerInApiProcess().catch((error) => {
+      console.error(
+         "Campaign worker could not start inside API process:",
+         error.message
+      );
+   });
 });
 
 async function shutdown(signal)
@@ -78,6 +89,7 @@ async function shutdown(signal)
 
    server.close(async () => {
       try {
+         await closeCampaignWorker();
          await closeCampaignQueue();
          await closeRateLimitRedisConnection();
          await prisma.$disconnect();

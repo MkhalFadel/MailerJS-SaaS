@@ -204,7 +204,9 @@ cp .env.example .env
 | Variable | Required | Purpose |
 | --- | --- | --- |
 | `PORT` | No | API port; the example uses `5000`. |
-| `DATABASE_URL` | Yes | PostgreSQL connection URL used by Prisma. |
+| `NODE_ENV` | Yes in production | Set `production` for secure production cookie behavior. |
+| `DATABASE_URL` | Yes | Pooled PostgreSQL connection URL used by the running API and worker. |
+| `DIRECT_URL` | Yes for Prisma CLI commands | Direct or session-capable PostgreSQL connection used by Prisma migrations and schema commands. |
 | `JWT_SECRET` | Yes | Secret for access tokens. |
 | `REFRESH_SECRET` | Yes | Secret for refresh tokens. |
 | `GOOGLE_CLIENT_ID` | For Google sign-in | Google OAuth web-client ID used to verify Google ID tokens. |
@@ -212,6 +214,7 @@ cp .env.example .env
 | `AUTH_COOKIE_SAME_SITE` | No | Refresh-cookie SameSite policy; default/example is `lax`. |
 | `SMTP_ENCRYPTION_KEY` | Yes for SMTP passwords | Key used to encrypt stored SMTP passwords. |
 | `QUEUE_REDIS_URL` | Yes for queued sending | Redis URL shared by the campaign queue, worker, and distributed rate-limit store. |
+| `RUN_CAMPAIGN_WORKER_IN_API` | No | Set `true` to run one campaign worker inside the API process; default/example is `false`. |
 | `RATE_LIMIT_ENABLED` | No | Set `false` only to disable application rate limiters intentionally; default/example is `true`. |
 | `RATE_LIMIT_GENERAL_LIMIT` | No | Requests allowed by the general API limiter per window; default/example is `600`. |
 | `RATE_LIMIT_GENERAL_WINDOW_MS` | No | General API limiter window in milliseconds; default/example is `900000` (15 minutes). |
@@ -264,7 +267,17 @@ docker run --name mailerjs-redis -p 6379:6379 redis:7-alpine
 
 Then point `QUEUE_REDIS_URL` to that instance, for example `redis://127.0.0.1:6379`.
 
-### 5. Run the three local processes
+### 5. Run the application
+
+Choose one campaign-worker mode. Do not run both modes unless you intentionally want multiple BullMQ workers.
+
+#### Separate local mode (recommended)
+
+Set this in `backend/.env`:
+
+```dotenv
+RUN_CAMPAIGN_WORKER_IN_API=false
+```
 
 Open separate terminals:
 
@@ -286,7 +299,27 @@ cd frontend
 npm run dev
 ```
 
-The API starts from `backend/src/server.js`, and the worker starts from `backend/workers/campaignWorker.js`. Deploy them as separate services using the same PostgreSQL database and `QUEUE_REDIS_URL`.
+#### Combined local mode
+
+Set this in `backend/.env`:
+
+```dotenv
+RUN_CAMPAIGN_WORKER_IN_API=true
+```
+
+Then start only the API and frontend:
+
+```bash
+cd backend
+npm start
+```
+
+```bash
+cd frontend
+npm run dev
+```
+
+The API starts from `backend/src/server.js`, and `npm run worker` starts the same reusable worker independently from `backend/workers/campaignWorker.js`.
 
 ### Google sign-in configuration
 
@@ -370,12 +403,16 @@ The backend test command uses Node's built-in test runner. The frontend currentl
 
 ## Deployment notes
 
-Run at least these services in production:
+MailerJS supports either a dedicated campaign worker or an embedded worker in the API process:
 
 1. **Frontend** — build and serve the Vite application with its production `VITE_API_URL` and, if enabled, `VITE_GOOGLE_CLIENT_ID` set at build time.
-2. **API** — run `npm start` in `backend/`; provide PostgreSQL, Redis, JWT/refresh secrets, CORS origin, cookie policy, and SMTP encryption key.
-3. **Campaign worker** — run `npm run worker` in `backend/`; provide the same PostgreSQL, Redis, and SMTP encryption configuration as the API.
+2. **Combined API and worker** — run `npm start` in `backend/` with `RUN_CAMPAIGN_WORKER_IN_API=true`. This is suitable for one Render Web Service and does not require a separate worker service.
+3. **Separate API and worker** — run `npm start` for the API and `npm run worker` for a dedicated worker, with `RUN_CAMPAIGN_WORKER_IN_API=false` on the API. Both use the same PostgreSQL database and Redis URL.
 4. **PostgreSQL and Redis** — use durable managed services or independently supervised processes appropriate for the deployment.
+
+For a Render combined deployment, use `backend` as the root directory, `npm ci && npx prisma generate` as the build command, and `npm start` as the start command. Set `RUN_CAMPAIGN_WORKER_IN_API=true` along with the API, Supabase, Redis, SMTP-encryption, and authentication environment variables.
+
+On a Render free Web Service, inactivity can put the service to sleep. The embedded worker sleeps with the API, so queued sends wait until the service wakes and starts the worker again. MailerJS does not self-ping to avoid this platform policy.
 
 Run `npx prisma migrate deploy` as part of the backend deployment process before serving traffic that relies on a new schema. Ensure `FRONTEND_URL`, `AUTH_COOKIE_SAME_SITE`, TLS, and `TRUST_PROXY_HOPS` match the real production topology. The API and worker close Prisma and Redis/BullMQ resources during graceful shutdown.
 

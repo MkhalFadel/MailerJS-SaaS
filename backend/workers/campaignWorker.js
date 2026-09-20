@@ -19,28 +19,12 @@ const {
 let worker;
 let workerConnection;
 let recoveryInterval;
+let workerStartPromise;
 let shuttingDown = false;
 
-async function startWorker()
+function registerWorkerHandlers(campaignWorker)
 {
-   workerConnection = createRedisConnection("worker");
-   worker = new Worker(
-      CAMPAIGN_QUEUE_NAME,
-      async (job) => {
-         const { campaignSendId } = job.data;
-
-         if(!campaignSendId)
-            throw new Error("Campaign send job is missing a campaignSendId");
-
-         await processCampaignSend(campaignSendId);
-      },
-      {
-         connection: workerConnection,
-         concurrency: 1
-      }
-   );
-
-   worker.on("failed", async (job, error) => {
+   campaignWorker.on("failed", async (job, error) => {
       if(!job)
       {
          console.error("Campaign worker job failed:", error.message);
@@ -80,20 +64,82 @@ async function startWorker()
       }
    });
 
-   worker.on("error", (error) => {
+   campaignWorker.on("error", (error) => {
       console.error("Campaign worker error:", error.message);
    });
+}
 
-   await worker.waitUntilReady();
-   await recoverQueuedCampaignSends();
+async function initializeCampaignWorker()
+{
+   workerConnection = createRedisConnection("worker");
+   worker = new Worker(
+      CAMPAIGN_QUEUE_NAME,
+      async (job) => {
+         const { campaignSendId } = job.data;
 
-   recoveryInterval = setInterval(() => {
-      recoverQueuedCampaignSends().catch((error) => {
-         console.error("Failed to recover queued campaign sends:", error.message);
-      });
-   }, 60000);
+         if(!campaignSendId)
+            throw new Error("Campaign send job is missing a campaignSendId");
 
-   console.info("Campaign worker is running");
+         await processCampaignSend(campaignSendId);
+      },
+      {
+         connection: workerConnection,
+         concurrency: 1
+      }
+   );
+
+   registerWorkerHandlers(worker);
+
+   try {
+      await worker.waitUntilReady();
+      await recoverQueuedCampaignSends();
+
+      recoveryInterval = setInterval(() => {
+         recoverQueuedCampaignSends().catch((error) => {
+            console.error("Failed to recover queued campaign sends:", error.message);
+         });
+      }, 60000);
+
+      console.info("Campaign worker is running");
+      return worker;
+   } catch(error) {
+      await closeCampaignWorker();
+      throw error;
+   }
+}
+
+function startCampaignWorker()
+{
+   if(workerStartPromise)
+      return workerStartPromise;
+
+   if(worker)
+      return Promise.resolve(worker);
+
+   workerStartPromise = initializeCampaignWorker();
+   return workerStartPromise;
+}
+
+async function closeCampaignWorker()
+{
+   if(recoveryInterval)
+      clearInterval(recoveryInterval);
+
+   recoveryInterval = null;
+
+   const activeWorker = worker;
+   const activeConnection = workerConnection;
+
+   worker = null;
+   workerConnection = null;
+   workerStartPromise = null;
+
+   try {
+      if(activeWorker)
+         await activeWorker.close();
+   } finally {
+      await closeRedisConnection(activeConnection);
+   }
 }
 
 async function shutdown(signal)
@@ -105,13 +151,8 @@ async function shutdown(signal)
    console.info(`Campaign worker received ${signal}, shutting down`);
 
    try {
-      clearInterval(recoveryInterval);
-
-      if(worker)
-         await worker.close();
-
+      await closeCampaignWorker();
       await closeCampaignQueue();
-      await closeRedisConnection(workerConnection);
       await prisma.$disconnect();
    } catch(error) {
       console.error("Campaign worker shutdown error:", error.message);
@@ -119,12 +160,19 @@ async function shutdown(signal)
    }
 }
 
-process.once("SIGINT", () => shutdown("SIGINT"));
-process.once("SIGTERM", () => shutdown("SIGTERM"));
+if(require.main === module)
+{
+   process.once("SIGINT", () => shutdown("SIGINT"));
+   process.once("SIGTERM", () => shutdown("SIGTERM"));
 
-startWorker().catch(async (error) => {
-   console.error("Campaign worker could not start:", error.message);
-   await closeRedisConnection(workerConnection);
-   await prisma.$disconnect();
-   process.exit(1);
-});
+   startCampaignWorker().catch(async (error) => {
+      console.error("Campaign worker could not start:", error.message);
+      await shutdown("startup failure");
+      process.exitCode = 1;
+   });
+}
+
+module.exports = {
+   startCampaignWorker,
+   closeCampaignWorker
+};
