@@ -187,31 +187,58 @@ cd ../frontend
 npm install
 ```
 
-### 2. Configure environment files
+### 2. Configure isolated environment files
 
-Copy each example file before supplying local values:
+MailerJS has no runtime environment switch. The values supplied before each process starts determine where it connects. Keep a dedicated Supabase project and Redis instance for development, and never point local values at production infrastructure: a development campaign send can create real BullMQ jobs and send email.
+
+Copy the backend example, then create an optional Vite development override for public frontend values:
 
 ```bash
 cd backend
 cp .env.example .env
 
 cd ../frontend
-cp .env.example .env
+cp .env.example .env.development.local
 ```
 
-#### Backend environment (`backend/.env`)
+`frontend/.env.development` is committed with safe localhost defaults. Vite loads it automatically for `npm run dev`; `frontend/.env.development.local` takes precedence and is ignored by Git. Do not put backend secrets or production URLs in frontend environment files.
+
+#### Development backend environment (`backend/.env`)
+
+Use the development Supabase project and local Redis in this untracked file:
+
+```dotenv
+NODE_ENV=development
+DATABASE_URL=<development-supabase-pooled-connection>
+DIRECT_URL=<development-supabase-direct-connection>
+QUEUE_REDIS_URL=redis://127.0.0.1:6379
+JWT_SECRET=<development-access-token-secret>
+REFRESH_SECRET=<development-refresh-token-secret>
+GOOGLE_CLIENT_ID=<google-web-client-id>
+FRONTEND_URL=http://localhost:5173
+AUTH_COOKIE_SAME_SITE=lax
+SMTP_ENCRYPTION_KEY=<development-smtp-encryption-key>
+RUN_CAMPAIGN_WORKER_IN_API=false
+RATE_LIMIT_ENABLED=true
+RATE_LIMIT_GENERAL_LIMIT=600
+RATE_LIMIT_GENERAL_WINDOW_MS=900000
+TRUST_PROXY_HOPS=
+PORT=5000
+```
+
+#### Backend variable reference
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
 | `PORT` | No | API port; the example uses `5000`. |
-| `NODE_ENV` | Yes in production | Set `production` for secure production cookie behavior. |
+| `NODE_ENV` | Yes in production | `development` locally; `production` on Render enables Secure cookies and production validation. |
 | `DATABASE_URL` | Yes | Pooled PostgreSQL connection URL used by the running API and worker. |
 | `DIRECT_URL` | Yes for Prisma CLI commands | Direct or session-capable PostgreSQL connection used by Prisma migrations and schema commands. |
 | `JWT_SECRET` | Yes | Secret for access tokens. |
 | `REFRESH_SECRET` | Yes | Secret for refresh tokens. |
 | `GOOGLE_CLIENT_ID` | For Google sign-in | Google OAuth web-client ID used to verify Google ID tokens. |
-| `FRONTEND_URL` | Yes | Allowed frontend origin for CORS; local example: `http://localhost:5173`. |
-| `AUTH_COOKIE_SAME_SITE` | No | Refresh-cookie SameSite policy; default/example is `lax`. |
+| `FRONTEND_URL` | Yes | Exact allowed frontend origin for CORS; local example: `http://localhost:5173`. |
+| `AUTH_COOKIE_SAME_SITE` | Yes in production | Use `lax` locally and `none` for the separate Vercel/Render origins. |
 | `SMTP_ENCRYPTION_KEY` | Yes for SMTP passwords | Key used to encrypt stored SMTP passwords. |
 | `QUEUE_REDIS_URL` | Yes for queued sending | Redis URL shared by the campaign queue, worker, and distributed rate-limit store. |
 | `RUN_CAMPAIGN_WORKER_IN_API` | No | Set `true` to run one campaign worker inside the API process; default/example is `false`. |
@@ -226,16 +253,18 @@ Example `DATABASE_URL` shape (use your own credentials):
 DATABASE_URL=postgresql://USER:PASSWORD@localhost:5432/mailerjs?schema=public
 ```
 
-#### Frontend environment (`frontend/.env`)
+#### Development frontend environment (`frontend/.env.development.local`)
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
-| `VITE_API_URL` | Yes | Base API URL; local example: `http://localhost:5000/api`. |
+| `VITE_API_URL` | Yes | Base API URL; local example: `http://localhost:5000/api`. It must include `/api`. |
 | `VITE_GOOGLE_CLIENT_ID` | For Google sign-in | Same Google OAuth web-client ID used by the backend. |
 
-Do not commit `.env` files, JWT secrets, database passwords, SMTP passwords, Redis credentials, or Google credentials.
+Only `VITE_` values are exposed to the browser. Never add `DATABASE_URL`, Redis URLs, JWT secrets, SMTP encryption keys, or any other backend secret to the frontend.
 
-### 3. Apply database migrations
+Do not commit local environment files, JWT secrets, database passwords, SMTP passwords, Redis credentials, or Google credentials.
+
+### 3. Apply development database migrations
 
 From `backend/`:
 
@@ -244,7 +273,13 @@ npx prisma migrate deploy
 npx prisma generate
 ```
 
-For local schema development, use `npx prisma migrate dev --name <migration-name>` instead of resetting an existing database. Prisma migrations preserve existing application records; do not run a database reset for normal setup or deployment.
+This applies the repository's existing migrations to the development database. When creating a schema change locally, use:
+
+```bash
+npx prisma migrate dev --name <migration-name>
+```
+
+Prisma commands use `DIRECT_URL` from `backend/.env`; the running API and worker use `DATABASE_URL`. Do not run `prisma migrate reset` as part of normal development or deployment. Production deployments use `npx prisma migrate deploy` against the production `DIRECT_URL`.
 
 ### 4. Start Redis
 
@@ -324,8 +359,10 @@ The API starts from `backend/src/server.js`, and `npm run worker` starts the sam
 ### Google sign-in configuration
 
 1. Create a Google OAuth **web application** client in Google Cloud.
-2. Add each frontend origin that will load the Google sign-in button to the client's authorized JavaScript origins (for local development, typically `http://localhost:5173`).
-3. Set the same client ID in `backend/.env` as `GOOGLE_CLIENT_ID` and in `frontend/.env` as `VITE_GOOGLE_CLIENT_ID`.
+2. Add both frontend origins that will load the Google sign-in button to the client's authorized JavaScript origins:
+   - `http://localhost:5173`
+   - `https://<production-vercel-domain>`
+3. Set the same client ID in `backend/.env` as `GOOGLE_CLIENT_ID` and in `frontend/.env.development.local` as `VITE_GOOGLE_CLIENT_ID`. Vercel supplies the production `VITE_GOOGLE_CLIENT_ID` at build time.
 4. Restart the API and Vite processes after changing environment values.
 
 MailerJS receives a Google Identity credential in the browser, verifies it using `google-auth-library` on the API, then creates its own session. This implementation does not use a frontend callback route or require a Google client secret in the application environment.
@@ -401,20 +438,60 @@ npm run build
 
 The backend test command uses Node's built-in test runner. The frontend currently exposes lint and production-build scripts; it does not define a separate frontend test script.
 
-## Deployment notes
+## Deployment and environment isolation
 
-MailerJS supports either a dedicated campaign worker or an embedded worker in the API process:
+Development and production are isolated entirely by environment values:
 
-1. **Frontend** — build and serve the Vite application with its production `VITE_API_URL` and, if enabled, `VITE_GOOGLE_CLIENT_ID` set at build time.
-2. **Combined API and worker** — run `npm start` in `backend/` with `RUN_CAMPAIGN_WORKER_IN_API=true`. This is suitable for one Render Web Service and does not require a separate worker service.
-3. **Separate API and worker** — run `npm start` for the API and `npm run worker` for a dedicated worker, with `RUN_CAMPAIGN_WORKER_IN_API=false` on the API. Both use the same PostgreSQL database and Redis URL.
-4. **PostgreSQL and Redis** — use durable managed services or independently supervised processes appropriate for the deployment.
+| Process | Development | Production |
+| --- | --- | --- |
+| Frontend | Vite with `frontend/.env.development` and optional `.env.development.local` | Vercel build variables |
+| API | Local Express process | Render Web Service |
+| Database | MailerJS Development Supabase project | Separate MailerJS Production Supabase project |
+| Redis | `redis://127.0.0.1:6379` or a dedicated development Redis instance | Render Redis instance |
+| Worker | `npm run worker` with `RUN_CAMPAIGN_WORKER_IN_API=false` | Embedded with `RUN_CAMPAIGN_WORKER_IN_API=true` |
 
-For a Render combined deployment, use `backend` as the root directory, `npm ci && npx prisma generate` as the build command, and `npm start` as the start command. Set `RUN_CAMPAIGN_WORKER_IN_API=true` along with the API, Supabase, Redis, SMTP-encryption, and authentication environment variables.
+The code does not contain Supabase, Redis, Vercel, or Render hostnames. Each process only uses the URLs it receives through its environment.
+
+### Vercel frontend variables
+
+Set these in Vercel's production environment settings before building:
+
+```dotenv
+VITE_API_URL=https://<render-backend-domain>/api
+VITE_GOOGLE_CLIENT_ID=<google-web-client-id>
+```
+
+Vite gives shell/platform environment variables precedence over files. Therefore `npm run dev` uses development mode values, while Vercel injects the production values into its production build without a source-code edit. Do not create or commit a production frontend `.env` file.
+
+### Render backend variables
+
+Set the following in Render for the API service. These must use the production Supabase project and production Redis instance, never their development equivalents:
+
+```dotenv
+NODE_ENV=production
+DATABASE_URL=<production-supabase-pooled-connection>
+DIRECT_URL=<production-supabase-direct-connection>
+QUEUE_REDIS_URL=<render-redis-url>
+JWT_SECRET=<production-access-token-secret>
+REFRESH_SECRET=<production-refresh-token-secret>
+GOOGLE_CLIENT_ID=<google-web-client-id>
+FRONTEND_URL=https://<production-vercel-domain>
+AUTH_COOKIE_SAME_SITE=none
+SMTP_ENCRYPTION_KEY=<production-smtp-encryption-key>
+RUN_CAMPAIGN_WORKER_IN_API=true
+RATE_LIMIT_ENABLED=true
+RATE_LIMIT_GENERAL_LIMIT=600
+RATE_LIMIT_GENERAL_WINDOW_MS=900000
+TRUST_PROXY_HOPS=1
+```
+
+`PORT` is supplied by Render. Production startup validates the database, Redis, token, CORS, cookie, and SMTP-encryption settings by variable name only; it never logs secret values. It also requires `AUTH_COOKIE_SAME_SITE=none`, while `NODE_ENV=production` keeps auth cookies Secure.
+
+The CORS allowlist is the normalized origin from `FRONTEND_URL`, with credentials enabled. Use an origin only—no route path or trailing slash is necessary—and never use `*` with credentialed cookies.
+
+For a Render combined deployment, use `backend` as the root directory, `npm ci && npx prisma generate` as the build command, and `npm start` as the start command. Run `npx prisma migrate deploy` against production before serving a schema change. For a separate-worker deployment, set `RUN_CAMPAIGN_WORKER_IN_API=false` on the API and run `npm run worker` in a dedicated process using the same production database and Redis values.
 
 On a Render free Web Service, inactivity can put the service to sleep. The embedded worker sleeps with the API, so queued sends wait until the service wakes and starts the worker again. MailerJS does not self-ping to avoid this platform policy.
-
-Run `npx prisma migrate deploy` as part of the backend deployment process before serving traffic that relies on a new schema. Ensure `FRONTEND_URL`, `AUTH_COOKIE_SAME_SITE`, TLS, and `TRUST_PROXY_HOPS` match the real production topology. The API and worker close Prisma and Redis/BullMQ resources during graceful shutdown.
 
 ## Security notes
 

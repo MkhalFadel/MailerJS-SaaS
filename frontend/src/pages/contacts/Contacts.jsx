@@ -6,6 +6,7 @@ import ContactDetails from "../../components/contacts/contactDetails/ContactDeta
 import ImportContacts from "../../components/contacts/importContacts/ImportContacts";
 import FeedbackState from "../../components/feedback/FeedbackState";
 import { getContacts } from "../../api/contacts";
+import useFeedbackScroll from "../../hooks/useFeedbackScroll";
 import styles from "./contacts.module.css";
 
 function Contacts() {
@@ -14,6 +15,8 @@ function Contacts() {
    const [contacts, setContacts] = useState([]); 
    const [loading, setLoading] = useState(true);
    const [error, setError] = useState(null);
+   const [feedback, setFeedback] = useState(null);
+   const { feedbackRef, requestFeedbackScroll } = useFeedbackScroll(feedback?.message);
 
 
    useEffect(() => {
@@ -25,7 +28,7 @@ function Contacts() {
             setContacts(response.data);
          } catch(error) {
             console.error("Failed to fetch contacts:",error);
-            setError(error);
+            setError(error.message || "Failed to load contacts.");
          } finally {
             setLoading(false);
          }
@@ -35,11 +38,13 @@ function Contacts() {
    },[]);
 
    function handleCreate() {
+      setFeedback(null);
       setSelectedContact(null);
       setView("form");
    }
 
    function handleEdit(contact) {
+      setFeedback(null);
       setSelectedContact(contact);
       setView("form");
    }
@@ -50,12 +55,25 @@ function Contacts() {
    }
 
    function handleImport() {
+      setFeedback(null);
       setView("import");
    }
 
    function handleBack() {
       setSelectedContact(null);
       setView("list");
+   }
+
+   function handleFeedback(type, message)
+   {
+      if(type === "clear")
+      {
+         setFeedback(null);
+         return;
+      }
+
+      requestFeedbackScroll();
+      setFeedback({ type, message });
    }
 
    async function handleImportedContacts()
@@ -66,12 +84,19 @@ function Contacts() {
          setContacts(response.data);
       } catch(error) {
          console.error("Failed to refresh imported contacts:", error);
+         handleFeedback("error", error.message || "Contacts were imported, but the list could not be refreshed.");
       }
    }
 
    return (
       <DashboardLayout>
          <div className={styles.page}>
+            {feedback && (
+               <FeedbackState feedbackRef={feedbackRef} type={feedback.type}>
+                  {feedback.message}
+               </FeedbackState>
+            )}
+
             {loading && (
                <FeedbackState>
                   Loading contacts...
@@ -80,7 +105,7 @@ function Contacts() {
 
             {!loading && error && (
                <FeedbackState type="error">
-                  Failed to load contacts.
+                  {error}
                </FeedbackState>
             )}
 
@@ -92,6 +117,7 @@ function Contacts() {
                   onEdit={handleEdit}
                   onDetails={handleDetails}
                   onImport={handleImport}
+                  onFeedback={handleFeedback}
                />
             )}
 
@@ -100,6 +126,7 @@ function Contacts() {
                   contact={selectedContact}
                   setContacts={setContacts}
                   onCancel={handleBack}
+                  onSuccess={(message) => handleFeedback("success", message)}
                />
             )}
 

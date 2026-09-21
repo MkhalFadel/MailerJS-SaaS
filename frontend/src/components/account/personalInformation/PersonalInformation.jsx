@@ -1,5 +1,7 @@
 import { useState } from "react";
 import styles from "./personalInformation.module.css";
+import FeedbackState from "../../feedback/FeedbackState";
+import useFeedbackScroll from "../../../hooks/useFeedbackScroll";
 
 function PersonalInformation({
    firstName,
@@ -13,6 +15,8 @@ function PersonalInformation({
    const [saved,setSaved] = useState(false);
    const [saving, setSaving] = useState(false);
    const [error, setError] = useState(null);
+   const feedbackMessage = error || (saved ? "Changes saved successfully." : null);
+   const { feedbackRef, requestFeedbackScroll } = useFeedbackScroll(feedbackMessage);
 
    async function handleSubmit(event) {
       event.preventDefault();
@@ -31,9 +35,11 @@ function PersonalInformation({
             });
          }
 
+         requestFeedbackScroll();
          setSaved(true);
       } catch(error) {
          console.error("Failed to update personal information:", error);
+         requestFeedbackScroll();
          setError(error.message || "Unable to save personal information.");
       } finally {
          setSaving(false);
@@ -51,7 +57,17 @@ function PersonalInformation({
             </p>
          </div>
 
+         {feedbackMessage && (
+            <FeedbackState
+               feedbackRef={feedbackRef}
+               type={error ? "error" : "success"}
+            >
+               {feedbackMessage}
+            </FeedbackState>
+         )}
+
          <form
+            aria-busy={saving}
             className={styles.form}
             onSubmit={handleSubmit}
          >
@@ -63,6 +79,7 @@ function PersonalInformation({
                      type="text"
                      value={firstName}
                      onChange={(event) => setFirstName(event.target.value)}
+                     disabled={saving}
                      required
                   />
                </label>
@@ -74,6 +91,7 @@ function PersonalInformation({
                      type="text"
                      value={lastName}
                      onChange={(event) => setLastName(event.target.value)}
+                     disabled={saving}
                      required
                   />
                </label>
@@ -86,23 +104,12 @@ function PersonalInformation({
                   type="email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
+                  disabled={saving}
                   required
                />
             </label>
 
             <div className={styles.actions}>
-               {error && (
-                  <span className={styles.error} role="alert">
-                     {error}
-                  </span>
-               )}
-
-               {saved && (
-                  <span className={styles.success} role="status">
-                     Changes saved successfully.
-                  </span>
-               )}
-
                <button disabled={saving} type="submit">
                   {saving ? "Saving..." : "Save Changes"}
                </button>

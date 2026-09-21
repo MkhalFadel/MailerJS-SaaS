@@ -6,6 +6,8 @@ import { useAuth } from "../../../context/authContext"
 import { useNavigate } from "react-router-dom";
 import Icon from "../../../components/icons/Icon";
 import GoogleSignIn from "../../../components/auth/googleSignIn/GoogleSignIn";
+import FeedbackState from "../../../components/feedback/FeedbackState";
+import useFeedbackScroll from "../../../hooks/useFeedbackScroll";
 
 function Login() {
    const [email, setEmail] = useState("");
@@ -13,14 +15,22 @@ function Login() {
    const [remember, setRemember] = useState(false);
    const [showPassword, setShowPassword] = useState(false);
    const [error, setError] = useState(null);
+   const [submitting, setSubmitting] = useState(false);
+   const [googleSigningIn, setGoogleSigningIn] = useState(false);
 
    const navigate = useNavigate("");
 
    const { login, googleLogin } = useAuth();
+   const { feedbackRef, requestFeedbackScroll } = useFeedbackScroll(error);
 
    async function handleSubmit(event) {
       event.preventDefault();
+
+      if(submitting || googleSigningIn)
+         return;
+
       setError(null);
+      setSubmitting(true);
 
       try {
          await login({
@@ -31,22 +41,30 @@ function Login() {
          navigate("/dashboard")
       } catch (error) {
          console.error(error);
+         requestFeedbackScroll();
          setError(error.message || "Unable to sign in.");
+      } finally {
+         setSubmitting(false);
       }
-
    }
 
    async function handleGoogleSignIn(credential)
    {
+      if(submitting || googleSigningIn)
+         return;
+
       setError(null);
+      setGoogleSigningIn(true);
 
       try {
          await googleLogin(credential);
          navigate("/dashboard");
       } catch(error) {
          console.error("Google sign-in failed:", error);
+         requestFeedbackScroll();
          setError(error.message || "Unable to sign in with Google.");
-         throw error;
+      } finally {
+         setGoogleSigningIn(false);
       }
    }
 
@@ -62,14 +80,20 @@ function Login() {
             </div>
 
             <form
+               aria-busy={submitting || googleSigningIn}
                className={styles.form}
                onSubmit={handleSubmit}
             >
                {error && (
-                  <div className={styles.error} role="alert">
-                     <Icon name="alert" size={17} />
+                  <FeedbackState feedbackRef={feedbackRef} type="error">
                      {error}
-                  </div>
+                  </FeedbackState>
+               )}
+
+               {googleSigningIn && (
+                  <FeedbackState type="info">
+                     Signing in with Google...
+                  </FeedbackState>
                )}
 
                <label className={styles.field}>
@@ -126,9 +150,10 @@ function Login() {
 
                <button
                   className={styles.submit}
+                  disabled={submitting || googleSigningIn}
                   type="submit"
                >
-                  Sign In
+                  {submitting ? "Signing In..." : "Sign In"}
                </button>
 
                <div className={styles.divider}>
@@ -136,8 +161,10 @@ function Login() {
                </div>
 
                <GoogleSignIn
+                  disabled={submitting || googleSigningIn}
                   onSuccess={handleGoogleSignIn}
                   onError={(googleError) => {
+                     requestFeedbackScroll();
                      setError(googleError.message || "Unable to sign in with Google.");
                   }}
                />

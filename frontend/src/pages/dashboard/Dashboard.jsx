@@ -3,6 +3,7 @@ import DashboardLayout from "../../layouts/dashboard/DashboardLayout";
 import DashboardStats from "../../components/dashboard/dashboardStats/DashboardStats";
 import RecentCampaigns from "../../components/dashboard/recentCampaigns/RecentCampaigns";
 import DashboardOverview from "../../components/dashboard/dashboardOverview/DashboardOverview";
+import FeedbackState from "../../components/feedback/FeedbackState";
 import { getDashboard } from "../../api/dashboard";
 import styles from "./dashboard.module.css";
 
@@ -44,15 +45,15 @@ function Dashboard()
             </div>
 
             {loading && (
-               <div className={styles.loading}>
+               <FeedbackState>
                   Loading dashboard...
-               </div>
+               </FeedbackState>
             )}
 
             {!loading && error && (
-               <div className={styles.error}>
+               <FeedbackState type="error">
                   {error}
-               </div>
+               </FeedbackState>
             )}
 
             {!loading && !error && dashboard && (

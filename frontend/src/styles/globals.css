@@ -172,6 +172,10 @@ select:disabled {
    cursor: not-allowed;
 }
 
+button:disabled {
+   opacity: 0.65;
+}
+
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,

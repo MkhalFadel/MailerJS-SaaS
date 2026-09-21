@@ -1,0 +1,12 @@
+.container {
+   display: grid;
+   min-height: 100vh;
+   place-items: center;
+   padding: 24px;
+   background: var(--color-bg);
+}
+
+.container > div {
+   width: min(100%, 360px);
+   margin-bottom: 0;
+}

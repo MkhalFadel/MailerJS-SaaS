@@ -19,6 +19,12 @@ const { closeCampaignWorker } = require("../workers/campaignWorker");
 const {
    startCampaignWorkerInApiProcess
 } = require("../services/campaignWorkerRuntime");
+const {
+   getFrontendOrigin,
+   validateProductionEnvironment
+} = require("../config/environment");
+
+validateProductionEnvironment();
 
 const app = express();
 
@@ -28,7 +34,7 @@ if(Number.isInteger(trustProxyHops) && trustProxyHops >= 0)
    app.set("trust proxy", trustProxyHops);
 
 app.use(cors({
-   origin: process.env.FRONTEND_URL || "http://localhost:5173",
+   origin: getFrontendOrigin(),
    credentials: true
 }));
 app.use(express.json());

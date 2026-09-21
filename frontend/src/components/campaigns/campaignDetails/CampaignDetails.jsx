@@ -15,6 +15,8 @@ import ContactSelector from "../contactSelector/ContactSelector";
 import Icon from "../../icons/Icon";
 import BackButton from "../../navigation/BackButton";
 import ConfirmModal from "../../feedback/ConfirmModal";
+import FeedbackState from "../../feedback/FeedbackState";
+import useFeedbackScroll from "../../../hooks/useFeedbackScroll";
 
 function isActiveCampaignSend(campaignSend)
 {
@@ -102,6 +104,13 @@ function CampaignDetails({ campaign, onBack, onEdit })
    const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
    const [cancelling, setCancelling] = useState(false);
    const [cancelError, setCancelError] = useState(null);
+   const { feedbackRef, requestFeedbackScroll } = useFeedbackScroll(
+      sendError || recipientsError
+   );
+   const {
+      feedbackRef: cancelFeedbackRef,
+      requestFeedbackScroll: requestCancelFeedbackScroll
+   } = useFeedbackScroll(cancelError);
 
    const loadRecipients = useCallback(async function loadRecipients()
    {
@@ -279,6 +288,7 @@ function CampaignDetails({ campaign, onBack, onEdit })
       } catch(error) {
          console.error("Failed to fetch contacts:", error);
 
+         requestFeedbackScroll();
          setRecipientsError(
             error.message ||
             "Unable to load contacts."
@@ -339,6 +349,7 @@ function CampaignDetails({ campaign, onBack, onEdit })
       } catch(error) {
          console.error("Failed to add campaign recipients:", error);
 
+         requestFeedbackScroll();
          setRecipientsError(
             error.message ||
             "Unable to add campaign recipients."
@@ -364,6 +375,7 @@ function CampaignDetails({ campaign, onBack, onEdit })
       } catch(error) {
          console.error("Failed to remove campaign recipient:", error);
 
+         requestFeedbackScroll();
          setRecipientsError(
             error.message ||
             "Unable to remove campaign recipient."
@@ -394,6 +406,7 @@ function CampaignDetails({ campaign, onBack, onEdit })
             return;
          }
 
+         requestFeedbackScroll();
          setSendError(
             error.message ||
             "Unable to send campaign."
@@ -434,6 +447,7 @@ function CampaignDetails({ campaign, onBack, onEdit })
       } catch(error) {
          console.error("Failed to cancel campaign send:", error);
 
+         requestCancelFeedbackScroll();
          setCancelError(
             error.message ||
             "Unable to cancel campaign sending."
@@ -541,9 +555,9 @@ function CampaignDetails({ campaign, onBack, onEdit })
          )}
 
          {sendError && (
-            <div className={styles.error}>
+            <FeedbackState feedbackRef={feedbackRef} type="error">
                {sendError}
-            </div>
+            </FeedbackState>
          )}
 
          {campaignSend && (
@@ -642,9 +656,9 @@ function CampaignDetails({ campaign, onBack, onEdit })
             </div>
 
             {recipientsError && (
-               <div className={styles.cardError}>
+               <FeedbackState feedbackRef={feedbackRef} type="error">
                   {recipientsError}
-               </div>
+               </FeedbackState>
             )}
 
             {loadingRecipients && (
@@ -818,6 +832,7 @@ function CampaignDetails({ campaign, onBack, onEdit })
                onClose={handleCloseContactSelector}
                onConfirm={handleAddRecipients}
                confirmDisabled={addingRecipients}
+               confirmLoadingLabel="Adding Contacts..."
                excludedContactIds={
                   recipients.map(recipient => recipient.contactId)
                }
@@ -829,6 +844,7 @@ function CampaignDetails({ campaign, onBack, onEdit })
                confirmLabel="Cancel Send"
                description="Emails already accepted by the SMTP provider cannot be recalled. MailerJS will stop sending to any remaining recipients."
                error={cancelError}
+               errorRef={cancelFeedbackRef}
                loading={cancelling}
                loadingLabel="Cancelling..."
                onCancel={handleCloseCancelConfirmation}

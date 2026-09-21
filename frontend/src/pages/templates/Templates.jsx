@@ -5,6 +5,7 @@ import TemplateEditor from "../../components/templates/templateEditor/TemplateEd
 import TemplatePreview from "../../components/templates/templatePreview/TemplatePreview";
 import FeedbackState from "../../components/feedback/FeedbackState";
 import { getTemplates } from "../../api/templates";
+import useFeedbackScroll from "../../hooks/useFeedbackScroll";
 import styles from "./templates.module.css";
 
 function Templates() {
@@ -13,6 +14,8 @@ function Templates() {
    const [selectedTemplate, setSelectedTemplate] = useState(null);
    const [loading, setLoading] = useState(true);
    const [error, setError] = useState(null);
+   const [feedback, setFeedback] = useState(null);
+   const { feedbackRef, requestFeedbackScroll } = useFeedbackScroll(feedback?.message);
 
    useEffect(() => {
       async function loadTemplates()
@@ -23,7 +26,7 @@ function Templates() {
             setTemplates(response.data);
          } catch(error) {
             console.error("Failed to fetch templates:",error);
-            setError(error);
+            setError(error.message || "Unable to load templates.");
          } finally {
             setLoading(false);
          }
@@ -33,11 +36,13 @@ function Templates() {
    },[]);
 
    function handleCreate() {
+      setFeedback(null);
       setSelectedTemplate(null);
       setView("editor");
    }
 
    function handleEdit(template) {
+      setFeedback(null);
       setSelectedTemplate(template);
       setView("editor");
    }
@@ -52,9 +57,26 @@ function Templates() {
       setView("list");
    }
 
+   function handleFeedback(type, message)
+   {
+      if(type === "clear")
+      {
+         setFeedback(null);
+         return;
+      }
+
+      requestFeedbackScroll();
+      setFeedback({ type, message });
+   }
+
    return (
       <DashboardLayout>
          <div className={styles.page}>
+            {feedback && (
+               <FeedbackState feedbackRef={feedbackRef} type={feedback.type}>
+                  {feedback.message}
+               </FeedbackState>
+            )}
 
             {loading && (
                <FeedbackState>
@@ -64,7 +86,7 @@ function Templates() {
 
             {!loading && error && (
                <FeedbackState type="error">
-                  Error finding templates.
+                  {error}
                </FeedbackState>
             )}
 
@@ -75,6 +97,7 @@ function Templates() {
                   onCreate={handleCreate}
                   onEdit={handleEdit}
                   onPreview={handlePreview}
+                  onFeedback={handleFeedback}
                />
             )}
 
@@ -83,6 +106,7 @@ function Templates() {
                   template={selectedTemplate}
                   setTemplates={setTemplates}
                   onCancel={handleBack}
+                  onSuccess={(message) => handleFeedback("success", message)}
                />
             )}
 

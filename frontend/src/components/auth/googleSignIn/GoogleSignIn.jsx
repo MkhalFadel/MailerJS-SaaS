@@ -5,7 +5,7 @@ const GOOGLE_IDENTITY_SCRIPT_ID = "google-identity-services";
 const GOOGLE_IDENTITY_SCRIPT_URL = "https://accounts.google.com/gsi/client";
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
-function GoogleSignIn({ onSuccess, onError })
+function GoogleSignIn({ disabled = false, onSuccess, onError })
 {
    const buttonRef = useRef(null);
    const callbacksRef = useRef({ onSuccess, onError });
@@ -94,7 +94,7 @@ function GoogleSignIn({ onSuccess, onError })
    if(!GOOGLE_CLIENT_ID)
    {
       return (
-         <p className={styles.error} role="status">
+         <p aria-live="assertive" className={styles.error} role="alert">
             Google sign-in is not configured.
          </p>
       );
@@ -103,13 +103,20 @@ function GoogleSignIn({ onSuccess, onError })
    if(error)
    {
       return (
-         <p className={styles.error} role="status">
+         <p aria-live="assertive" className={styles.error} role="alert">
             {error}
          </p>
       );
    }
 
-   return <div className={styles.button} ref={buttonRef} />;
+   return (
+      <div
+         aria-busy={disabled}
+         aria-disabled={disabled}
+         className={`${styles.button} ${disabled ? styles.disabled : ""}`}
+         ref={buttonRef}
+      />
+   );
 }
 
 export default GoogleSignIn;

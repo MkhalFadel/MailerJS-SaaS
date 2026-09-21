@@ -3,6 +3,7 @@ import styles from "./importContacts.module.css";
 import Icon from "../../icons/Icon";
 import BackButton from "../../navigation/BackButton";
 import { importContacts } from "../../../api/contacts";
+import useFeedbackScroll from "../../../hooks/useFeedbackScroll";
 
 const MAX_FILE_SIZE = 1024 * 1024;
 
@@ -118,6 +119,10 @@ function ImportContacts({ onCancel, onImported }) {
    const [result, setResult] = useState(null);
    const [isDragging, setIsDragging] = useState(false);
    const dragDepth = useRef(0);
+   const feedbackMessage = error || (result
+      ? `${result.imported} contact${result.imported === 1 ? "" : "s"} imported.`
+      : null);
+   const { feedbackRef, requestFeedbackScroll } = useFeedbackScroll(feedbackMessage);
 
    function handleFileSelection(selectedFile)
    {
@@ -129,6 +134,7 @@ function ImportContacts({ onCancel, onImported }) {
       if(!isSupported)
       {
          setFile(null);
+         requestFeedbackScroll();
          setError("Choose a CSV or text file.");
          return;
       }
@@ -136,6 +142,7 @@ function ImportContacts({ onCancel, onImported }) {
       if(selectedFile.size > MAX_FILE_SIZE)
       {
          setFile(null);
+         requestFeedbackScroll();
          setError("Choose a file smaller than 1 MB.");
          return;
       }
@@ -186,6 +193,7 @@ function ImportContacts({ onCancel, onImported }) {
 
       setImporting(true);
       setError(null);
+      setResult(null);
 
       try {
          const content = await file.text();
@@ -195,16 +203,19 @@ function ImportContacts({ onCancel, onImported }) {
 
          if(contacts.length === 0)
          {
+            requestFeedbackScroll();
             setError("No contacts were found in this file.");
             return;
          }
 
          const response = await importContacts(contacts);
 
+         requestFeedbackScroll();
          setResult(response.data);
          onImported();
       } catch(error) {
          console.error("Failed to import contacts:", error);
+         requestFeedbackScroll();
          setError(error.message || "Unable to import contacts.");
       } finally {
          setImporting(false);
@@ -225,7 +236,7 @@ function ImportContacts({ onCancel, onImported }) {
             </p>
          </div>
 
-         <div className={styles.card}>
+         <div aria-busy={importing} className={styles.card}>
             <label
                className={
                   `${styles.dropzone} ${isDragging ? styles.dragging : ""}`
@@ -281,11 +292,24 @@ function ImportContacts({ onCancel, onImported }) {
             </div>
 
             {error && (
-               <div className={styles.error}>{error}</div>
+               <div
+                  className={styles.error}
+                  ref={feedbackRef}
+                  role="alert"
+                  tabIndex="-1"
+               >
+                  {error}
+               </div>
             )}
 
             {result && (
-               <div className={styles.result}>
+               <div
+                  aria-live="polite"
+                  className={styles.result}
+                  ref={feedbackRef}
+                  role="status"
+                  tabIndex="-1"
+               >
                   <strong>
                      {result.imported} contact{result.imported === 1 ? "" : "s"} imported
                   </strong>
@@ -299,6 +323,7 @@ function ImportContacts({ onCancel, onImported }) {
             <div className={styles.actions}>
                <button
                   className={styles.cancelButton}
+                  disabled={importing}
                   onClick={onCancel}
                   type="button"
                >

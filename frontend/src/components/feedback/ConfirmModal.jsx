@@ -4,6 +4,7 @@ function ConfirmModal({
    confirmLabel,
    description,
    error,
+   errorRef,
    loading = false,
    loadingLabel = "Deleting...",
    onCancel,
@@ -27,7 +28,15 @@ function ConfirmModal({
             <p id="confirmation-description">{description}</p>
 
             {error && (
-               <p className={styles.error}>{error}</p>
+               <p
+                  aria-live="assertive"
+                  className={styles.error}
+                  ref={errorRef}
+                  role="alert"
+                  tabIndex="-1"
+               >
+                  {error}
+               </p>
             )}
 
             <div className={styles.actions}>

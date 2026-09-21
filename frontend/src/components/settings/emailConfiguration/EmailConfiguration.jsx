@@ -2,6 +2,8 @@ import { useState } from "react";
 import styles from "./emailConfiguration.module.css";
 import { createSmtpAccount, updateSmtpAccount, testSmtpConnection } from "../../../api/smtp";
 import Icon from "../../icons/Icon";
+import FeedbackState from "../../feedback/FeedbackState";
+import useFeedbackScroll from "../../../hooks/useFeedbackScroll";
 
 const providers = [
    {
@@ -69,7 +71,7 @@ function getInitialFormData(account)
    };
 }
 
-function EmailConfiguration({ account, setSmtpAccounts, onCancel })
+function EmailConfiguration({ account, setSmtpAccounts, onCancel, onSuccess })
 {
    const [formData,setFormData] = useState(
       () => account ? getInitialFormData(account) : defaultFormData
@@ -79,8 +81,9 @@ function EmailConfiguration({ account, setSmtpAccounts, onCancel })
    const [loading, setLoading] = useState(false);
    const [testing, setTesting] = useState(false);
    const [error, setError] = useState(null);
-   const [message, setMessage] = useState(null);
    const [connectionStatus, setConnectionStatus] = useState(null);
+   const feedbackMessage = error || connectionStatus?.message;
+   const { feedbackRef, requestFeedbackScroll } = useFeedbackScroll(feedbackMessage);
 
    const isEditing = Boolean(account);
 
@@ -128,7 +131,7 @@ function EmailConfiguration({ account, setSmtpAccounts, onCancel })
 
       setLoading(true);
       setError(null);
-      setMessage(null);
+      setConnectionStatus(null);
 
       try {
          const data = {
@@ -165,6 +168,7 @@ function EmailConfiguration({ account, setSmtpAccounts, onCancel })
          {
             if(!formData.password.trim())
             {
+               requestFeedbackScroll();
                setError("SMTP password is required.");
                return;
             }
@@ -179,19 +183,23 @@ function EmailConfiguration({ account, setSmtpAccounts, onCancel })
             ]);
          }
 
-         setMessage(isEditing ? "SMTP account updated successfully." : "SMTP account created successfully.");
-
          setFormData(current => ({
             ...current,
             password: ""
          }));
 
-         if(onCancel)
-            onCancel();
+         onSuccess?.(
+            isEditing
+               ? "SMTP account updated successfully."
+               : "SMTP account created successfully."
+         );
+
+         onCancel?.();
 
       } catch(error) {
-         console.error(error);
+         console.error("Unable to save SMTP account:", error);
 
+         requestFeedbackScroll();
          setError(error.message || "Unable to save SMTP account.");
       } finally {
          setLoading(false);
@@ -202,6 +210,7 @@ function EmailConfiguration({ account, setSmtpAccounts, onCancel })
    {
       if(!account)
       {
+         requestFeedbackScroll();
          setConnectionStatus({
             success: false,
             message: "Save the SMTP account before testing the connection."
@@ -211,18 +220,21 @@ function EmailConfiguration({ account, setSmtpAccounts, onCancel })
       }
 
       setTesting(true);
+      setError(null);
       setConnectionStatus(null);
 
       try {
          await testSmtpConnection(account.id);
 
+         requestFeedbackScroll();
          setConnectionStatus({
             success: true,
             message: "SMTP connection successful."
          });
       } catch(error) {
-         console.error(error);
+         console.error("Unable to test SMTP connection:", error);
 
+         requestFeedbackScroll();
          setConnectionStatus({
             success: false,
             message: error.message || "Unable to connect to the SMTP server."
@@ -253,19 +265,17 @@ function EmailConfiguration({ account, setSmtpAccounts, onCancel })
             </span>
          </div>
 
-         {error && (
-            <div className={styles.error}>
-               {error}
-            </div>
-         )}
-
-         {message && (
-            <div className={styles.success}>
-               {message}
-            </div>
+         {feedbackMessage && (
+            <FeedbackState
+               feedbackRef={feedbackRef}
+               type={error || connectionStatus?.success === false ? "error" : "success"}
+            >
+               {feedbackMessage}
+            </FeedbackState>
          )}
 
          <form
+            aria-busy={loading || testing}
             className={styles.card}
             onSubmit={handleSave}
          >
@@ -277,6 +287,7 @@ function EmailConfiguration({ account, setSmtpAccounts, onCancel })
                      name="provider"
                      value={formData.provider}
                      onChange={handleProviderChange}
+                     disabled={loading || testing}
                   >
                      {providers.map(item => (
                         <option
@@ -303,6 +314,7 @@ function EmailConfiguration({ account, setSmtpAccounts, onCancel })
                         value={formData.host}
                         onChange={handleChange}
                         placeholder="smtp.example.com"
+                        disabled={loading || testing}
                      />
                   </label>
 
@@ -315,6 +327,7 @@ function EmailConfiguration({ account, setSmtpAccounts, onCancel })
                         value={formData.port}
                         onChange={handleChange}
                         placeholder="587"
+                        disabled={loading || testing}
                      />
                   </label>
                </div>
@@ -335,6 +348,7 @@ function EmailConfiguration({ account, setSmtpAccounts, onCancel })
                      }`}
                      onClick={handleSecureToggle}
                      aria-label="Toggle secure connection"
+                     disabled={loading || testing}
                   >
                      <span></span>
                   </button>
@@ -378,7 +392,7 @@ function EmailConfiguration({ account, setSmtpAccounts, onCancel })
                               ? "Password is securely stored"
                               : "Enter SMTP password"
                         }
-                        disabled={isEditing}
+                        disabled={isEditing || loading || testing}
                      />
 
                      {!isEditing && (
@@ -388,6 +402,7 @@ function EmailConfiguration({ account, setSmtpAccounts, onCancel })
                            onClick={() =>
                               setShowPassword(current => !current)
                            }
+                           disabled={loading || testing}
                         >
                            <Icon name={showPassword ? "eyeOff" : "eye"} size={17} />
                         </button>
@@ -410,6 +425,7 @@ function EmailConfiguration({ account, setSmtpAccounts, onCancel })
                      value={formData.senderName}
                      onChange={handleChange}
                      placeholder="MailerJS"
+                     disabled={loading || testing}
                   />
                </label>
 
@@ -422,30 +438,10 @@ function EmailConfiguration({ account, setSmtpAccounts, onCancel })
                      value={formData.senderEmail}
                      onChange={handleChange}
                      placeholder="you@example.com"
+                     disabled={loading || testing}
                   />
                </label>
             </div>
-
-            {connectionStatus && (
-               <div
-                  className={
-                     connectionStatus.success
-                        ? styles.connectionSuccess
-                        : styles.connectionError
-                  }
-               >
-                  <span>
-                     <Icon
-                        name={connectionStatus.success ? "check" : "alert"}
-                        size={17}
-                     />
-                  </span>
-
-                  <span>
-                     {connectionStatus.message}
-                  </span>
-               </div>
-            )}
 
             <div className={styles.actions}>
                {isEditing && (

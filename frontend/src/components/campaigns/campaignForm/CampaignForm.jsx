@@ -11,6 +11,8 @@ import { getContacts } from "../../../api/contacts";
 import ContactSelector from "../contactSelector/ContactSelector";
 import Icon from "../../icons/Icon";
 import BackButton from "../../navigation/BackButton";
+import FeedbackState from "../../feedback/FeedbackState";
+import useFeedbackScroll from "../../../hooks/useFeedbackScroll";
 
 function CampaignForm({ campaign, onCancel, onCreated, onUpdated })
 {
@@ -34,6 +36,7 @@ function CampaignForm({ campaign, onCancel, onCreated, onUpdated })
    const [error, setError] = useState(null);
    const [createdCampaign, setCreatedCampaign] = useState(null);
    const isEditing = Boolean(campaign);
+   const { feedbackRef, requestFeedbackScroll } = useFeedbackScroll(error);
 
    useEffect(() => {
       async function loadOptions()
@@ -100,8 +103,9 @@ function CampaignForm({ campaign, onCancel, onCreated, onUpdated })
             setCreatedCampaign(campaign);
 
             if(onCreated)
-               onCreated(campaign);
+               onCreated(campaign, false);
 
+            requestFeedbackScroll();
             setError("Campaign was created, but its recipients could not be added. Open it from the campaign list to try again.");
             return;
          }
@@ -110,12 +114,13 @@ function CampaignForm({ campaign, onCancel, onCreated, onUpdated })
             onCreated({
                ...campaign,
                recipients: selectedContacts.length
-            });
+            }, true);
 
          onCancel();
       } catch(error) {
          console.error("Failed to create campaign:", error);
 
+         requestFeedbackScroll();
          setError(error.message || "Unable to create campaign.");
       } finally {
          setLoading(false);
@@ -140,6 +145,7 @@ function CampaignForm({ campaign, onCancel, onCreated, onUpdated })
          }
       } catch(error) {
          console.error("Failed to update campaign:", error);
+         requestFeedbackScroll();
          setError(error.message || "Unable to update campaign.");
       } finally {
          setLoading(false);
@@ -152,30 +158,35 @@ function CampaignForm({ campaign, onCancel, onCreated, onUpdated })
 
       if(!formData.name.trim())
       {
+         requestFeedbackScroll();
          setError("Campaign name is required.");
          return;
       }
 
       if(!formData.subject.trim())
       {
+         requestFeedbackScroll();
          setError("Subject is required.");
          return;
       }
 
       if(!formData.templateId)
       {
+         requestFeedbackScroll();
          setError("Please select a template.");
          return;
       }
 
       if(!formData.smtpAccountId)
       {
+         requestFeedbackScroll();
          setError("Please select an SMTP account.");
          return;
       }
 
       if(!isEditing && selectedContacts.length === 0)
       {
+         requestFeedbackScroll();
          setError("Please select at least one contact.");
          return;
       }
@@ -199,6 +210,7 @@ function CampaignForm({ campaign, onCancel, onCreated, onUpdated })
       } catch(error) {
          console.error("Failed to fetch contacts:",error);
 
+         requestFeedbackScroll();
          setError(
             error.message ||
             "Unable to load contacts."
@@ -239,12 +251,13 @@ function CampaignForm({ campaign, onCancel, onCreated, onUpdated })
          </div>
 
          {error && (
-            <div className={styles.error}>
+            <FeedbackState feedbackRef={feedbackRef} type="error">
                {error}
-            </div>
+            </FeedbackState>
          )}
 
          <form
+            aria-busy={loading || loadingOptions || loadingContacts}
             className={styles.formCard}
             onSubmit={handleSubmit}
          >
@@ -267,6 +280,7 @@ function CampaignForm({ campaign, onCancel, onCreated, onUpdated })
                         value={formData.name}
                         onChange={handleChange}
                         placeholder="Summer Newsletter"
+                        disabled={loading}
                      />
                   </label>
 
@@ -279,6 +293,7 @@ function CampaignForm({ campaign, onCancel, onCreated, onUpdated })
                         value={formData.subject}
                         onChange={handleChange}
                         placeholder="Summer deals are here!"
+                        disabled={loading}
                      />
                   </label>
                </div>
@@ -300,7 +315,7 @@ function CampaignForm({ campaign, onCancel, onCreated, onUpdated })
                      name="templateId"
                      value={formData.templateId}
                      onChange={handleChange}
-                     disabled={loadingOptions || templates.length === 0}
+                     disabled={loading || loadingOptions || templates.length === 0}
                   >
                      <option value="">
                         Select a template
@@ -341,6 +356,7 @@ function CampaignForm({ campaign, onCancel, onCreated, onUpdated })
                      value={formData.smtpAccountId}
                      onChange={handleChange}
                      disabled={
+                        loading ||
                         loadingOptions ||
                         smtpAccounts.length === 0
                      }
@@ -414,6 +430,7 @@ function CampaignForm({ campaign, onCancel, onCreated, onUpdated })
                            <button
                               type="button"
                               onClick={() => removeSelectedContact(contact.id)}
+                              disabled={loading}
                               aria-label={`Remove ${contact.email}`}
                            >
                               <Icon name="close" size={15} />

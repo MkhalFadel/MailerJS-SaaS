@@ -4,6 +4,7 @@ import EmailConfiguration from "../../components/settings/emailConfiguration/Ema
 import FeedbackState from "../../components/feedback/FeedbackState";
 import Icon from "../../components/icons/Icon";
 import { getSmtpAccounts, deleteSmtpAccount } from "../../api/smtp";
+import useFeedbackScroll from "../../hooks/useFeedbackScroll";
 import styles from "./settings.module.css";
 
 function Settings()
@@ -16,6 +17,9 @@ function Settings()
    const [showConfiguration,setShowConfiguration] = useState(false);
    const [loading,setLoading] = useState(true);
    const [error,setError] = useState(null);
+   const [feedback, setFeedback] = useState(null);
+   const [deletingAccountId, setDeletingAccountId] = useState(null);
+   const { feedbackRef, requestFeedbackScroll } = useFeedbackScroll(feedback?.message);
 
    useEffect(() => {
       async function loadSmtpAccounts()
@@ -26,7 +30,7 @@ function Settings()
             setSmtpAccounts(response.data);
          } catch(error) {
             console.error("Failed to fetch SMTP accounts:",error);
-            setError(error);
+            setError(error.message || "Unable to load SMTP accounts.");
          } finally {
             setLoading(false);
          }
@@ -40,6 +44,7 @@ function Settings()
       setSelectedAccount(null);
       setShowConfiguration(true);
       setError(null);
+      setFeedback(null);
    }
 
    function handleEdit(account)
@@ -47,6 +52,7 @@ function Settings()
       setSelectedAccount(account);
       setShowConfiguration(true);
       setError(null);
+      setFeedback(null);
    }
 
    function handleCancel()
@@ -57,6 +63,12 @@ function Settings()
 
    async function handleDelete(id)
    {
+      if(deletingAccountId)
+         return;
+
+      setFeedback(null);
+      setDeletingAccountId(id);
+
       try {
          await deleteSmtpAccount(id);
 
@@ -69,13 +81,23 @@ function Settings()
             setSelectedAccount(null);
             setShowConfiguration(false);
          }
+
+         handleFeedback("success", "SMTP account deleted successfully.");
       } catch(error) {
          console.error("Failed to delete SMTP account:",error);
-         setError(
+         handleFeedback("error",
             error.message ||
             "Unable to delete SMTP account."
          );
+      } finally {
+         setDeletingAccountId(null);
       }
+   }
+
+   function handleFeedback(type, message)
+   {
+      requestFeedbackScroll();
+      setFeedback({ type, message });
    }
 
    return (
@@ -88,6 +110,12 @@ function Settings()
                   Manage your email configuration and sending preferences.
                </p>
             </div>
+
+            {feedback && (
+               <FeedbackState feedbackRef={feedbackRef} type={feedback.type}>
+                  {feedback.message}
+               </FeedbackState>
+            )}
 
             <div className={styles.layout}>
                <aside className={styles.sidebar}>
@@ -132,6 +160,7 @@ function Settings()
                            {!showConfiguration && (
                               <button
                                  className={styles.addButton}
+                                 disabled={Boolean(deletingAccountId)}
                                  onClick={handleCreate}
                                  type="button"
                                  >
@@ -163,6 +192,7 @@ function Settings()
 
                               <button
                                  className={styles.addButton}
+                                 disabled={Boolean(deletingAccountId)}
                                  onClick={handleCreate}
                                  type="button"
                                  >
@@ -218,6 +248,7 @@ function Settings()
                                     <div className={styles.smtpActions}>
                                        <button
                                           className={styles.editButton}
+                                          disabled={Boolean(deletingAccountId)}
                                           onClick={() => handleEdit(account)}
                                           type="button"
                                           >
@@ -227,11 +258,14 @@ function Settings()
 
                                        <button
                                           className={styles.deleteButton}
+                                          disabled={Boolean(deletingAccountId)}
                                           onClick={() => handleDelete(account.id)}
                                           type="button"
                                           >
                                           <Icon name="trash" size={15} />
-                                          Delete
+                                          {deletingAccountId === account.id
+                                             ? "Deleting..."
+                                             : "Delete"}
                                        </button>
                                     </div>
                                  </div>
@@ -244,6 +278,7 @@ function Settings()
                               account={selectedAccount}
                               setSmtpAccounts={setSmtpAccounts}
                               onCancel={handleCancel}
+                              onSuccess={(message) => handleFeedback("success", message)}
                            />
                         )}
                      </div>

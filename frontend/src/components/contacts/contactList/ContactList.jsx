@@ -4,13 +4,24 @@ import { deleteContact } from "../../../api/contacts";
 import EmptyState from "../../feedback/EmptyState";
 import ConfirmModal from "../../feedback/ConfirmModal";
 import Icon from "../../icons/Icon";
+import useFeedbackScroll from "../../../hooks/useFeedbackScroll";
 
-function ContactList({ contacts, setContacts, onCreate, onEdit, onDetails, onImport }) 
+function ContactList({
+   contacts,
+   setContacts,
+   onCreate,
+   onEdit,
+   onDetails,
+   onImport,
+   onFeedback
+})
 {
    const [search, setSearch] = useState("");
    const [contactToDelete, setContactToDelete] = useState(null);
    const [deleteError, setDeleteError] = useState(null);
-   const [deleting, setDeleting] = useState(false);
+   const [deletingContactId, setDeletingContactId] = useState(null);
+   const deleting = Boolean(deletingContactId);
+   const { feedbackRef, requestFeedbackScroll } = useFeedbackScroll(deleteError);
 
    const filteredContacts = useMemo(() => {
       return contacts.filter((contact) => {
@@ -61,12 +72,14 @@ function ContactList({ contacts, setContacts, onCreate, onEdit, onDetails, onImp
       if(deleting)
          return;
 
+      onFeedback?.("clear");
       setDeleteError(null);
-      setDeleting(true);
+      setDeletingContactId(contact.id);
 
       try {
          await deleteContact(contact.id);
          removeContact(contact.id);
+         onFeedback?.("success", "Contact deleted successfully.");
       } catch(error) {
          if(error.status === 409 && error.data?.requiresConfirmation)
          {
@@ -78,9 +91,10 @@ function ContactList({ contacts, setContacts, onCreate, onEdit, onDetails, onImp
          }
 
          console.error("Failed to delete contact:", error);
+         requestFeedbackScroll();
          setDeleteError(error.message || "Unable to delete this contact.");
       } finally {
-         setDeleting(false);
+         setDeletingContactId(null);
       }
    }
 
@@ -89,18 +103,20 @@ function ContactList({ contacts, setContacts, onCreate, onEdit, onDetails, onImp
       if(!contactToDelete || deleting)
          return;
 
+      onFeedback?.("clear");
       setDeleteError(null);
-      setDeleting(true);
+      setDeletingContactId(contactToDelete.id);
 
       try {
          await deleteContact(contactToDelete.id, true);
          removeContact(contactToDelete.id);
          setContactToDelete(null);
+         onFeedback?.("success", "Contact deleted successfully.");
       } catch(error) {
          console.error("Failed to delete contact:", error);
          setDeleteError(error.message || "Unable to delete this contact.");
       } finally {
-         setDeleting(false);
+         setDeletingContactId(null);
       }
    }
 
@@ -159,7 +175,14 @@ function ContactList({ contacts, setContacts, onCreate, onEdit, onDetails, onImp
          </div>
 
          {deleteError && !contactToDelete && (
-            <div className={styles.deleteError}>{deleteError}</div>
+            <div
+               className={styles.deleteError}
+               ref={feedbackRef}
+               role="alert"
+               tabIndex="-1"
+            >
+               {deleteError}
+            </div>
          )}
 
          <div className={styles.tableWrapper}>
@@ -230,11 +253,14 @@ function ContactList({ contacts, setContacts, onCreate, onEdit, onDetails, onImp
 
                               <button
                                  className={styles.deleteButton}
+                                 disabled={deleting}
                                  onClick={() => requestContactDeletion(contact)}
                                  type="button"
                               >
                                  <Icon name="trash" size={15} />
-                                 Delete
+                                 {deletingContactId === contact.id
+                                    ? "Deleting..."
+                                    : "Delete"}
                               </button>
                            </div>
                         </td>

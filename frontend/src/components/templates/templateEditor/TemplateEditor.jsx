@@ -3,51 +3,69 @@ import { createTemplate, updateTemplate } from "../../../api/templates";
 import styles from "./templateEditor.module.css";
 import Icon from "../../icons/Icon";
 import BackButton from "../../navigation/BackButton";
+import FeedbackState from "../../feedback/FeedbackState";
+import useFeedbackScroll from "../../../hooks/useFeedbackScroll";
 
-function TemplateEditor({ template, setTemplates, onCancel }) {
+function TemplateEditor({ template, setTemplates, onCancel, onSuccess }) {
    const [name, setName] = useState(template?.name || "");
    const [content, setContent] = useState(template?.content?.trim() || "");
+   const [error, setError] = useState(null);
+   const [saving, setSaving] = useState(false);
+   const { feedbackRef, requestFeedbackScroll } = useFeedbackScroll(error);
 
    const isEditing = Boolean(template);
 
-   async function createNewTemplate()
+   async function handleSubmit(event)
    {
+      event.preventDefault();
+
+      if(saving)
+         return;
+
+      setError(null);
+      setSaving(true);
+
       try {
-         const response = await createTemplate({
-            name,
-            content
-         });
+         if(isEditing)
+         {
+            const response = await updateTemplate(template.id, {
+               name,
+               content
+            });
 
-         setTemplates(current => [
-            ...current,
-            response.data
-         ]);
+            setTemplates(current =>
+               current.map(item =>
+                  item.id === response.data.id
+                     ? response.data
+                     : item
+               )
+            );
+         }
+         else
+         {
+            const response = await createTemplate({
+               name,
+               content
+            });
 
-         onCancel();
-      } catch(error) {
-         console.error(error);
-      }
-   }
+            setTemplates(current => [
+               ...current,
+               response.data
+            ]);
+         }
 
-   async function editExistingTemplate()
-   {
-      try {
-         const response = await updateTemplate(template.id,{
-            name,
-            content
-         });
-
-         setTemplates(current =>
-            current.map(item =>
-               item.id === response.data.id
-                  ? response.data
-                  : item
-            )
+         onSuccess?.(
+            isEditing
+               ? "Template updated successfully."
+               : "Template created successfully."
          );
-
          onCancel();
       } catch(error) {
-         console.error(error);
+         console.error("Unable to save template:", error);
+         requestFeedbackScroll();
+         setError(error.message || "Unable to save this template.");
+      } finally {
+         setSaving(false);
       }
    }
 
@@ -69,7 +87,17 @@ function TemplateEditor({ template, setTemplates, onCancel }) {
             </p>
          </div>
 
-         <div className={styles.editorCard}>
+         {error && (
+            <FeedbackState feedbackRef={feedbackRef} type="error">
+               {error}
+            </FeedbackState>
+         )}
+
+         <form
+            aria-busy={saving}
+            className={styles.editorCard}
+            onSubmit={handleSubmit}
+         >
             <div className={styles.form}>
                <label className={styles.field}>
                   <span>Template Name</span>
@@ -79,6 +107,7 @@ function TemplateEditor({ template, setTemplates, onCancel }) {
                      value={name}
                      onChange={(event) => setName(event.target.value)}
                      placeholder="Welcome Email"
+                     disabled={saving}
                   />
                </label>
             </div>
@@ -102,6 +131,7 @@ function TemplateEditor({ template, setTemplates, onCancel }) {
                   onChange={(event) => setContent(event.target.value)}
                   spellCheck="false"
                   placeholder="<h1>Hello {{name}}</h1>"
+                  disabled={saving}
                />
             </div>
 
@@ -116,6 +146,7 @@ function TemplateEditor({ template, setTemplates, onCancel }) {
             <div className={styles.actions}>
                <button
                   className={styles.cancelButton}
+                  disabled={saving}
                   onClick={onCancel}
                   type="button"
                >
@@ -124,14 +155,14 @@ function TemplateEditor({ template, setTemplates, onCancel }) {
 
                <button
                   className={styles.saveButton}
-                  onClick={isEditing ? editExistingTemplate : createNewTemplate}
-                  type="button"
+                  disabled={saving}
+                  type="submit"
                >
                   <Icon name={isEditing ? "edit" : "plus"} size={16} />
-                  Save Template
+                  {saving ? "Saving..." : "Save Template"}
                </button>
             </div>
-         </div>
+         </form>
       </div>
    );
 }

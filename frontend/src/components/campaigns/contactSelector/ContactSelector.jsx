@@ -9,7 +9,8 @@ function ContactSelector({
    onClose,
    onConfirm,
    excludedContactIds = [],
-   confirmDisabled = false
+   confirmDisabled = false,
+   confirmLoadingLabel = "Saving..."
 })
 {
    const [search, setSearch] = useState("");
@@ -112,7 +113,7 @@ function ContactSelector({
 
    return (
       <div className={styles.overlay}>
-         <div className={styles.modal}>
+         <div aria-busy={confirmDisabled} className={styles.modal}>
             <div className={styles.header}>
                <div>
                   <h2>Choose Contacts</h2>
@@ -125,6 +126,7 @@ function ContactSelector({
                <button
                   type="button"
                   className={styles.closeButton}
+                  disabled={confirmDisabled}
                   onClick={onClose}
                   aria-label="Close contact selector"
                >
@@ -143,6 +145,7 @@ function ContactSelector({
                      onChange={(event) =>
                         setSearch(event.target.value)
                      }
+                     disabled={confirmDisabled}
                   />
                </div>
 
@@ -150,7 +153,7 @@ function ContactSelector({
                   type="button"
                   className={styles.selectAllButton}
                   onClick={handleSelectAll}
-                  disabled={filteredContacts.length === 0}
+                  disabled={confirmDisabled || filteredContacts.length === 0}
                >
                   {filteredContacts.length > 0 &&
                   filteredContacts.every(
@@ -169,6 +172,7 @@ function ContactSelector({
                {selectedContacts.length > 0 && (
                   <button
                      type="button"
+                     disabled={confirmDisabled}
                      onClick={() => setSelectedContacts([])}
                   >
                      Clear Selection
@@ -201,16 +205,17 @@ function ContactSelector({
                            type="checkbox"
                            checked={selected}
                            onChange={() => handleToggle(contact)}
+                           disabled={confirmDisabled}
                         />
 
                         <span className={styles.avatar}>
-                           {contact.firstName.charAt(0)}
-                           {contact.lastName.charAt(0)}
+                           {(contact.firstName || contact.email || "").charAt(0)}
+                           {(contact.lastName || "").charAt(0)}
                         </span>
 
                         <span className={styles.info}>
                            <strong>
-                              {contact.firstName} {contact.lastName}
+                              {`${contact.firstName || ""} ${contact.lastName || ""}`.trim() || "No name provided"}
                            </strong>
 
                            <span>
@@ -226,6 +231,7 @@ function ContactSelector({
                <button
                   type="button"
                   className={styles.cancelButton}
+                  disabled={confirmDisabled}
                   onClick={onClose}
                >
                   Cancel
@@ -237,7 +243,9 @@ function ContactSelector({
                   onClick={handleConfirm}
                   disabled={confirmDisabled}
                >
-                  Use {selectedContacts.length} Contacts
+                  {confirmDisabled
+                     ? confirmLoadingLabel
+                     : `Use ${selectedContacts.length} Contacts`}
                </button>
             </div>
          </div>

@@ -3,56 +3,70 @@ import styles from "./contactForm.module.css";
 import { createContact, updateContact } from "../../../api/contacts";
 import Icon from "../../icons/Icon";
 import BackButton from "../../navigation/BackButton";
+import FeedbackState from "../../feedback/FeedbackState";
+import useFeedbackScroll from "../../../hooks/useFeedbackScroll";
 
-function ContactForm({ contact, setContacts, onCancel }) {
+function ContactForm({ contact, setContacts, onCancel, onSuccess }) {
    const [firstName, setFirstName] = useState(contact?.firstName || "");
    const [lastName, setLastName] = useState(contact?.lastName || "");
    const [email, setEmail] = useState(contact?.email || "");
+   const [error, setError] = useState(null);
+   const [saving, setSaving] = useState(false);
+   const { feedbackRef, requestFeedbackScroll } = useFeedbackScroll(error);
 
    const isEditing = Boolean(contact);
 
-   async function createNewContact()
+   async function handleSubmit(event)
    {
+      event.preventDefault();
+
+      if(saving)
+         return;
+
+      setError(null);
+      setSaving(true);
+
       try {
-         const res = await createContact({
-            email,
-            firstName, 
-            lastName
-         })
+         if(isEditing)
+         {
+            const response = await updateContact(contact.id, {
+               email,
+               firstName,
+               lastName
+            });
 
-         const newContact = res.data;
+            setContacts(current =>
+               current.map(item =>
+                  item.id === response.data.id ? response.data : item
+               )
+            );
+         }
+         else
+         {
+            const response = await createContact({
+               email,
+               firstName,
+               lastName
+            });
 
-         setContacts(current => ([
-            ...current,
-            newContact
-         ]))
+            setContacts(current => ([
+               ...current,
+               response.data
+            ]));
+         }
 
-         onCancel();
-      } catch (error) {
-         console.log(error);
-      }
-   }
-
-   async function editContact()
-   {
-      try {
-         const res = await updateContact(contact.id, {
-            email,
-            firstName, 
-            lastName
-         });
-
-         const editedContact = res.data;
-
-         setContacts(current =>
-            current.map(item =>
-               item.id === editedContact.id ? editedContact : item
-            )
+         onSuccess?.(
+            isEditing
+               ? "Contact updated successfully."
+               : "Contact added successfully."
          );
-
          onCancel();
       } catch (error) {
-         console.log(error);
+         console.error("Unable to save contact:", error);
+         requestFeedbackScroll();
+         setError(error.message || "Unable to save this contact.");
+      } finally {
+         setSaving(false);
       }
    }
 
@@ -74,7 +88,17 @@ function ContactForm({ contact, setContacts, onCancel }) {
             </p>
          </div>
 
-         <div className={styles.card}>
+         {error && (
+            <FeedbackState feedbackRef={feedbackRef} type="error">
+               {error}
+            </FeedbackState>
+         )}
+
+         <form
+            aria-busy={saving}
+            className={styles.card}
+            onSubmit={handleSubmit}
+         >
             <div className={styles.form}>
                <label className={styles.field}>
                   <span>First Name</span>
@@ -84,6 +108,7 @@ function ContactForm({ contact, setContacts, onCancel }) {
                      value={firstName}
                      onChange={(event) => setFirstName(event.target.value)}
                      placeholder="Fadel"
+                     disabled={saving}
                   />
                </label>
 
@@ -95,6 +120,7 @@ function ContactForm({ contact, setContacts, onCancel }) {
                      value={lastName}
                      onChange={(event) => setLastName(event.target.value)}
                      placeholder="Mkahal"
+                     disabled={saving}
                   />
                </label>
 
@@ -106,6 +132,7 @@ function ContactForm({ contact, setContacts, onCancel }) {
                      value={email}
                      onChange={(event) => setEmail(event.target.value)}
                      placeholder="fadel@example.com"
+                     disabled={saving}
                   />
                </label>
             </div>
@@ -113,6 +140,7 @@ function ContactForm({ contact, setContacts, onCancel }) {
             <div className={styles.actions}>
                <button
                className={styles.cancelButton}
+               disabled={saving}
                onClick={onCancel}
                type="button"
                >
@@ -121,14 +149,18 @@ function ContactForm({ contact, setContacts, onCancel }) {
 
                <button
                className={styles.saveButton}
-               onClick={isEditing ? editContact : createNewContact}
-               type="button"
+               disabled={saving}
+               type="submit"
                >
                   <Icon name={isEditing ? "edit" : "plus"} size={16} />
-                  {isEditing ? "Save Changes" : "Add Contact"}
+                  {saving
+                     ? "Saving..."
+                     : isEditing
+                        ? "Save Changes"
+                        : "Add Contact"}
                </button>
             </div>
-         </div>
+         </form>
       </div>
    );
 }

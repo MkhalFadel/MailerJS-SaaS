@@ -2,6 +2,8 @@ import { useState } from "react";
 import styles from "./security.module.css";
 import GoogleSignIn from "../../auth/googleSignIn/GoogleSignIn";
 import { verifyGoogleReauthentication } from "../../../api/auth";
+import FeedbackState from "../../feedback/FeedbackState";
+import useFeedbackScroll from "../../../hooks/useFeedbackScroll";
 
 function Security({ hasPassword = true, onPasswordChange }) {
    const [currentPassword, setCurrentPassword] = useState("");
@@ -15,6 +17,8 @@ function Security({ hasPassword = true, onPasswordChange }) {
    const [error, setError] = useState(null);
    const [successMessage, setSuccessMessage] = useState(null);
    const isGoogleOnly = !hasPassword;
+   const feedbackMessage = error || verificationError || successMessage;
+   const { feedbackRef, requestFeedbackScroll } = useFeedbackScroll(feedbackMessage);
 
    function clearGoogleVerification()
    {
@@ -34,9 +38,12 @@ function Security({ hasPassword = true, onPasswordChange }) {
          await verifyGoogleReauthentication(credential);
 
          setGoogleCredential(credential);
+         requestFeedbackScroll();
          setGoogleVerified(true);
+         setSuccessMessage("Google account verified. You can now set your password.");
       } catch(error) {
          clearGoogleVerification();
+         requestFeedbackScroll();
          setVerificationError(
             error.message || "Unable to verify the Google account connected to this MailerJS account."
          );
@@ -53,30 +60,35 @@ function Security({ hasPassword = true, onPasswordChange }) {
 
       if(newPassword.length < 8)
       {
+         requestFeedbackScroll();
          setError("Your new password must contain at least 8 characters.");
          return;
       }
 
       if(!/[a-z]/.test(newPassword) || !/[A-Z]/.test(newPassword) || !/\d/.test(newPassword))
       {
+         requestFeedbackScroll();
          setError("Your new password must include uppercase, lowercase, and a number.");
          return;
       }
 
       if(newPassword !== confirmPassword)
       {
+         requestFeedbackScroll();
          setError("Your new password and confirmation do not match.");
          return;
       }
 
       if(isGoogleOnly && (!googleVerified || !googleCredential))
       {
+         requestFeedbackScroll();
          setError("Verify your Google identity before setting a password.");
          return;
       }
 
       if(!onPasswordChange)
       {
+         requestFeedbackScroll();
          setError("Password updates are unavailable right now.");
          return;
       }
@@ -95,6 +107,7 @@ function Security({ hasPassword = true, onPasswordChange }) {
          setNewPassword("");
          setConfirmPassword("");
          clearGoogleVerification();
+         requestFeedbackScroll();
          setSuccessMessage(
             isGoogleOnly
                ? "Password set successfully. You can now sign in with Google or your email and password."
@@ -102,6 +115,7 @@ function Security({ hasPassword = true, onPasswordChange }) {
          );
       } catch(error) {
          console.error("Failed to update password:", error);
+         requestFeedbackScroll();
          setError(error.message || "Unable to change your password.");
 
          if(isGoogleOnly)
@@ -124,6 +138,15 @@ function Security({ hasPassword = true, onPasswordChange }) {
             </p>
          </div>
 
+         {feedbackMessage && (
+            <FeedbackState
+               feedbackRef={feedbackRef}
+               type={error || verificationError ? "error" : "success"}
+            >
+               {feedbackMessage}
+            </FeedbackState>
+         )}
+
          <div className={styles.passwordStatus}>
             <div>
                <h3>{isGoogleOnly ? "Set Password" : "Change Password"}</h3>
@@ -140,7 +163,11 @@ function Security({ hasPassword = true, onPasswordChange }) {
             </span>
          </div>
 
-         <form className={styles.form} onSubmit={handleSubmit}>
+         <form
+            aria-busy={saving || verifyingGoogle}
+            className={styles.form}
+            onSubmit={handleSubmit}
+         >
             {hasPassword && (
                <label className={styles.field}>
                   <span>Current Password</span>
@@ -152,6 +179,7 @@ function Security({ hasPassword = true, onPasswordChange }) {
                      autoComplete="current-password"
                      placeholder="Enter current password"
                      required
+                     disabled={saving || verifyingGoogle}
                   />
                </label>
             )}
@@ -176,16 +204,12 @@ function Security({ hasPassword = true, onPasswordChange }) {
                      </p>
                   ) : (
                      <>
-                        {verificationError && (
-                           <p className={styles.verificationError} role="alert">
-                              {verificationError}
-                           </p>
-                        )}
-
                         <GoogleSignIn
+                           disabled={saving || verifyingGoogle}
                            onSuccess={handleGoogleVerification}
                            onError={(googleError) => {
                               clearGoogleVerification();
+                              requestFeedbackScroll();
                               setVerificationError(
                                  googleError.message || "Unable to verify your Google account."
                               );
@@ -206,6 +230,7 @@ function Security({ hasPassword = true, onPasswordChange }) {
                   autoComplete="new-password"
                   placeholder="Enter new password"
                   required
+                  disabled={saving || verifyingGoogle}
                />
             </label>
 
@@ -219,6 +244,7 @@ function Security({ hasPassword = true, onPasswordChange }) {
                   autoComplete="new-password"
                   placeholder="Confirm new password"
                   required
+                  disabled={saving || verifyingGoogle}
                />
             </label>
 
@@ -231,20 +257,6 @@ function Security({ hasPassword = true, onPasswordChange }) {
             </div>
 
             <div className={styles.actions}>
-               <div className={styles.feedback}>
-                  {error && (
-                     <span className={styles.error} role="alert">
-                        {error}
-                     </span>
-                  )}
-
-                  {successMessage && (
-                     <span className={styles.success} role="status">
-                        {successMessage}
-                     </span>
-                  )}
-               </div>
-
                <button
                   disabled={saving || (isGoogleOnly && (!googleVerified || !googleCredential || verifyingGoogle))}
                   type="submit"

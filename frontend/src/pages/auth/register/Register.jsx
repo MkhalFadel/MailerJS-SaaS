@@ -4,7 +4,8 @@ import AuthLayout from "../../../components/auth/authLayout/AuthLayout";
 import styles from "./register.module.css";
 import { registerUser } from "../../../api/auth";
 import { useNavigate } from "react-router-dom";
-import Icon from "../../../components/icons/Icon";
+import FeedbackState from "../../../components/feedback/FeedbackState";
+import useFeedbackScroll from "../../../hooks/useFeedbackScroll";
 
 function Register() {
    const [firstName,setFirstName] = useState("");
@@ -14,12 +15,19 @@ function Register() {
    const [confirmPassword,setConfirmPassword] = useState("");
    const [terms,setTerms] = useState(false);
    const [error, setError] = useState(null);
+   const [submitting, setSubmitting] = useState(false);
 
    const navigate = useNavigate();
+   const { feedbackRef, requestFeedbackScroll } = useFeedbackScroll(error);
 
    async function handleSubmit(event) {
       event.preventDefault();
+
+      if(submitting)
+         return;
+
       setError(null);
+      setSubmitting(true);
 
       try {
          await registerUser({
@@ -32,7 +40,10 @@ function Register() {
          navigate("/login")
       } catch (error) {
          console.error(error);
+         requestFeedbackScroll();
          setError(error.message || "Unable to create your account.");
+      } finally {
+         setSubmitting(false);
       }
    }
 
@@ -48,14 +59,14 @@ function Register() {
             </div>
 
             <form
+               aria-busy={submitting}
                className={styles.form}
                onSubmit={handleSubmit}
             >
                {error && (
-                  <div className={styles.error} role="alert">
-                     <Icon name="alert" size={17} />
+                  <FeedbackState feedbackRef={feedbackRef} type="error">
                      {error}
-                  </div>
+                  </FeedbackState>
                )}
 
                <div className={styles.nameRow}>
@@ -68,6 +79,7 @@ function Register() {
                         onChange={(event) => setFirstName(event.target.value)}
                         placeholder="Fadel"
                         required
+                        disabled={submitting}
                      />
                   </label>
 
@@ -80,6 +92,7 @@ function Register() {
                         onChange={(event) => setLastName(event.target.value)}
                         placeholder="Mkahal"
                         required
+                        disabled={submitting}
                      />
                   </label>
                </div>
@@ -93,6 +106,7 @@ function Register() {
                      onChange={(event) => setEmail(event.target.value)}
                      placeholder="you@example.com"
                      required
+                     disabled={submitting}
                   />
                </label>
 
@@ -105,6 +119,7 @@ function Register() {
                      onChange={(event) => setPassword(event.target.value)}
                      placeholder="Create a password"
                      required
+                     disabled={submitting}
                   />
                </label>
 
@@ -117,6 +132,7 @@ function Register() {
                      onChange={(event) => setConfirmPassword(event.target.value)}
                      placeholder="Confirm your password"
                      required
+                     disabled={submitting}
                   />
                </label>
 
@@ -126,6 +142,7 @@ function Register() {
                      checked={terms}
                      onChange={(event) => setTerms(event.target.checked)}
                      required
+                     disabled={submitting}
                   />
 
                   <span>
@@ -135,9 +152,10 @@ function Register() {
 
                <button
                   className={styles.submit}
+                  disabled={submitting}
                   type="submit"
                >
-                  Create Account
+                  {submitting ? "Creating Account..." : "Create Account"}
                </button>
             </form>
 

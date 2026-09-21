@@ -5,12 +5,22 @@ import { formatTemplateDate } from "../../../utils/utils";
 import EmptyState from "../../feedback/EmptyState";
 import ConfirmModal from "../../feedback/ConfirmModal";
 import Icon from "../../icons/Icon";
+import useFeedbackScroll from "../../../hooks/useFeedbackScroll";
 
-function TemplateList({ templates, setTemplates, onCreate, onEdit, onPreview }) {
+function TemplateList({
+   templates,
+   setTemplates,
+   onCreate,
+   onEdit,
+   onPreview,
+   onFeedback
+}) {
    const [search, setSearch] = useState("");
    const [templateToDelete, setTemplateToDelete] = useState(null);
    const [deleteError, setDeleteError] = useState(null);
-   const [deleting, setDeleting] = useState(false);
+   const [deletingTemplateId, setDeletingTemplateId] = useState(null);
+   const deleting = Boolean(deletingTemplateId);
+   const { feedbackRef, requestFeedbackScroll } = useFeedbackScroll(deleteError);
 
    const filteredTemplates = useMemo(() => {
       return templates.filter((template) => {
@@ -34,12 +44,14 @@ function TemplateList({ templates, setTemplates, onCreate, onEdit, onPreview }) 
       if(deleting)
          return;
 
+      onFeedback?.("clear");
       setDeleteError(null);
-      setDeleting(true);
+      setDeletingTemplateId(template.id);
 
       try {
          await deleteTemplate(template.id);
          removeTemplate(template.id);
+         onFeedback?.("success", "Template deleted successfully.");
       } catch(error) {
          if(error.status === 409 && error.data?.requiresConfirmation)
          {
@@ -51,9 +63,10 @@ function TemplateList({ templates, setTemplates, onCreate, onEdit, onPreview }) 
          }
 
          console.error("Failed to delete template:", error);
+         requestFeedbackScroll();
          setDeleteError(error.message || "Unable to delete this template.");
       } finally {
-         setDeleting(false);
+         setDeletingTemplateId(null);
       }
    }
 
@@ -62,18 +75,20 @@ function TemplateList({ templates, setTemplates, onCreate, onEdit, onPreview }) 
       if(!templateToDelete || deleting)
          return;
 
+      onFeedback?.("clear");
       setDeleteError(null);
-      setDeleting(true);
+      setDeletingTemplateId(templateToDelete.id);
 
       try {
          await deleteTemplate(templateToDelete.id, true);
          removeTemplate(templateToDelete.id);
          setTemplateToDelete(null);
+         onFeedback?.("success", "Template deleted successfully.");
       } catch(error) {
          console.error("Failed to delete template:", error);
          setDeleteError(error.message || "Unable to delete this template.");
       } finally {
-         setDeleting(false);
+         setDeletingTemplateId(null);
       }
    }
 
@@ -120,7 +135,14 @@ function TemplateList({ templates, setTemplates, onCreate, onEdit, onPreview }) 
          </div>
 
          {deleteError && !templateToDelete && (
-            <div className={styles.deleteError}>{deleteError}</div>
+            <div
+               className={styles.deleteError}
+               ref={feedbackRef}
+               role="alert"
+               tabIndex="-1"
+            >
+               {deleteError}
+            </div>
          )}
 
          {filteredTemplates.length === 0 ? (
@@ -192,11 +214,14 @@ function TemplateList({ templates, setTemplates, onCreate, onEdit, onPreview }) 
 
                               <button
                                  className={styles.deleteButton}
+                                 disabled={deleting}
                                  onClick={() => requestTemplateDeletion(template)}
                                  type="button"
                               >
                                  <Icon name="trash" size={15} />
-                                 Delete
+                                 {deletingTemplateId === template.id
+                                    ? "Deleting..."
+                                    : "Delete"}
                               </button>
                            </div>
                         </div>

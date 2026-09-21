@@ -3,12 +3,14 @@ import styles from "./accountActions.module.css";
 import { useNavigate } from "react-router-dom";
 import { deleteUser } from "../../../api/auth";
 import { useAuth } from "../../../context/authContext";
+import useFeedbackScroll from "../../../hooks/useFeedbackScroll";
 
 function AccountActions() {
    const [showConfirmation,setShowConfirmation] = useState(false);
    const [action, setAction] = useState("");
    const [error, setError] = useState(null);
    const [loading, setLoading] = useState(false);
+   const { feedbackRef, requestFeedbackScroll } = useFeedbackScroll(error);
 
    const navigate = useNavigate();
    const { logout } = useAuth();
@@ -23,6 +25,7 @@ function AccountActions() {
          navigate("/login");
       } catch (error) {
          console.error("Failed to sign out:", error);
+         requestFeedbackScroll();
          setError(error.message || "Unable to sign out.");
       } finally {
          setLoading(false);
@@ -40,6 +43,7 @@ function AccountActions() {
          navigate('/login');
       } catch (error) {
          console.error("Failed to delete account:", error);
+         requestFeedbackScroll();
          setError(error.message || "Unable to delete your account.");
       } finally {
          setLoading(false);
@@ -57,7 +61,12 @@ function AccountActions() {
          </div>
 
          {error && (
-            <p className={styles.error} role="alert">
+            <p
+               className={styles.error}
+               ref={feedbackRef}
+               role="alert"
+               tabIndex="-1"
+            >
                {error}
             </p>
          )}

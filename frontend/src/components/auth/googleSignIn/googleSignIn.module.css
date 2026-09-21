@@ -4,6 +4,11 @@
    min-height: 40px;
 }
 
+.disabled {
+   opacity: 0.65;
+   pointer-events: none;
+}
+
 .error {
    color: var(--color-text-muted);
    font-size: 12px;
