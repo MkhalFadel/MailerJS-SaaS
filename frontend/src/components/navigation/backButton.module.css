@@ -43,3 +43,29 @@
    width: fit-content;
    margin: 20px auto 0;
 }
+
+.backButton {
+   min-height: 36px;
+   margin-bottom: 18px;
+   padding: 7px 11px 7px 8px;
+   background: transparent;
+   border-color: transparent;
+   box-shadow: none;
+   font-weight: 650;
+}
+
+.backButton:hover {
+   background: var(--surface);
+   color: var(--accent);
+   border-color: var(--border);
+   box-shadow: none;
+   transform: translateX(-2px);
+}
+
+.backButton:active {
+   transform: translateX(-2px) translateY(1px);
+}
+
+.centered {
+   margin-top: 22px;
+}

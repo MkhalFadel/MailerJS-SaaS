@@ -77,7 +77,7 @@ function Register() {
                         type="text"
                         value={firstName}
                         onChange={(event) => setFirstName(event.target.value)}
-                        placeholder="Fadel"
+                        placeholder="John"
                         required
                         disabled={submitting}
                      />
@@ -90,7 +90,7 @@ function Register() {
                         type="text"
                         value={lastName}
                         onChange={(event) => setLastName(event.target.value)}
-                        placeholder="Mkahal"
+                        placeholder="Doe"
                         required
                         disabled={submitting}
                      />

@@ -6,7 +6,11 @@
    background: var(--color-bg);
 }
 
-.container > div {
-   width: min(100%, 360px);
-   margin-bottom: 0;
+.container {
+   background: var(--bg-app);
+}
+
+.container > span {
+   max-width: min(100%, 360px);
+   text-align: center;
 }

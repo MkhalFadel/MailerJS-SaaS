@@ -7,41 +7,34 @@ import Icon from "../../icons/Icon";
 
 function DashboardOverview({ stats })
 {
-   const resources = [
-      {
-         label: "Contacts",
-         value: stats.totalContacts
-      },
+   const readiness = [
       {
          label: "Templates",
-         value: stats.totalTemplates
+         value: stats.totalTemplates,
+         description: "Reusable campaign content"
       },
       {
          label: "SMTP Accounts",
-         value: stats.totalSmtpAccounts
+         value: stats.totalSmtpAccounts,
+         description: "Configured sending accounts"
       }
    ];
 
    return (
       <div className={styles.overview}>
-         <section className={styles.card}>
-            <div className={styles.header}>
-               <div className={styles.titleRow}>
-                  <span className={styles.headerIcon}>
-                     <Icon name="send" size={17} />
-                  </span>
+         <section className={styles.deliveryPanel}>
+            <span className={styles.panelIcon}>
+               <Icon name="send" size={17} />
+            </span>
 
-                  <h2>Delivery Overview</h2>
-               </div>
-
-               <p>
-                  SMTP acceptance across all campaign delivery attempts.
-               </p>
+            <div>
+               <h2>Delivery overview</h2>
+               <p>SMTP acceptance across all campaign delivery attempts.</p>
             </div>
 
             <div className={styles.deliveryMetrics}>
                <div>
-                  <span>Accepted Emails</span>
+                  <span>Accepted</span>
                   <strong>{formatNumber(stats.acceptedEmails)}</strong>
                </div>
 
@@ -57,26 +50,32 @@ function DashboardOverview({ stats })
             </div>
          </section>
 
-         <section className={styles.card}>
-            <div className={styles.header}>
-               <div className={styles.titleRow}>
-                  <span className={styles.headerIcon}>
-                     <Icon name="settings" size={17} />
-                  </span>
-
-                  <h2>Resource Overview</h2>
+         <section className={styles.readinessPanel}>
+            <div className={styles.readinessHeader}>
+               <div>
+                  <h2>Campaign readiness</h2>
+                  <p>Resources available for your next send.</p>
                </div>
 
-               <p>
-                  Your configured MailerJS resources.
-               </p>
+               <Icon name="settings" size={18} />
             </div>
 
-            <div className={styles.resources}>
-               {resources.map((resource) => (
+            <div className={styles.readinessList}>
+               {readiness.map((resource) => (
                   <div key={resource.label}>
-                     <span>{resource.label}</span>
-                     <strong>{formatNumber(resource.value)}</strong>
+                     <div>
+                        <strong>{resource.label}</strong>
+                        <span>{resource.description}</span>
+                     </div>
+
+                     <span className={resource.value > 0
+                        ? styles.ready
+                        : styles.needsSetup}
+                     >
+                        {resource.value > 0
+                           ? `${formatNumber(resource.value)} available`
+                           : "Needs setup"}
+                     </span>
                   </div>
                ))}
             </div>

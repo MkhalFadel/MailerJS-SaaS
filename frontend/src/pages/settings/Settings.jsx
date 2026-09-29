@@ -182,104 +182,109 @@ function Settings()
                            </FeedbackState>
                         )}
 
-                        {!loading && !showConfiguration && smtpAccounts.length === 0 && (
-                           <div className={styles.emptySmtp}>
-                              <h3>No SMTP accounts</h3>
-
-                              <p>
-                                 Add an SMTP account to start sending emails.
-                              </p>
-
-                              <button
-                                 className={styles.addButton}
-                                 disabled={Boolean(deletingAccountId)}
-                                 onClick={handleCreate}
-                                 type="button"
-                                 >
-                                 <Icon name="plus" size={16} />
-                                 Add SMTP Account
-                              </button>
-                           </div>
-                        )}
-
-                        {!loading && !showConfiguration && smtpAccounts.length > 0 && (
-                           <div className={styles.smtpList}>
-                              {smtpAccounts.map((account) => (
-                                 <div
-                                    className={styles.smtpAccount}
-                                    key={account.id}
-                                 >
-                                    <div className={styles.smtpInfo}>
-                                       <span className={styles.smtpProvider}>
-                                          {account.provider}
-                                       </span>
-
-                                       <span className={styles.smtpEmail}>
-                                          {account.senderEmail}
-                                       </span>
-
-                                       <div className={styles.smtpDetails}>
-                                          <span>
-                                             {account.host}
-                                          </span>
-
-                                          <span>
-                                             •
-                                          </span>
-
-                                          <span>
-                                             {account.port}
-                                          </span>
-
-                                          {account.isDefault && (
-                                             <>
-                                                <span>
-                                                   •
-                                                </span>
-
-                                                <span className={styles.smtpBadge}>
-                                                   Default
-                                                </span>
-                                             </>
-                                          )}
-                                       </div>
-                                    </div>
-
-                                    <div className={styles.smtpActions}>
-                                       <button
-                                          className={styles.editButton}
-                                          disabled={Boolean(deletingAccountId)}
-                                          onClick={() => handleEdit(account)}
-                                          type="button"
-                                          >
-                                          <Icon name="edit" size={15} />
-                                          Edit
-                                       </button>
-
-                                       <button
-                                          className={styles.deleteButton}
-                                          disabled={Boolean(deletingAccountId)}
-                                          onClick={() => handleDelete(account.id)}
-                                          type="button"
-                                          >
-                                          <Icon name="trash" size={15} />
-                                          {deletingAccountId === account.id
-                                             ? "Deleting..."
-                                             : "Delete"}
-                                       </button>
-                                    </div>
+                        {!loading && (
+                           <div className={styles.configurationWorkspace}>
+                              <aside className={styles.accountDirectory}>
+                                 <div className={styles.directoryLabel}>
+                                    <span>Sending accounts</span>
+                                    <strong>{smtpAccounts.length}</strong>
                                  </div>
-                              ))}
-                           </div>
-                        )}
 
-                        {!loading && showConfiguration && (
-                           <EmailConfiguration
-                              account={selectedAccount}
-                              setSmtpAccounts={setSmtpAccounts}
-                              onCancel={handleCancel}
-                              onSuccess={(message) => handleFeedback("success", message)}
-                           />
+                                 {smtpAccounts.length === 0 ? (
+                                    <div className={styles.emptySmtp}>
+                                       <h3>No SMTP accounts</h3>
+
+                                       <p>
+                                          Add an SMTP account to start sending emails.
+                                       </p>
+
+                                       <button
+                                          className={styles.addButton}
+                                          disabled={Boolean(deletingAccountId)}
+                                          onClick={handleCreate}
+                                          type="button"
+                                          >
+                                          <Icon name="plus" size={16} />
+                                          Add SMTP Account
+                                       </button>
+                                    </div>
+                                 ) : (
+                                    <div className={styles.smtpList}>
+                                       {smtpAccounts.map((account) => (
+                                          <div
+                                             className={styles.smtpAccount}
+                                             key={account.id}
+                                          >
+                                             <div className={styles.smtpInfo}>
+                                                <span className={styles.smtpProvider}>
+                                                   {account.provider}
+                                                </span>
+
+                                                <span className={styles.smtpEmail}>
+                                                   {account.senderEmail}
+                                                </span>
+
+                                                <div className={styles.smtpDetails}>
+                                                   <span>{account.host}</span>
+                                                   <span>•</span>
+                                                   <span>{account.port}</span>
+
+                                                   {account.isDefault && (
+                                                      <span className={styles.smtpBadge}>
+                                                         Default
+                                                      </span>
+                                                   )}
+                                                </div>
+                                             </div>
+
+                                             <div className={styles.smtpActions}>
+                                                <button
+                                                   className={styles.editButton}
+                                                   disabled={Boolean(deletingAccountId)}
+                                                   onClick={() => handleEdit(account)}
+                                                   type="button"
+                                                   >
+                                                   <Icon name="edit" size={15} />
+                                                   Edit
+                                                </button>
+
+                                                <button
+                                                   className={styles.deleteButton}
+                                                   disabled={Boolean(deletingAccountId)}
+                                                   onClick={() => handleDelete(account.id)}
+                                                   type="button"
+                                                   >
+                                                   <Icon name="trash" size={15} />
+                                                   {deletingAccountId === account.id
+                                                      ? "Deleting..."
+                                                      : "Delete"}
+                                                </button>
+                                             </div>
+                                          </div>
+                                       ))}
+                                    </div>
+                                 )}
+                              </aside>
+
+                              <div className={styles.configurationPane}>
+                                 {showConfiguration ? (
+                                    <EmailConfiguration
+                                       account={selectedAccount}
+                                       setSmtpAccounts={setSmtpAccounts}
+                                       onCancel={handleCancel}
+                                       onSuccess={(message) => handleFeedback("success", message)}
+                                    />
+                                 ) : (
+                                    <div className={styles.configurationEmpty}>
+                                       <span>Configuration</span>
+                                       <h3>Choose a sending account</h3>
+                                       <p>
+                                          Select an existing account to update it, or add a new account for campaign delivery.
+                                       </p>
+                                    </div>
+                                 )}
+                              </div>
+                           </div>
                         )}
                      </div>
                   )}

@@ -161,3 +161,77 @@
       padding: 12px;
    }
 }
+
+.card {
+   border-radius: var(--radius-lg);
+   box-shadow: var(--shadow-sm);
+}
+
+.header {
+   padding: 22px;
+}
+
+.header h2 {
+   font-size: 18px;
+   letter-spacing: -0.015em;
+}
+
+.header p {
+   margin-top: 6px;
+   font-size: 13px;
+}
+
+.table {
+   min-width: 760px;
+}
+
+.table th,
+.table td {
+   padding: 16px 20px;
+}
+
+.table th {
+   background: var(--bg-subtle);
+   font-size: 11px;
+   font-weight: 750;
+   letter-spacing: 0.08em;
+}
+
+.table td {
+   font-size: 13px;
+}
+
+.table tbody tr {
+   transition: background var(--transition-fast);
+}
+
+.table tbody tr:hover {
+   background: var(--surface-hover);
+}
+
+.campaignDetails {
+   gap: 5px;
+}
+
+.campaignDetails strong {
+   font-weight: 650;
+}
+
+.status {
+   min-height: 28px;
+   padding: 5px 10px;
+   font-size: 11px;
+   font-weight: 700;
+}
+
+.emptyState {
+   padding: 64px 24px;
+}
+
+.emptyState h3 {
+   font-size: 16px;
+}
+
+.emptyState p {
+   font-size: 13px;
+}

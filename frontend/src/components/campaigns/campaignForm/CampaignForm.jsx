@@ -232,6 +232,16 @@ function CampaignForm({ campaign, onCancel, onCreated, onUpdated })
       templates.length > 0 &&
       smtpAccounts.length > 0;
 
+   const selectedTemplate = templates.find(
+      template => template.id === formData.templateId
+   );
+   const selectedSmtpAccount = smtpAccounts.find(
+      account => account.id === formData.smtpAccountId
+   );
+   const recipientCount = isEditing
+      ? campaign.recipients
+      : selectedContacts.length;
+
    return (
       <div className={styles.container}>
          <div className={styles.header}>
@@ -261,6 +271,8 @@ function CampaignForm({ campaign, onCancel, onCreated, onUpdated })
             className={styles.formCard}
             onSubmit={handleSubmit}
          >
+            <div className={styles.composerLayout}>
+            <div className={styles.composerMain}>
             <div className={styles.section}>
                <div className={styles.sectionHeader}>
                   <h2>Campaign Information</h2>
@@ -452,6 +464,36 @@ function CampaignForm({ campaign, onCancel, onCreated, onUpdated })
             </div>
             )}
 
+            </div>
+
+            <aside className={styles.summaryPanel}>
+               <div className={styles.summaryHeader}>
+                  <span>Campaign summary</span>
+                  <h2>Review your setup</h2>
+                  <p>Confirm the sending details before saving this campaign.</p>
+               </div>
+
+               <dl className={styles.summaryList}>
+                  <div>
+                     <dt>Template</dt>
+                     <dd>{selectedTemplate?.name || "Not selected"}</dd>
+                  </div>
+
+                  <div>
+                     <dt>Sending account</dt>
+                     <dd>
+                        {selectedSmtpAccount
+                           ? `${selectedSmtpAccount.provider} — ${selectedSmtpAccount.senderEmail}`
+                           : "Not selected"}
+                     </dd>
+                  </div>
+
+                  <div>
+                     <dt>Recipients</dt>
+                     <dd>{recipientCount}</dd>
+                  </div>
+               </dl>
+
             <div className={styles.formActions}>
                <button
                   type="button"
@@ -487,6 +529,8 @@ function CampaignForm({ campaign, onCancel, onCreated, onUpdated })
                            ? "Save Campaign"
                            : "Create Campaign"}
                </button>
+            </div>
+            </aside>
             </div>
          </form>
       </div>

@@ -41,7 +41,7 @@ function CampaignList({ campaigns, onCreate, onView }) {
 
    return (
       <div className={styles.container}>
-         <div className={styles.header}>
+         <header className={styles.pageHeader}>
             <div>
                <h1>Campaigns</h1>
                <p>Manage and monitor your email campaigns.</p>
@@ -55,22 +55,29 @@ function CampaignList({ campaigns, onCreate, onView }) {
                <Icon name="plus" size={16} />
                Create Campaign
             </button>
-         </div>
-
-         <div className={styles.toolbar}>
-            <div className={styles.searchWrapper}>
-               <Icon className={styles.searchIcon} name="search" size={18} />
-
-               <input
-                  type="text"
-                  placeholder="Search campaigns..."
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-               />
-            </div>
-         </div>
+         </header>
 
          <div className={styles.card}>
+            <div className={styles.panelHeader}>
+               <div>
+                  <span>Campaign workspace</span>
+                  <h2>All campaigns</h2>
+               </div>
+
+               <div className={styles.toolbar}>
+                  <div className={styles.searchWrapper}>
+                     <Icon className={styles.searchIcon} name="search" size={18} />
+
+                     <input
+                        type="text"
+                        placeholder="Search campaigns..."
+                        value={search}
+                        onChange={(event) => setSearch(event.target.value)}
+                     />
+                  </div>
+               </div>
+            </div>
+
             {filteredCampaigns.length === 0 ? (
                <EmptyState
                   actionLabel="Create Campaign"
@@ -118,9 +125,19 @@ function CampaignList({ campaigns, onCreate, onView }) {
                                  </div>
                                  </td>
 
-                                 <td>{campaign.recipients}</td>
+                                 <td>
+                                    <div className={styles.metricCell}>
+                                       <strong>{campaign.recipients}</strong>
+                                       <span>Recipients</span>
+                                    </div>
+                                 </td>
 
-                                 <td>{campaign.accepted}</td>
+                                 <td>
+                                    <div className={styles.metricCell}>
+                                       <strong>{campaign.accepted}</strong>
+                                       <span>Accepted</span>
+                                    </div>
+                                 </td>
 
                                  <td>{formatTemplateDate(campaign.createdAt)}</td>
                               </tr>
@@ -130,10 +147,10 @@ function CampaignList({ campaigns, onCreate, onView }) {
                   </table>
                </div>
             )}
-         </div>
 
-         <div className={styles.footer}>
-            Showing {filteredCampaigns.length} of {campaigns.length} campaigns
+            <div className={styles.footer}>
+               Showing {filteredCampaigns.length} of {campaigns.length} campaigns
+            </div>
          </div>
       </div>
    );

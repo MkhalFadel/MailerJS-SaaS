@@ -1,0 +1,148 @@
+.loader {
+   --loader-size: 36px;
+
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   gap: 12px;
+   color: var(--text-muted);
+}
+
+.sm {
+   --loader-size: 22px;
+
+   gap: 0;
+}
+
+.md {
+   --loader-size: 36px;
+}
+
+.lg {
+   --loader-size: 56px;
+
+   flex-direction: column;
+   gap: 14px;
+}
+
+.mark {
+   display: block;
+   width: var(--loader-size);
+   height: var(--loader-size);
+   flex: 0 0 var(--loader-size);
+   overflow: visible;
+}
+
+.base {
+   fill: var(--sidebar-bg);
+}
+
+.path {
+   fill: none;
+   stroke-linecap: round;
+   stroke-linejoin: round;
+}
+
+.envelope,
+.fold {
+   stroke: var(--sidebar-text);
+   stroke-dasharray: 80;
+   stroke-dashoffset: 80;
+   stroke-width: 3.25;
+}
+
+.envelope {
+   animation: draw-envelope 1.6s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+}
+
+.fold {
+   animation: draw-fold 1.6s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+}
+
+.delivery {
+   stroke: var(--accent);
+   stroke-dasharray: 20;
+   stroke-dashoffset: 20;
+   stroke-width: 2.5;
+   transform-box: fill-box;
+   transform-origin: center;
+   animation: deliver 1.6s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+}
+
+.label {
+   color: var(--text-muted);
+   font-size: 14px;
+   font-weight: 600;
+   line-height: 1.4;
+}
+
+@keyframes draw-envelope {
+   0%,
+   10% {
+      opacity: 0.38;
+      stroke-dashoffset: 80;
+   }
+
+   45%,
+   76% {
+      opacity: 1;
+      stroke-dashoffset: 0;
+   }
+
+   100% {
+      opacity: 0.38;
+      stroke-dashoffset: -8;
+   }
+}
+
+@keyframes draw-fold {
+   0%,
+   17% {
+      opacity: 0.3;
+      stroke-dashoffset: 80;
+   }
+
+   53%,
+   76% {
+      opacity: 1;
+      stroke-dashoffset: 0;
+   }
+
+   100% {
+      opacity: 0.3;
+      stroke-dashoffset: -8;
+   }
+}
+
+@keyframes deliver {
+   0%,
+   46% {
+      opacity: 0;
+      stroke-dashoffset: 20;
+      transform: translateX(-2px);
+   }
+
+   64%,
+   78% {
+      opacity: 1;
+      stroke-dashoffset: 0;
+      transform: translateX(0);
+   }
+
+   100% {
+      opacity: 0;
+      stroke-dashoffset: -4;
+      transform: translateX(1px);
+   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+   .envelope,
+   .fold,
+   .delivery {
+      animation: none;
+      opacity: 1;
+      stroke-dashoffset: 0;
+      transform: none;
+   }
+}

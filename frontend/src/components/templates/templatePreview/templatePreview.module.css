@@ -96,3 +96,50 @@
       padding: 25px;
    }
 }
+
+.container {
+   max-width: 1160px;
+}
+
+.header {
+   margin-bottom: 28px;
+}
+
+.header h1 {
+   font-size: clamp(28px, 3vw, 34px);
+   letter-spacing: -0.04em;
+}
+
+.header p {
+   margin-top: 8px;
+   font-size: 15px;
+}
+
+.editButton {
+   min-height: 44px;
+   background: var(--accent);
+   border-color: var(--accent);
+   font-weight: 650;
+}
+
+.editButton:hover {
+   background: var(--accent-hover);
+}
+
+.previewCard {
+   border-radius: var(--radius-xl);
+   box-shadow: var(--shadow-md);
+}
+
+.emailPreview {
+   min-height: 600px;
+   padding: clamp(24px, 5vw, 64px);
+   background: var(--bg-subtle);
+}
+
+.emailPreview > div {
+   padding: clamp(26px, 4vw, 44px);
+   border: 1px solid var(--border);
+   border-radius: var(--radius-lg);
+   box-shadow: var(--shadow-md);
+}

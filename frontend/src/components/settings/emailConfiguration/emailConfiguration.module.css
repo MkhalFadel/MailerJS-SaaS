@@ -325,3 +325,89 @@
       width: 100%;
    }
 }
+
+.sectionHeader {
+   margin-bottom: 22px;
+}
+
+.sectionHeader h2 {
+   font-size: 22px;
+   letter-spacing: -0.025em;
+}
+
+.sectionHeader p {
+   margin-top: 6px;
+   font-size: 14px;
+}
+
+.status {
+   min-height: 30px;
+   padding: 6px 10px;
+   font-weight: 700;
+}
+
+.card {
+   border-radius: var(--radius-xl);
+   box-shadow: var(--shadow-md);
+}
+
+.form {
+   gap: 22px;
+   padding: 28px;
+}
+
+.field > span {
+   font-weight: 650;
+}
+
+.field input,
+.field select {
+   min-height: 46px;
+   padding: 11px 13px;
+}
+
+.field input:focus,
+.field select:focus {
+   border-color: var(--accent);
+   box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.secureRow {
+   padding: 16px;
+   border-radius: var(--radius-md);
+}
+
+.toggle.enabled {
+   background: var(--accent);
+}
+
+.passwordWrapper button {
+   color: var(--accent);
+}
+
+.actions {
+   padding: 20px 28px;
+}
+
+.testButton,
+.saveButton {
+   min-height: 44px;
+   font-weight: 650;
+}
+
+.saveButton {
+   background: var(--accent);
+   border-color: var(--accent);
+}
+
+.saveButton:hover {
+   background: var(--accent-hover);
+}
+
+@media (max-width: 600px) {
+   .form,
+   .actions {
+      padding-right: 20px;
+      padding-left: 20px;
+   }
+}

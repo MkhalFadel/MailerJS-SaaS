@@ -113,3 +113,41 @@
       width: 100%;
    }
 }
+
+.overlay {
+   padding: 24px;
+   background: var(--color-overlay);
+}
+
+.modal {
+   width: min(100%, 480px);
+   padding: 28px;
+   border-radius: var(--radius-xl);
+}
+
+.eyebrow {
+   padding: 5px 9px;
+   font-weight: 750;
+}
+
+.modal h2 {
+   margin-top: 16px;
+   font-size: 22px;
+   letter-spacing: -0.02em;
+}
+
+.actions {
+   margin-top: 26px;
+}
+
+.cancelButton,
+.confirmButton {
+   min-height: 44px;
+   border-radius: var(--radius-md);
+}
+
+@media (max-width: 480px) {
+   .overlay {
+      padding: 16px;
+   }
+}

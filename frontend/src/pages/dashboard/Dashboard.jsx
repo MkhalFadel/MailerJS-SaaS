@@ -3,6 +3,7 @@ import DashboardLayout from "../../layouts/dashboard/DashboardLayout";
 import DashboardStats from "../../components/dashboard/dashboardStats/DashboardStats";
 import RecentCampaigns from "../../components/dashboard/recentCampaigns/RecentCampaigns";
 import DashboardOverview from "../../components/dashboard/dashboardOverview/DashboardOverview";
+import BrandLoader from "../../components/feedback/BrandLoader";
 import FeedbackState from "../../components/feedback/FeedbackState";
 import { getDashboard } from "../../api/dashboard";
 import styles from "./dashboard.module.css";
@@ -45,9 +46,9 @@ function Dashboard()
             </div>
 
             {loading && (
-               <FeedbackState>
-                  Loading dashboard...
-               </FeedbackState>
+               <section className={styles.pageLoader}>
+                  <BrandLoader label="Loading dashboard..." size="lg" />
+               </section>
             )}
 
             {!loading && error && (
@@ -60,12 +61,16 @@ function Dashboard()
                <>
                   <DashboardStats stats={dashboard.stats} />
 
-                  <section className={styles.contentGrid}>
-                     <RecentCampaigns
-                        campaigns={dashboard.recentCampaigns}
-                     />
+                  <section className={styles.workspace}>
+                     <div className={styles.recentPanel}>
+                        <RecentCampaigns
+                           campaigns={dashboard.recentCampaigns}
+                        />
+                     </div>
 
-                     <DashboardOverview stats={dashboard.stats} />
+                     <aside className={styles.summaryPanel}>
+                        <DashboardOverview stats={dashboard.stats} />
+                     </aside>
                   </section>
                </>
             )}

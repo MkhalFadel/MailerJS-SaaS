@@ -339,3 +339,114 @@
       grid-template-columns: 1fr;
    }
 }
+
+.header {
+   margin-bottom: 32px;
+}
+
+.header h1 {
+   font-size: clamp(28px, 3vw, 34px);
+   font-weight: 720;
+   letter-spacing: -0.04em;
+}
+
+.header p {
+   margin-top: 8px;
+   font-size: 15px;
+}
+
+.primaryButton {
+   min-height: 44px;
+   background: var(--accent);
+   border-color: var(--accent);
+   border-radius: var(--radius-md);
+   font-weight: 650;
+   box-shadow: var(--shadow-button);
+}
+
+.primaryButton:hover {
+   background: var(--accent-hover);
+}
+
+.toolbar {
+   margin-bottom: 20px;
+}
+
+.searchWrapper input {
+   min-height: 46px;
+   padding-left: 42px;
+}
+
+.searchWrapper input:focus {
+   border-color: var(--accent);
+   box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.grid {
+   gap: 22px;
+}
+
+.card {
+   border-radius: var(--radius-lg);
+   box-shadow: var(--shadow-sm);
+}
+
+.card:hover {
+   border-color: var(--accent);
+   box-shadow: var(--shadow-md);
+   transform: translateY(-3px);
+}
+
+.previewContent {
+   min-height: 230px;
+   padding: 20px;
+}
+
+.previewBody {
+   min-height: 174px;
+   padding: 20px;
+   border-radius: var(--radius-md);
+}
+
+.previewButton {
+   background: var(--accent);
+   border-radius: var(--radius-sm);
+}
+
+.cardContent {
+   padding: 20px;
+}
+
+.cardTitle h2 {
+   font-size: 17px;
+   font-weight: 650;
+}
+
+.cardFooter {
+   margin-top: 18px;
+   padding-top: 14px;
+}
+
+.actions {
+   gap: 6px;
+}
+
+.actions button {
+   min-height: 34px;
+   padding: 6px 9px;
+   border: 1px solid transparent;
+   font-weight: 650;
+}
+
+.actions button:hover {
+   border-color: var(--border);
+}
+
+.emptyCard {
+   border-radius: var(--radius-xl);
+}
+
+.footer {
+   margin-top: 14px;
+   font-size: 13px;
+}

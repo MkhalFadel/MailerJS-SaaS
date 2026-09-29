@@ -113,3 +113,60 @@
       width: 100%;
    }
 }
+
+.container {
+   border-radius: var(--radius-xl);
+   box-shadow: var(--shadow-sm);
+}
+
+.header {
+   padding: 24px 26px;
+}
+
+.header h2 {
+   font-size: 19px;
+   letter-spacing: -0.02em;
+}
+
+.header p {
+   margin-top: 6px;
+   font-size: 14px;
+}
+
+.form {
+   gap: 20px;
+   padding: 26px;
+}
+
+.field span {
+   font-weight: 650;
+}
+
+.field input {
+   min-height: 46px;
+   padding: 11px 13px;
+}
+
+.field input:focus {
+   border-color: var(--accent);
+   box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.actions button {
+   min-height: 44px;
+   background: var(--accent);
+   border-color: var(--accent);
+   font-weight: 650;
+}
+
+.actions button:hover {
+   background: var(--accent-hover);
+}
+
+@media (max-width: 600px) {
+   .header,
+   .form {
+      padding-right: 20px;
+      padding-left: 20px;
+   }
+}

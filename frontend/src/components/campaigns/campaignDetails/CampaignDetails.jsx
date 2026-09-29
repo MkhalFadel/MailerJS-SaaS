@@ -560,7 +560,36 @@ function CampaignDetails({ campaign, onBack, onEdit })
             </FeedbackState>
          )}
 
-         {campaignSend && (
+         <section className={styles.detailGrid}>
+            <article className={styles.configurationPanel}>
+               <div className={styles.panelHeading}>
+                  <span>Campaign configuration</span>
+                  <h2>Ready to send</h2>
+               </div>
+
+               <dl className={styles.configurationList}>
+                  <div>
+                     <dt>Template</dt>
+                     <dd>{campaign.template?.name || "Not selected"}</dd>
+                  </div>
+
+                  <div>
+                     <dt>Sending account</dt>
+                     <dd>
+                        {campaign.smtpAccount
+                           ? `${campaign.smtpAccount.provider} — ${campaign.smtpAccount.senderEmail}`
+                           : "Not selected"}
+                     </dd>
+                  </div>
+
+                  <div>
+                     <dt>Email subject</dt>
+                     <dd>{campaign.subject}</dd>
+                  </div>
+               </dl>
+            </article>
+
+            {campaignSend ? (
             <div
                className={
                   styles.sendSummary + " " +
@@ -604,7 +633,16 @@ function CampaignDetails({ campaign, onBack, onEdit })
                   </p>
                )}
             </div>
-         )}
+            ) : (
+               <aside className={styles.noSendPanel}>
+                  <span>Send activity</span>
+                  <h2>Not sent yet</h2>
+                  <p>
+                     Start a send when your template, sender, and recipient list are ready.
+                  </p>
+               </aside>
+            )}
+         </section>
 
          <div className={styles.statistics}>
             <div className={styles.statCard}>
@@ -628,6 +666,14 @@ function CampaignDetails({ campaign, onBack, onEdit })
 
                <strong>
                   {statistics.failed}
+               </strong>
+            </div>
+
+            <div className={styles.statCard}>
+               <span>Current send</span>
+
+               <strong className={styles.statusValue}>
+                  {campaignSend ? getCampaignSendTitle(campaignSend) : "Not sent"}
                </strong>
             </div>
          </div>

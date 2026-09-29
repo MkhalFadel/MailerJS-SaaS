@@ -112,35 +112,45 @@ function TemplateEditor({ template, setTemplates, onCancel, onSuccess }) {
                </label>
             </div>
 
-            <div className={styles.editorSection}>
-               <div className={styles.editorHeader}>
-                  <div>
-                     <h2>HTML Content</h2>
-                     <p>
-                        Use placeholders such as{" "}
-                        <code>{"{{name}}"}</code> in your template.
-                     </p>
+            <div className={styles.editorWorkspace}>
+               <div className={styles.editorSection}>
+                  <div className={styles.editorHeader}>
+                     <div>
+                        <h2>HTML Content</h2>
+                        <p>
+                           Write the email content that recipients will receive.
+                        </p>
+                     </div>
+
+                     <span className={styles.htmlBadge}>HTML</span>
                   </div>
 
-                  <span className={styles.htmlBadge}>HTML</span>
+                  <textarea
+                     className={styles.editor}
+                     value={content}
+                     onChange={(event) => setContent(event.target.value)}
+                     spellCheck="false"
+                     placeholder="<h1>Hello {{name}}</h1>"
+                     disabled={saving}
+                  />
                </div>
 
-               <textarea
-                  className={styles.editor}
-                  value={content}
-                  onChange={(event) => setContent(event.target.value)}
-                  spellCheck="false"
-                  placeholder="<h1>Hello {{name}}</h1>"
-                  disabled={saving}
-               />
-            </div>
+               <aside className={styles.editorSidebar}>
+                  <div>
+                     <h2>Personalization</h2>
+                     <p>Use these values to tailor the message for each contact.</p>
+                  </div>
 
-            <div className={styles.placeholders}>
-               <span>Available placeholders</span>
+                  <div className={styles.placeholders}>
+                     <code>{"{{first_name}}"}</code>
+                     <code>{"{{last_name}}"}</code>
+                     <code>{"{{email}}"}</code>
+                  </div>
 
-               <code>{"{{first_name}}"}</code>
-               <code>{"{{last_name}}"}</code>
-               <code>{"{{email}}"}</code>
+                  <p className={styles.sidebarNote}>
+                     Placeholder values are filled from each campaign recipient.
+                  </p>
+               </aside>
             </div>
 
             <div className={styles.actions}>

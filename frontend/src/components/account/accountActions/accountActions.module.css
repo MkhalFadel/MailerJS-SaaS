@@ -181,3 +181,93 @@
       flex: 1;
    }
 }
+
+.container {
+   border-radius: var(--radius-xl);
+   box-shadow: var(--shadow-sm);
+}
+
+.header {
+   padding: 24px 26px;
+}
+
+.header h2 {
+   font-size: 19px;
+   letter-spacing: -0.02em;
+}
+
+.header p {
+   margin-top: 6px;
+   font-size: 14px;
+}
+
+.actionCard {
+   margin: 22px 26px 26px;
+   border-radius: var(--radius-lg);
+}
+
+.content {
+   padding: 20px;
+}
+
+.content h3 {
+   font-size: 16px;
+}
+
+.content p {
+   margin-top: 6px;
+   font-size: 13px;
+}
+
+.signOutButton,
+.deleteButton {
+   min-height: 42px;
+   padding: 9px 13px;
+   border-radius: var(--radius-md);
+   font-weight: 650;
+}
+
+.signOutButton:hover {
+   border-color: var(--border-strong);
+}
+
+.confirmation {
+   padding: 17px 20px;
+}
+
+.confirmation h3 {
+   font-size: 14px;
+}
+
+.confirmation p {
+   font-size: 13px;
+}
+
+.cancelButton,
+.confirmButton {
+   min-height: 38px;
+   border-radius: var(--radius-md);
+   font-weight: 650;
+}
+
+.confirmButton {
+   background: var(--accent);
+   border-color: var(--accent);
+}
+
+.destructive .confirmButton {
+   background: var(--danger);
+   border-color: var(--danger);
+}
+
+@media (max-width: 600px) {
+   .header {
+      padding-right: 20px;
+      padding-left: 20px;
+   }
+
+   .actionCard {
+      margin-right: 20px;
+      margin-left: 20px;
+   }
+}

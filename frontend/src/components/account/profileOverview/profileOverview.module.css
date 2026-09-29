@@ -82,3 +82,42 @@
    }
 
 }
+
+.container {
+   gap: 18px;
+   padding: 24px 26px;
+   border-radius: var(--radius-xl);
+   box-shadow: var(--shadow-sm);
+}
+
+.avatar {
+   width: 56px;
+   height: 56px;
+   background: var(--accent);
+   border-radius: var(--radius-lg);
+   font-size: 18px;
+}
+
+.details h2 {
+   font-size: 20px;
+   letter-spacing: -0.02em;
+}
+
+.details p {
+   margin-top: 5px;
+   font-size: 14px;
+}
+
+.verification {
+   min-height: 30px;
+   padding: 5px 10px;
+   background: var(--success-soft);
+   border-radius: var(--radius-full);
+   font-weight: 700;
+}
+
+.verification span {
+   width: 17px;
+   height: 17px;
+   background: var(--surface);
+}

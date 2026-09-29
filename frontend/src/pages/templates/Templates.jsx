@@ -3,6 +3,7 @@ import DashboardLayout from "../../layouts/dashboard/DashboardLayout";
 import TemplateList from "../../components/templates/templateList/TemplateList";
 import TemplateEditor from "../../components/templates/templateEditor/TemplateEditor";
 import TemplatePreview from "../../components/templates/templatePreview/TemplatePreview";
+import BrandLoader from "../../components/feedback/BrandLoader";
 import FeedbackState from "../../components/feedback/FeedbackState";
 import { getTemplates } from "../../api/templates";
 import useFeedbackScroll from "../../hooks/useFeedbackScroll";
@@ -79,9 +80,9 @@ function Templates() {
             )}
 
             {loading && (
-               <FeedbackState>
-                  Loading templates...
-               </FeedbackState>
+               <section className={styles.pageLoader}>
+                  <BrandLoader label="Loading templates..." size="lg" />
+               </section>
             )}
 
             {!loading && error && (

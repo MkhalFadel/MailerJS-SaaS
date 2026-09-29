@@ -1,7 +1,8 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../../context/authContext";
 import Icon from "../../icons/Icon";
-import mailerjsFullLogo from "../../../assets/mailerjsFullLogo.png";
+import mailerjsMark from "../../../assets/brand/mailerjsMark.svg";
+import ThemeToggle from "../../themeToggle/ThemeToggle";
 import styles from "./sidebar.module.css";
 
 const navigation = [
@@ -59,11 +60,10 @@ function Sidebar({ isOpen, onNavigate }) {
          className={`${styles.sidebar} ${isOpen ? styles.open : ""}`}
       >
          <div className={styles.logo}>
-         <img
-            alt="MailerJS"
-            className={styles.logoImage}
-            src={mailerjsFullLogo}
-         />
+            <img alt="" aria-hidden="true" className={styles.logoMark} src={mailerjsMark} />
+            <span className={styles.wordmark}>
+               Mailer<span className={styles.wordmarkAccent}>JS</span>
+            </span>
          </div>
 
          <nav className={styles.navigation}>
@@ -105,6 +105,11 @@ function Sidebar({ isOpen, onNavigate }) {
          </nav>
 
          <div className={styles.sidebarBottom}>
+         <div className={styles.utilityRow}>
+            <span>Appearance</span>
+            <ThemeToggle />
+         </div>
+
          <NavLink
             key={"/account"}
             to={"/account"}

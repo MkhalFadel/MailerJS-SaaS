@@ -67,28 +67,28 @@
    color: var(--color-info);
 }
 
-.spinner {
-   width: 17px;
-   height: 17px;
-   border: 2px solid currentColor;
-   border-right-color: transparent;
-   border-radius: 50%;
-   animation: spin 700ms linear infinite;
-}
-
 .state:focus {
    outline: 0;
    box-shadow: 0 0 0 3px var(--color-primary-light);
 }
 
-@keyframes spin {
-   to {
-      transform: rotate(360deg);
-   }
+.state {
+   gap: 12px;
+   padding: 14px 16px;
+   border-radius: var(--radius-lg);
+   box-shadow: var(--shadow-sm);
+   font-weight: 520;
 }
 
-@media (prefers-reduced-motion: reduce) {
-   .spinner {
-      animation: none;
-   }
+.icon {
+   width: 34px;
+   height: 34px;
+   border-radius: var(--radius-md);
+}
+
+.error,
+.success,
+.warning,
+.info {
+   border-color: currentColor;
 }

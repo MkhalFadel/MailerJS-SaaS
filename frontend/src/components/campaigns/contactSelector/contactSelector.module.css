@@ -307,3 +307,104 @@
    }
 
 }
+
+.overlay {
+   padding: 24px;
+   background: var(--color-overlay);
+}
+
+.modal {
+   max-width: 700px;
+   max-height: min(84vh, 760px);
+   border-radius: var(--radius-xl);
+}
+
+.header {
+   padding: 24px;
+}
+
+.header h2 {
+   font-size: 22px;
+   letter-spacing: -0.02em;
+}
+
+.header p {
+   margin-top: 6px;
+   font-size: 14px;
+}
+
+.closeButton {
+   width: 38px;
+   height: 38px;
+   border: 1px solid transparent;
+}
+
+.closeButton:hover {
+   border-color: var(--border);
+}
+
+.toolbar {
+   padding: 16px 24px;
+}
+
+.searchField input {
+   min-height: 44px;
+   padding-left: 40px;
+}
+
+.searchField input:focus {
+   border-color: var(--accent);
+   box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.selectAllButton {
+   min-height: 44px;
+   font-weight: 650;
+}
+
+.selectedSummary {
+   padding: 12px 24px;
+}
+
+.contactList {
+   padding: 10px;
+}
+
+.contact {
+   padding: 12px 14px;
+   border-radius: var(--radius-md);
+}
+
+.contact.selected {
+   border-color: var(--accent);
+}
+
+.avatar {
+   width: 36px;
+   height: 36px;
+}
+
+.actions {
+   padding: 18px 24px;
+}
+
+.cancelButton,
+.confirmButton {
+   min-height: 44px;
+   font-weight: 650;
+}
+
+.confirmButton {
+   background: var(--accent);
+   border-color: var(--accent);
+}
+
+.confirmButton:hover {
+   background: var(--accent-hover);
+}
+
+@media (max-width: 600px) {
+   .overlay {
+      padding: 12px;
+   }
+}

@@ -400,6 +400,133 @@ td {
    }
 }
 
+.detailGrid {
+   display: grid;
+   grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr);
+   gap: 18px;
+   margin: 0 0 18px;
+}
+
+.configurationPanel,
+.noSendPanel {
+   min-height: 100%;
+   padding: 24px;
+   border: 1px solid var(--border);
+   border-radius: var(--radius-lg);
+   background: var(--surface);
+   box-shadow: var(--shadow-sm);
+}
+
+.panelHeading > span,
+.noSendPanel > span {
+   display: block;
+   color: var(--text-muted);
+   font-size: 11px;
+   font-weight: 750;
+   letter-spacing: 0.08em;
+   text-transform: uppercase;
+}
+
+.panelHeading h2,
+.noSendPanel h2 {
+   margin: 7px 0 0;
+   color: var(--text-strong);
+   font-size: 20px;
+   letter-spacing: -0.025em;
+}
+
+.configurationList {
+   display: grid;
+   gap: 14px;
+   margin: 22px 0 0;
+}
+
+.configurationList > div {
+   display: grid;
+   grid-template-columns: 122px minmax(0, 1fr);
+   gap: 14px;
+   align-items: baseline;
+   padding-top: 14px;
+   border-top: 1px solid var(--border);
+}
+
+.configurationList dt {
+   color: var(--text-muted);
+   font-size: 12px;
+   font-weight: 650;
+}
+
+.configurationList dd {
+   margin: 0;
+   overflow-wrap: anywhere;
+   color: var(--text-strong);
+   font-size: 13px;
+   font-weight: 650;
+   line-height: 1.5;
+}
+
+.detailGrid .sendSummary {
+   min-height: 100%;
+   margin: 0;
+}
+
+.noSendPanel {
+   display: flex;
+   flex-direction: column;
+   justify-content: center;
+   background: var(--bg-subtle);
+}
+
+.noSendPanel p {
+   max-width: 34ch;
+   margin: 9px 0 0;
+   color: var(--text-muted);
+   font-size: 13px;
+   line-height: 1.55;
+}
+
+.statistics {
+   grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.statCard .statusValue {
+   max-width: 15ch;
+   font-size: 16px;
+   line-height: 1.25;
+}
+
+@media (max-width: 980px) {
+   .detailGrid {
+      grid-template-columns: 1fr;
+   }
+
+   .statistics {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+   }
+}
+
+@media (max-width: 560px) {
+   .configurationPanel,
+   .noSendPanel {
+      padding: 20px;
+   }
+
+   .configurationList > div {
+      grid-template-columns: 1fr;
+      gap: 5px;
+   }
+
+   .statistics {
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+   }
+
+   .statCard {
+      min-height: 104px;
+      padding: 16px;
+   }
+}
+
 @media (max-width: 500px) {
    .sendSummary {
       padding: 16px;
@@ -419,5 +546,197 @@ td {
 
    td {
       padding: 13px 14px;
+   }
+}
+
+.container {
+   max-width: 1500px;
+}
+
+.header {
+   gap: 24px;
+   margin-bottom: 30px;
+}
+
+.titleRow h1 {
+   font-size: clamp(28px, 3vw, 34px);
+   font-weight: 720;
+   letter-spacing: -0.04em;
+}
+
+.header p {
+   margin-top: 8px;
+   font-size: 15px;
+}
+
+.headerActions {
+   display: flex;
+   flex-wrap: wrap;
+   justify-content: flex-end;
+   gap: 8px;
+}
+
+.primaryButton,
+.addContactButton,
+.secondaryButton,
+.cancelSendButton {
+   min-height: 44px;
+   margin: 0;
+   border-radius: var(--radius-md);
+   font-weight: 650;
+}
+
+.primaryButton,
+.addContactButton {
+   background: var(--accent);
+   border-color: var(--accent);
+   box-shadow: var(--shadow-button);
+}
+
+.primaryButton:hover,
+.addContactButton:hover {
+   background: var(--accent-hover);
+}
+
+.secondaryButton {
+   border-color: var(--border);
+}
+
+.cancelSendButton {
+   background: var(--danger-soft);
+   border-color: var(--danger);
+}
+
+.configurationWarning {
+   gap: 10px;
+   padding: 13px 15px;
+   border-color: var(--warning);
+   border-radius: var(--radius-md);
+}
+
+.sendSummary {
+   padding: 22px;
+   border-radius: var(--radius-lg);
+   box-shadow: var(--shadow-sm);
+}
+
+.sendSummary h2 {
+   font-size: 19px;
+   letter-spacing: -0.02em;
+}
+
+.sendSummary p {
+   margin-top: 6px;
+   font-size: 14px;
+}
+
+.summaryStatistics {
+   gap: 8px;
+   margin-top: 16px;
+}
+
+.summaryStatistics span {
+   min-height: 30px;
+   padding: 6px 10px;
+   border-radius: var(--radius-full);
+}
+
+.statistics {
+   gap: 18px;
+   margin-bottom: 24px;
+}
+
+.statCard {
+   min-height: 120px;
+   padding: 20px;
+   border-radius: var(--radius-lg);
+}
+
+.statCard span {
+   font-size: 13px;
+   font-weight: 600;
+}
+
+.statCard strong {
+   margin-top: 12px;
+   font-size: 30px;
+   letter-spacing: -0.035em;
+}
+
+.card {
+   margin-bottom: 24px;
+   border-radius: var(--radius-lg);
+   box-shadow: var(--shadow-sm);
+}
+
+.cardHeader {
+   padding: 22px;
+}
+
+.cardHeader h2 {
+   font-size: 18px;
+   letter-spacing: -0.015em;
+}
+
+.cardHeader p {
+   margin-top: 6px;
+   font-size: 13px;
+}
+
+.card table {
+   min-width: 720px;
+}
+
+.card th {
+   padding: 14px 20px;
+   background: var(--bg-subtle);
+   font-size: 11px;
+   font-weight: 750;
+   letter-spacing: 0.08em;
+}
+
+.card td {
+   padding: 16px 20px;
+   font-size: 13px;
+   vertical-align: middle;
+}
+
+.card tbody tr {
+   transition: background var(--transition-fast);
+}
+
+.card tbody tr:hover {
+   background: var(--surface-hover);
+}
+
+.recipientStatus {
+   min-height: 28px;
+   padding: 5px 10px;
+   font-size: 11px;
+   font-weight: 700;
+}
+
+.removeButton {
+   min-height: 36px;
+   padding: 6px 10px;
+   border-radius: var(--radius-md);
+   font-weight: 650;
+}
+
+.emptyState {
+   min-height: 180px;
+   padding: 36px 24px;
+   font-size: 14px;
+}
+
+@media (max-width: 700px) {
+   .headerActions {
+      justify-content: stretch;
+   }
+
+   .primaryButton,
+   .secondaryButton,
+   .cancelSendButton {
+      margin: 0;
    }
 }

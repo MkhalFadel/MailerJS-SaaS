@@ -131,12 +131,12 @@ function ContactList({
 
    return (
       <div className={styles.container}>
-         <div className={styles.header}>
+         <header className={styles.pageHeader}>
             <div>
                <h1>Contacts</h1>
 
                <p>
-                  Manage the people you send emails to.
+                  Manage the people available for campaign delivery.
                </p>
             </div>
 
@@ -159,9 +159,16 @@ function ContactList({
                   Add Contact
                </button>
             </div>
-         </div>
+         </header>
 
-         <div className={styles.toolbar}>
+         <section className={styles.directoryPanel}>
+         <div className={styles.panelHeader}>
+            <div className={styles.panelHeading}>
+               <h2>Audience directory</h2>
+               <span>{contacts.length} total</span>
+            </div>
+
+            <div className={styles.toolbar}>
             <div className={styles.searchWrapper}>
                <Icon className={styles.searchIcon} name="search" size={18} />
 
@@ -171,6 +178,7 @@ function ContactList({
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                />
+            </div>
             </div>
          </div>
 
@@ -280,9 +288,10 @@ function ContactList({
             )}
          </div>
 
-         <div className={styles.footer}>
+         <footer className={styles.panelFooter}>
             Showing {filteredContacts.length} of {contacts.length} contacts
-         </div>
+         </footer>
+         </section>
 
          {contactToDelete && (
             <ConfirmModal

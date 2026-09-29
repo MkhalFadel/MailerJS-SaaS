@@ -3,6 +3,7 @@ import DashboardLayout from "../../layouts/dashboard/DashboardLayout";
 import CampaignList from "../../components/campaigns/campaignList/CampaignList";
 import CampaignForm from "../../components/campaigns/campaignForm/CampaignForm";
 import CampaignDetails from "../../components/campaigns/campaignDetails/CampaignDetails";
+import BrandLoader from "../../components/feedback/BrandLoader";
 import FeedbackState from "../../components/feedback/FeedbackState";
 import { getCampaigns } from "../../api/campaigns";
 import useFeedbackScroll from "../../hooks/useFeedbackScroll";
@@ -91,9 +92,9 @@ function Campaigns() {
             )}
 
             {view === "list" && loading && (
-               <FeedbackState>
-                  Loading campaigns...
-               </FeedbackState>
+               <section className={styles.pageLoader}>
+                  <BrandLoader label="Loading campaigns..." size="lg" />
+               </section>
             )}
 
             {view === "list" && !loading && error && (

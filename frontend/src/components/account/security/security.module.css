@@ -202,3 +202,92 @@
       margin-right: 0;
    }
 }
+
+.container {
+   border-radius: var(--radius-xl);
+   box-shadow: var(--shadow-sm);
+}
+
+.header {
+   padding: 24px 26px;
+}
+
+.header h2 {
+   font-size: 19px;
+   letter-spacing: -0.02em;
+}
+
+.header p {
+   margin-top: 6px;
+   font-size: 14px;
+}
+
+.passwordStatus {
+   margin: 24px 26px 0;
+   padding: 17px;
+   border-radius: var(--radius-md);
+}
+
+.passwordStatus h3 {
+   font-size: 15px;
+}
+
+.passwordStatus p,
+.passwordStatus span {
+   font-size: 13px;
+}
+
+.form {
+   gap: 20px;
+   padding: 26px;
+}
+
+.field span {
+   font-weight: 650;
+}
+
+.field input {
+   min-height: 46px;
+   padding: 11px 13px;
+}
+
+.field input:focus {
+   border-color: var(--accent);
+   box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.requirements,
+.reauthentication {
+   padding: 15px;
+   border: 1px solid var(--border);
+   border-radius: var(--radius-md);
+}
+
+.requirements p,
+.reauthentication p {
+   font-size: 13px;
+}
+
+.actions button {
+   min-height: 44px;
+   background: var(--accent);
+   border-color: var(--accent);
+   font-weight: 650;
+}
+
+.actions button:hover {
+   background: var(--accent-hover);
+}
+
+@media (max-width: 600px) {
+   .header,
+   .form {
+      padding-right: 20px;
+      padding-left: 20px;
+   }
+
+   .passwordStatus {
+      margin-right: 20px;
+      margin-left: 20px;
+   }
+}

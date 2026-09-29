@@ -1,4 +1,5 @@
 import Icon from "../icons/Icon";
+import BrandLoader from "./BrandLoader";
 import styles from "./feedbackState.module.css";
 
 function FeedbackState({ children, feedbackRef, type = "loading" })
@@ -20,7 +21,7 @@ function FeedbackState({ children, feedbackRef, type = "loading" })
       >
          <span className={styles.icon}>
             {type === "loading"
-               ? <span className={styles.spinner} aria-hidden="true" />
+               ? <BrandLoader label={null} size="sm" />
                : <Icon name={iconName} size={18} />}
          </span>
 

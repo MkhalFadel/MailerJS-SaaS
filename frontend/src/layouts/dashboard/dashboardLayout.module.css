@@ -36,3 +36,57 @@
       border: 0;
    }
 }
+
+/* Refined application frame */
+.layout {
+   background: var(--bg-app);
+}
+
+.main {
+   margin-left: 266px;
+}
+
+.content {
+   padding: 34px clamp(24px, 3vw, 52px) 52px;
+}
+
+@media (max-width: 900px) {
+   .main {
+      margin-left: 0;
+   }
+
+   .content {
+      padding: 28px 24px 40px;
+   }
+
+   .mobileOverlay {
+      background: var(--color-overlay);
+   }
+}
+
+@media (max-width: 480px) {
+   .content {
+      padding: 22px 16px 32px;
+   }
+}
+
+@media (max-width: 900px) {
+   .mobileOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: block;
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      border: 0;
+   }
+}
+
+.main {
+   margin-left: 238px;
+}
+
+.content {
+   padding: 28px clamp(20px, 3vw, 44px) 48px;
+}

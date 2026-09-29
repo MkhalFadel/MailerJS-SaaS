@@ -3,3 +3,9 @@
    max-width: 1500px;
    margin: 0 auto;
 }
+
+.pageLoader {
+   display: grid;
+   min-height: clamp(260px, 52vh, 520px);
+   place-items: center;
+}

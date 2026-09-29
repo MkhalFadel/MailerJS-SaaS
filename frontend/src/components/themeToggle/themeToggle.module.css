@@ -32,3 +32,25 @@
    background: var(--color-primary);
    color: var(--color-primary-text);
 }
+
+.toggle {
+   width: 68px;
+   height: 36px;
+   background: var(--surface-hover);
+   border-color: var(--border);
+   box-shadow: none;
+}
+
+.toggle:hover {
+   border-color: var(--border-strong);
+}
+
+.icon {
+   width: 28px;
+   height: 28px;
+}
+
+.icon.active {
+   background: var(--accent);
+   color: var(--accent-text);
+}

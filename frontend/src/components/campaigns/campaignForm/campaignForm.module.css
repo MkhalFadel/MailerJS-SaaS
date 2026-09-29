@@ -284,3 +284,256 @@
       width: 100%;
    }
 }
+
+.container {
+   max-width: 1000px;
+}
+
+.header {
+   margin-bottom: 28px;
+}
+
+.header h1 {
+   font-size: clamp(28px, 3vw, 34px);
+   letter-spacing: -0.04em;
+}
+
+.header p {
+   margin-top: 8px;
+   font-size: 15px;
+}
+
+.formCard {
+   border-radius: var(--radius-xl);
+   box-shadow: var(--shadow-md);
+}
+
+.section {
+   padding: 28px;
+}
+
+.sectionHeader {
+   margin-bottom: 20px;
+}
+
+.sectionHeader h2 {
+   font-size: 18px;
+}
+
+.sectionHeader p {
+   margin-top: 6px;
+   font-size: 13px;
+}
+
+.field span {
+   font-weight: 650;
+}
+
+.field input,
+.field select {
+   min-height: 46px;
+   padding: 11px 13px;
+}
+
+.field input:focus,
+.field select:focus {
+   border-color: var(--accent);
+   box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.selectButton {
+   min-height: 50px;
+   padding: 12px 14px;
+}
+
+.selectButton:hover {
+   border-color: var(--accent);
+   box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.selectedContact {
+   padding: 12px 14px;
+   border-radius: var(--radius-md);
+}
+
+.formActions {
+   padding: 20px 28px;
+}
+
+.cancelButton,
+.primaryButton {
+   min-height: 44px;
+   font-weight: 650;
+}
+
+.primaryButton {
+   background: var(--accent);
+   border-color: var(--accent);
+}
+
+.primaryButton:hover {
+   background: var(--accent-hover);
+}
+
+@media (max-width: 700px) {
+   .section,
+   .formActions {
+      padding-right: 20px;
+      padding-left: 20px;
+   }
+}
+
+.formCard {
+   overflow: visible;
+   border: 0;
+   background: transparent;
+   box-shadow: none;
+}
+
+.composerLayout {
+   display: grid;
+   grid-template-columns: minmax(0, 1fr) 280px;
+   gap: 24px;
+   align-items: start;
+}
+
+.composerMain {
+   overflow: hidden;
+   border: 1px solid var(--color-border);
+   border-radius: var(--radius-lg);
+   background: var(--color-surface);
+}
+
+.composerMain .section {
+   padding: 24px;
+}
+
+.composerMain .sectionHeader {
+   display: flex;
+   align-items: baseline;
+   gap: 10px;
+   margin-bottom: 16px;
+}
+
+.composerMain .sectionHeader h2 {
+   font-size: 15px;
+}
+
+.composerMain .sectionHeader p {
+   margin: 0;
+   font-size: 12px;
+}
+
+.summaryPanel {
+   position: sticky;
+   top: 20px;
+   overflow: hidden;
+   border: 1px solid var(--color-border);
+   border-radius: var(--radius-lg);
+   background: var(--color-surface);
+}
+
+.summaryHeader {
+   padding: 20px;
+   border-bottom: 1px solid var(--color-border);
+}
+
+.summaryHeader > span {
+   color: var(--color-text-muted);
+   font-size: 10px;
+   font-weight: 700;
+   letter-spacing: 0.08em;
+   text-transform: uppercase;
+}
+
+.summaryHeader h2 {
+   margin-top: 6px;
+   color: var(--color-text);
+   font-size: 17px;
+   font-weight: 650;
+   letter-spacing: -0.02em;
+}
+
+.summaryHeader p {
+   margin-top: 6px;
+   color: var(--color-text-muted);
+   font-size: 12px;
+   line-height: 1.5;
+}
+
+.summaryList {
+   display: flex;
+   flex-direction: column;
+   padding: 8px 20px;
+}
+
+.summaryList > div {
+   display: flex;
+   flex-direction: column;
+   gap: 4px;
+   padding: 13px 0;
+   border-bottom: 1px solid var(--color-border);
+}
+
+.summaryList > div:last-child {
+   border-bottom: 0;
+}
+
+.summaryList dt {
+   color: var(--color-text-muted);
+   font-size: 11px;
+   font-weight: 600;
+}
+
+.summaryList dd {
+   overflow-wrap: anywhere;
+   color: var(--color-text);
+   font-size: 13px;
+   font-weight: 600;
+}
+
+.summaryPanel .formActions {
+   display: flex;
+   flex-direction: column-reverse;
+   gap: 8px;
+   padding: 16px 20px 20px;
+   background: transparent;
+   border-top: 1px solid var(--color-border);
+}
+
+.summaryPanel .cancelButton,
+.summaryPanel .primaryButton {
+   width: 100%;
+}
+
+@media (max-width: 950px) {
+   .composerLayout {
+      grid-template-columns: 1fr;
+   }
+
+   .summaryPanel {
+      position: static;
+   }
+
+   .summaryPanel .formActions {
+      flex-direction: row;
+      justify-content: flex-end;
+   }
+
+   .summaryPanel .cancelButton,
+   .summaryPanel .primaryButton {
+      width: auto;
+   }
+}
+
+@media (max-width: 600px) {
+   .composerMain .section {
+      padding: 20px;
+   }
+
+   .composerMain .sectionHeader {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 4px;
+   }
+}

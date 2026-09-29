@@ -38,17 +38,19 @@ function Account() {
                      email={email}
                   />
 
-                  <PersonalInformation
-                     firstName={firstName}
-                     lastName={lastName}
-                     email={email}
-                     setFirstName={setFirstName}
-                     setLastName={setLastName}
-                     setEmail={setEmail}
-                     onSave={handleProfileSave}
-                  />
+                  <div className={styles.profileGrid}>
+                     <PersonalInformation
+                        firstName={firstName}
+                        lastName={lastName}
+                        email={email}
+                        setFirstName={setFirstName}
+                        setLastName={setLastName}
+                        setEmail={setEmail}
+                        onSave={handleProfileSave}
+                     />
 
-                  <AccountInformation user={user} />
+                     <AccountInformation user={user} />
+                  </div>
                </div>
             );
 

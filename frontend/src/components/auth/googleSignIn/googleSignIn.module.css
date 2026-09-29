@@ -15,3 +15,15 @@
    line-height: 1.5;
    text-align: center;
 }
+
+.button {
+   min-height: 44px;
+}
+
+.error {
+   padding: 10px 12px;
+   background: var(--danger-soft);
+   color: var(--danger);
+   border: 1px solid var(--danger);
+   border-radius: var(--radius-md);
+}

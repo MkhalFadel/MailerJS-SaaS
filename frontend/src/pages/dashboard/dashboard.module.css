@@ -31,6 +31,12 @@
    font-size: 13px;
 }
 
+.pageLoader {
+   display: grid;
+   min-height: clamp(260px, 52vh, 520px);
+   place-items: center;
+}
+
 .error {
    background: var(--color-danger-light);
    color: var(--color-danger);
@@ -52,5 +58,46 @@
 @media (max-width: 600px) {
    .header h1 {
       font-size: 24px;
+   }
+}
+
+.page {
+   max-width: 1600px;
+}
+
+.header {
+   margin-bottom: 32px;
+}
+
+.header h1 {
+   font-size: clamp(28px, 3vw, 34px);
+   font-weight: 720;
+   letter-spacing: -0.04em;
+}
+
+.header p {
+   margin-top: 8px;
+   font-size: 15px;
+}
+
+.contentGrid {
+   gap: 24px;
+}
+
+.workspace {
+   display: grid;
+   grid-template-columns: minmax(0, 1.7fr) minmax(310px, 0.8fr);
+   gap: 24px;
+   align-items: start;
+}
+
+.recentPanel,
+.summaryPanel {
+   min-width: 0;
+}
+
+@media (max-width: 1100px) {
+   .workspace {
+      grid-template-columns: 1fr;
    }
 }

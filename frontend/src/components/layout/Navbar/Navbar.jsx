@@ -1,6 +1,5 @@
 import { NavLink } from "react-router-dom";
 import styles from "./navbar.module.css";
-import ThemeToggle from "../../themeToggle/ThemeToggle";
 import { useAuth } from "../../../context/authContext";
 import Icon from "../../icons/Icon";
 
@@ -12,7 +11,9 @@ function Navbar({ onMenuToggle }) {
 
    return (
       <header className={styles.navbar}>
-         <div>
+         <div className={styles.leading}>
+         <span className={styles.desktopContext}>Workspace</span>
+
          <button
             aria-label="Toggle navigation"
             className={styles.mobileMenu}
@@ -25,8 +26,6 @@ function Navbar({ onMenuToggle }) {
 
 
          <div className={styles.actions}>
-         <ThemeToggle />
-
          <NavLink
             aria-label="Open account settings"
             className={styles.profile}

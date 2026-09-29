@@ -4,6 +4,7 @@ import ContactList from "../../components/contacts/contactList/ContactList";
 import ContactForm from "../../components/contacts/contactForm/ContactForm";
 import ContactDetails from "../../components/contacts/contactDetails/ContactDetails";
 import ImportContacts from "../../components/contacts/importContacts/ImportContacts";
+import BrandLoader from "../../components/feedback/BrandLoader";
 import FeedbackState from "../../components/feedback/FeedbackState";
 import { getContacts } from "../../api/contacts";
 import useFeedbackScroll from "../../hooks/useFeedbackScroll";
@@ -98,9 +99,9 @@ function Contacts() {
             )}
 
             {loading && (
-               <FeedbackState>
-                  Loading contacts...
-               </FeedbackState>
+               <section className={styles.pageLoader}>
+                  <BrandLoader label="Loading contacts..." size="lg" />
+               </section>
             )}
 
             {!loading && error && (
